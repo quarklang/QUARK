@@ -11,3 +11,6 @@ This is a log of all project decisions we make.
     2. Set up Vagrant for common dev environment and Trello for project management and SCRUM board.
 - 9/11/14:
     1. Started maintaining log of all project decisions.
+- 9/15/14:
+    1. Consulted Prof. Edwards on using external simulator and designing a quantum computing language.
+    2. Decided on demos: Shor's factorization algorithm, Grover's search algorithm, possibly Deautsch-Jozsa simulation and Simon's period algorithm time permitting.
