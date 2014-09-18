@@ -17,3 +17,4 @@ This is a log of all project decisions we make.
 - 9/17/24:
     1. Decided on supporting integers, floats, strings, complex numbers, matrices, quantum registers and gates as built-in types.
     2. Considered making the language dynamically typed.
+    3. Assigned team roles.
