@@ -1,5 +1,5 @@
-Project Logs
-============
+Milestones
+==========
 This is a log of all project decisions we make.
 - 9/8/14:
     1. Formed team of Parthiban Loganathan, Jim Fan, Daria Jung and Jamis Johnson.
