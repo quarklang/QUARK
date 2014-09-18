@@ -14,3 +14,6 @@ This is a log of all project decisions we make.
 - 9/15/14:
     1. Consulted Prof. Edwards on using external simulator and designing a quantum computing language.
     2. Decided on demos: Shor's factorization algorithm, Grover's search algorithm, possibly Deautsch-Jozsa simulation and Simon's period algorithm time permitting.
+- 9/17/24:
+    1. Decided on supporting integers, floats, strings, complex numbers, matrices, quantum registers and gates as built-in types.
+    2. Considered making the language dynamically typed.
