@@ -18,9 +18,9 @@ More to come...
 ####Team
 In lexicographical order:
 
-| Role                        | Name                 | UNI     |
-|-----------------------------|----------------------|---------|
-| Verification and Validation | Daria Jung           | djj2115 |
-| Language Guru               | Jamis Johnson        | jmj2180 |
-| System Architect            | Jim Fan              | lf2422  |
-| Manager                     | Parthiban Loganathan | pl2487  |
+| Name                 | UNI     | Role                        |
+|----------------------|---------|-----------------------------|
+| Daria Jung           | djj2115 | Verification and Validation |
+| Jamis Johnson        | jmj2180 | Language Guru               |
+| Jim Fan              | lf2422  | System Architect            |
+| Parthiban Loganathan | pl2487  | Manager                     |
