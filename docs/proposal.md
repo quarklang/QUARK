@@ -25,3 +25,5 @@ Quantum computers, like classical computers, consists of three parts, a memory c
 - Quantum Registers
 - QBits
 - Quantum Gates
+
+ADD JIM'S CODE SNIPPETS
