@@ -19,11 +19,12 @@ Quantum computers, like classical computers, consists of three parts, a memory c
 #####Built In Data Types
 - Integers
 - Floats
+- Fractions
 - Strings
 - Complex numbers
 - Matrices
-- Quantum Registers
-- QBits
-- Quantum Gates
+- Quantum registers
+
+QBits and quantum gates are encapsulated in the built-in function calls. 
 
 ADD JIM'S CODE SNIPPETS
