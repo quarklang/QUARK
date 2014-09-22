@@ -116,3 +116,76 @@ qr1 = <size, 1> % dense quantum register with initial state 1
 qr2 = <<size, 0>> % sparse quantum register with initial state 0
 qr1?1 % what does this return?
 ```
+
+#####Control Flow
+######if
+`if` behaves similar to C.
+```
+if size == 0 {
+    return size;
+}
+```
+Just as in C, brackets are not required if the underlying block is only one line.
+```
+if len list == 0
+    list = [:len q]
+```
+######for
+Our `for` is similar to python's for
+```
+for number in numbers
+    number += 1
+```
+Example of iterating over half of a list
+```
+for val in list[0:len(list)/2]
+    val = val*10;
+```
+You can also iterate over q-bits in a quantum register
+```
+for qbit in <10, 0>
+    had(qbit, val);
+```
+######while
+`while` is identical to C and continually runs the block until the boolean expression becomes false
+```
+while(val != 0) {
+    val = val - 1;
+}
+```
+
+#####Standard Library (util.qk)
+######gcd
+`gcd` is used enough in quantum computing that we decided to include it in our standard library.
+```
+gcd(200,150); % returns 50
+```
+
+######bit
+Viewing the bit value of an integer is also critical to QC. `bit` takes an integer and bit position. If the position is outside the bounds of the integer than a error is raised.
+```
+bit(15, 0); % returns 1
+```
+
+######len
+`len` is short for length. `len` returns the length of a list, the number of characters in a string, the number of q-bits in a quantum register, or the number of rows in a matrix.
+
+```
+list = [1,2,3,4,5];
+len list; % returns 5
+str = "hi earth";
+len str == 8; % returns true
+q_reg = <10,0>;
+len(q_req); % returns 10
+mat = [[1,2,3],[4,5,6]];
+len mat; % returns 2
+```
+
+######norm
+It is a regular occurence that we need the norm of a complex number so we have included `norm` in our utils.
+```
+norm(1+1i); % returns 1.41421 aka square root of 2
+```
+
+######had
+######had_multi
