@@ -1,3 +1,6 @@
+# vim
+*.sw*
+
 # OCaml
 *.annot
 *.cmo
