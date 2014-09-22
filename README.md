@@ -21,6 +21,6 @@ In lexicographical order:
 | Name                 | UNI     | Role                        |
 |----------------------|---------|-----------------------------|
 | Daria Jung           | djj2115 | Verification and Validation |
-| Jamis Johnson        | jmj2180 | Language Guru               |
-| Jim Fan              | lf2422  | System Architect            |
+| Jamis Johnson        | jmj2180 | System Architect            |
+| Jim Fan              | lf2422  | Language Guru               |
 | Parthiban Loganathan | pl2487  | Manager                     |

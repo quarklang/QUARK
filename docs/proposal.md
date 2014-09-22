@@ -27,4 +27,14 @@ Quantum computers, like classical computers, consists of three parts, a memory c
 
 QBits and quantum gates are encapsulated in the built-in function calls. 
 
-ADD JIM'S CODE SNIPPETS
+####Syntax
+#####Comments
+```
+% single line comment
+%{
+  multi-line comments
+}%
+```
+
+#####Declarations
+
