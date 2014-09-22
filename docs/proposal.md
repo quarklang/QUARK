@@ -3,7 +3,15 @@ QUARK
 #####QUantum Analysis and Realization Kit
 A High Level Programming Language for Quantum Computing
 
-*Daria Jung (djj2115), Jamis Johnson (jmj2180), Jim Fan (lf2422), Parthiban Loganathan (pl2487)*
+####Team
+In lexicographical order:
+
+| Name                 | UNI     | Role                        |
+|----------------------|---------|-----------------------------|
+| Daria Jung           | djj2115 | Verification and Validation |
+| Jamis Johnson        | jmj2180 | System Architect            |
+| Jim Fan              | lf2422  | Language Guru               |
+| Parthiban Loganathan | pl2487  | Manager                     |
 
 ####Introduction
 In the early 1980's, Richard Feynman observed that certain quantum mechanical effects could not be efficiently simulated using classical computation methods. This led to the proposal for the idea of a "quantum computer", a computer that uses the effects of quantum mechanics, such as superposition and entanglement, to its advantage. Though quantum computing is still in relative infancy, in 1994, Peter Shor (Bell Labs) developed a quantum algorithm to factor integers in polynomial time, providing motivation and renewed interest in building quantum computers and discovering other quantum algorithms. 
