@@ -13,7 +13,9 @@ In the early 1980's, Richard Feynman observed that certain quantum mechanical ef
 
 Classic computers require data to be encoded in binary digits, where each bit is always in a definite state of either 0 or 1. Quantum computation uses qubits in order to represent a superposition of states. Operating on qubits effectively operates on different possible states of being at the same time. By performing a single operation on a one bit qubit, we perform operations on two different states of a qubit at once. With certain algorithms, we can use this parallelism in order to solve problems in significantly less time than a classical computer would take.
 
-We would like to propose QUARK, a domain-specific imperative programming language to allow for expression of quantum algorithms. The purpose of QUARK is to simulate quantum computing in a user-friendly way, and possibly compile to real quantum circuit instructions if we have a physical quantum computer some time in the future. Since quantum machines must currently be controlled by classical devices, QUARK incorporates classic computing methods and control structures, which allow operations on quantum and classical data. A basic quantum circuit simulator is included as part of the QUARK architecture. QUARK compiles to generate C++ code, which can then be passed onto our quantum simulator.
+We would like to propose QUARK, a domain-specific imperative programming language to allow for expression of quantum algorithms. The purpose of QUARK is to simulate quantum computing in a user-friendly way, and possibly compile to real quantum circuit instructions if we have a physical quantum computer some time in the future. Since quantum machines must currently be controlled by classical devices, QUARK incorporates classic computing methods and control structures, which allow operations on quantum and classical data. QUARK supports user defined operators and functions.
+
+A basic quantum circuit simulator is included as part of the QUARK architecture. Quantum operators and data types in QUARK compile to C++ code, which can then be passed onto our quantum simulator. 
 
 ####Syntax
 ######Comments
