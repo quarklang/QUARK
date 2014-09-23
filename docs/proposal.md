@@ -95,7 +95,7 @@ someString[4]; % returns "o"
 ```
 
 ######Lists
-We make it easy to use lists, kinf od like Python.
+We make it easy to use lists, kind of like Python.
 ```
 someList = [1:5]; % returns list {1, 2, 3, 4, 5};
 anotherList = {"a", "b", "c", "d", "e", "f"}; % can be used to explicitly define elements in list
@@ -116,7 +116,7 @@ mat[0][1]; % get element at position (0,1)
 ```
 
 ######Quantum Registers
-We support quantum registers that take a size and .
+We support quantum registers that take a size and an initial state.
 You can query a quantum register for its stats using `?`.
 ```
 size = 5
