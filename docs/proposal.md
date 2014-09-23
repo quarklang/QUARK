@@ -62,7 +62,7 @@ Fractions can represent arbitrary precision and are represented using a `$` sign
 % pi represents 22/7
 pi = 22$7;
 1/pi; % returns 7/22
-pi + 1%7; % returns 23/7
+pi + 1$7; % returns 23/7
 ```
 
 ######Complex Numbers
@@ -121,56 +121,53 @@ You can query a quantum register for its stats using `?`.
 ```
 size = 5
 qr1 = <size, 1> % dense quantum register with initial state 1
-qr2 = <<size, 0>> % sparse quantum register with initial state 0
+qr2 = <size, 0>' % sparse quantum register with initial state 0
 qr1?1 % what does this return?
 ```
 
 #####Control Flow
 ######if
 `if` behaves similar to C.
+If the body of `if` has only one line, the brackets are optional.
+The condition is terminated by a colon.
 ```
-if size == 0 {
-    return size;
+l = [1, 2];
+if len l == 0 :
+    return l;
+
+if 1 == 1 :
+{
+    x = 2;
+    x += 1;
 }
-```
-Just as in C, brackets are not required if the underlying block is only one line.
-```
-if len list == 0
-    list = [:len q]
 ```
 ######for
 Our `for` is similar to python's for
 ```
-for number in numbers
+for number in numbers:
     number += 1
 ```
 Example of iterating over half of a list
 ```
-for val in list[0:len(list)/2]
+for val in list[0:len(list)/2]:
     val = val*10;
 ```
 You can also iterate over q-bits in a quantum register
 ```
-for qbit in <10, 0>
-    had(qbit, val);
+q = <10, 0>
+for qbit in [: len(q)]:
+    had q qbit;
 ```
 ######while
-`while` is identical to C and continually runs the block until the boolean expression becomes false
+`while` is python style and continually runs the block until the boolean expression becomes false
 ```
-while(val != 0) {
-    val = val - 1;
-}
-```
-
-#####Standard Library (util.qk)
-######gcd
-`gcd` is used enough in quantum computing that we decided to include it in our standard library.
-```
-gcd(200,150); % returns 50
+while val != 0 :
+    val -= 1;
 ```
 
+#####Built-in Functions
 ######bit
-Viewing the bit value of an integer is also critical to QC. `bit` takes an integer and bit position. If the position is outside the bounds of the integer than a error is raised.
+Viewing the bit value of an integer is also critical to QC. `bit` takes an integer and bit position. The position is counted from the least significant bit. 
 ```
 bit(15, 0); % returns 1
 ```
@@ -188,12 +185,3 @@ len(q_req); % returns 10
 mat = [[1,2,3],[4,5,6]];
 len mat; % returns 2
 ```
-
-######norm
-It is a regular occurence that we need the norm of a complex number so we have included `norm` in our utils.
-```
-norm(1+1i); % returns 1.41421 aka square root of 2
-```
-
-######had
-######had_multi
