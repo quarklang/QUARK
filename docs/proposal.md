@@ -134,7 +134,11 @@ q ? :5; % from qubit 0 to 4.
 q ? 3:; % from qubit 3 to the last qubit. 
 q ?; % measure the entire register. The result will range from 0 to 2^size - 1
 
-% same as above, except that you can repeatedly measure without disrupting the quantum states. Use this mode with caution because it is unrealistic.
+%{
+same as above, except that you can repeatedly measure 
+without disrupting the quantum states. 
+Use this mode with caution because it is unrealistic.
+}%
 q ?' 1;
 q ?' 5:;
 q ?';
