@@ -183,6 +183,31 @@ for qbit in [: len(q)]:
 while val != 0 :
     val -= 1;
 ```
+######Function definition
+`def` keyword defines a new function.
+The parentheses at the line of `def` are optional.
+
+Optional arguments are denoted by `arg_name = default_value`
+```
+def f1 a, b = 3
+{
+    c = a ** b + 1i;
+    return c * (2 - 3i) + a;
+}
+
+```
+######Lambda
+There are two styles of lambda.
+
+The short one has one statement as its body:
+```
+square = lambda x : x * x;
+```
+The long one has its body enclosed in brackets and can have more complicated control flow. A `return` statement is required if the lambda wants to return a non-void value.
+```
+square = lambda x : { return x * x; };
+(lambda x : {if x < 2: return -1; else return 100;})(30) % return 100
+```
 
 #####Built-in Functions
 ######bit
@@ -222,7 +247,6 @@ def gcd(a, b)
 ```
 
 ######Bitwise dot product
-The parentheses at the line of `def` are optional
 ```
 def bit_dot a, b
 {
@@ -258,10 +282,8 @@ def had_multi(q, lis)
     for i = lis:
         had q, i;
 }
-```
 
-Optional arguments are denoted by `arg_name = default_value`
-```
+
 def had_range(q, start, size = 1)
 {
     had_multi q, [start: start+size] ;
