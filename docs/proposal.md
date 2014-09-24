@@ -32,10 +32,10 @@ A basic quantum circuit simulator is included as part of the QUARK architecture.
 ```
 
 ######Variable Declarations
-Variables are declared in an imperative style with dynamic typing. There is no need to declare the type of the variable or demarcate a new variable with a keyword. The variable name is on the left and it is assigned a value using `=` operator to the result on the right side of the assignment. Also, every line ending is indicated by a `;` like in Java or C. We also suggest naming variables using camel case.
+Variables are declared in an imperative style with dynamic typing. There is no need to declare the type of the variable or demarcate a new variable with a keyword. The variable name is on the left and it is assigned a value using `=` operator to the result on the right side of the assignment. Also, every line ending is indicated by a `;` like in Java or C. We also suggest naming variables using underscores.
 ```
-someVariable = "variable";
-someOtherVariable = 10;
+some_variable = "variable";
+some_other_variable = 10;
 ```
 
 ######Types
@@ -82,25 +82,25 @@ abs(complex) == sqrt(norm(complex)); % use abs() to get the absolute value
 ######Booleans
 It's simply `true` and `false`.
 ```
-isThisAnAwesomeLanguage = true;
+is_this_an_awesome_language = true;
 ```
 
 ######Strings
 Strings can be represented within double quotes. There are no characters. Characters are just strings of length 1. Escape a double quote with `\` as in `\"`. Get the string length with the `len()` function. Concatenate strings with `+=`. Access parts of string using `[]`.
 ```
-someString = "Hello World";
-len(someString); % returns 11
-someString += "!"; % It's now "Hello World!"
-someString[4]; % returns "o"
+some_string = "Hello World";
+len(some_string); % returns 11
+some_string += "!"; % It's now "Hello World!"
+some_string[4]; % returns "o"
 ```
 
 ######Lists
 We make it easy to use lists, kind of like Python.
 ```
-someList = [1:5]; % returns list {1, 2, 3, 4, 5};
-anotherList = {"a", "b", "c", "d", "e", "f"}; % can be used to explicitly define elements in list
-anotherList[-1]; % returns "f"
-anotherList[2:4]; % returns {"c", "d", "e"}
+some_list = [1:5]; % returns list {1, 2, 3, 4, 5};
+another_list = {"a", "b", "c", "d", "e", "f"}; % can be used to explicitly define elements in list
+another_list[-1]; % returns "f"
+another_list[2:4]; % returns {"c", "d", "e"}
 len(lis); % len() returns the size of the first dimension of the list
 ```
 
