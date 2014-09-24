@@ -116,13 +116,32 @@ mat[0][1]; % get element at position (0,1)
 ```
 
 ######Quantum Registers
-We support quantum registers that take a size and an initial state.
-You can query a quantum register for its stats using `?`.
+Quantum registers are the essential containers for qubit states and entanglement. Our language (and simulator) supports two modes of a quantum register: dense and sparse mode. Note that they are used for simulation only. Please use sparse mode if you know in advance that your quantum state vector will have relatively few non-zero entries. 
+
+Measuring a register, partially or totally, will force certain states to collapse probabilistically. A measurement is a non-reversible intrusive operation on a physical quantum computer, but our simulator supports an unrealistic mode of repeated measurement to facilitate simulation. 
+
+The measurement operator is `?`, while the unrealistic non-destructive measurement is `?'`
 ```
-size = 5
-qr1 = <size, 1> % dense quantum register with initial state 1
-qr2 = <size, 0>' % sparse quantum register with initial state 0
-qr1?1 % what does this return?
+size = 5;
+% quantum register  construction
+qr1 = <size, 1>; % dense quantum register with initial state 1
+qr2 = <size, 0>'; % sparse quantum register with initial state 0
+
+% measurement
+q ? 1; % measure a single qubit. Returns either 0 or 1
+q ? 2:5; % measure qubit 2 to 4. Returns an integer from 0 to 31 that represents the resultant state.
+q ? :5; % from qubit 0 to 4.
+q ? 3:; % from qubit 3 to the last qubit. 
+q ?; % measure the entire register. The result will range from 0 to 2^size - 1
+
+%{
+same as above, except that you can repeatedly measure 
+without disrupting the quantum states. 
+Use this mode with caution because it is unrealistic.
+}%
+q ?' 1;
+q ?' 5:;
+q ?';
 ```
 
 #####Control Flow
@@ -140,6 +159,11 @@ if 1 == 1 :
     x = 2;
     x += 1;
 }
+else
+{
+    x = 6;
+    x ++;
+}
 ```
 ######for
 Our `for` is similar to python's for
@@ -152,7 +176,7 @@ Example of iterating over half of a list
 for val in list[0:len(list)/2]:
     val = val*10;
 ```
-You can also iterate over q-bits in a quantum register
+You can also iterate over qubits in a quantum register
 ```
 q = <10, 0>
 for qbit in [: len(q)]:
@@ -164,6 +188,31 @@ for qbit in [: len(q)]:
 while val != 0 :
     val -= 1;
 ```
+######Function definition
+`def` keyword defines a new function.
+The parentheses at the line of `def` are optional.
+
+Optional arguments are denoted by `arg_name = default_value`
+```
+def f1 a, b = 3
+{
+    c = a ** b + 1i;
+    return c * (2 - 3i) + a;
+}
+
+```
+######Lambda
+There are two styles of lambda.
+
+The short version has a single statement as its body:
+```
+square = lambda x : x * x;
+```
+The long version has its body enclosed in brackets and can have more complicated control flow. A `return` statement is required if the lambda wants to return a non-void value.
+```
+square = lambda x : { return x * x; };
+(lambda x : {if x < 2: return -1; else return 100;})(30) % return 100
+```
 
 #####Built-in Functions
 ######bit
@@ -173,7 +222,7 @@ bit(15, 0); % returns 1
 ```
 
 ######len
-`len` is short for length. `len` returns the length of a list, the number of characters in a string, the number of q-bits in a quantum register, or the number of rows in a matrix.
+`len` is short for length. `len` returns the length of a list, the number of characters in a string, the number of qubits in a quantum register, or the number of rows in a matrix.
 
 ```
 list = [1,2,3,4,5];
@@ -184,4 +233,175 @@ q_reg = <10,0>;
 len(q_req); % returns 10
 mat = [[1,2,3],[4,5,6]];
 len mat; % returns 2
+```
+
+###Sample Code
+#####Classical algorithms
+######gcd algorithm
+```
+def gcd(a, b)
+{
+    while a != 0:
+    {
+        c = a;
+        a = b mod a;
+        b = c;
+    }
+    return b;
+}
+```
+
+######Bitwise dot product
+```
+def bit_dot a, b
+{
+    limit = 1;
+
+    c = a & b;
+
+    counter = 0;
+    i = 0;
+
+    while limit <= c:
+    {
+        counter += bit c i++;
+        limit <<= 1; % same as limit *= 2
+    }
+
+    return counter mod 2;
+}
+```
+
+#####User-defined quantum gates
+######Multi-qubit hadamard gate operation
+```
+def had_multi(q, lis)
+{
+    %{ if the list is empty, 
+      we apply had() to all bits
+    }%
+
+    if len lis == 0:
+        lis = [: len q];
+
+    for i = lis:
+        had q, i;
+}
+
+
+def had_range(q, start, size = 1)
+{
+    had_multi q, [start: start+size] ;
+}
+```
+
+######Quantum Fourier Transform
+`qft_sub` is the recursive subroutine used by `qft`
+```
+def qft_sub q, start, size
+{
+    if size == 1:
+    {
+        had(q, start);
+        return;
+    }
+
+    % recurse
+    qft_sub(q, start, size-1);
+
+    last = start + size - 1;
+    for t = [start : last]:
+    % control gates are prefixed with 'c_'
+        c_phase_shift q, PI / 2**(last - t), last, t;
+
+    had q, last ;
+}
+
+def qft(q, start = 0, size = len q)
+{
+    qft_sub q start size;
+
+    % reverse the qubits
+    for tar = [start : start + size/2]:
+        swap q, tar, tar+tarSize-1-tar;
+}
+```
+
+##### Sample quantum algorithms
+Almost all quantum algorithms consist of a classical part and a quantum part. 
+Classical part typically involves pre- or post-processing on a normal computer. Quantum part involves qubits and quantum circuits. 
+###### Deutsch-Josza Parity algorithm
+An efficient O(1) quantum algorithm to solve the Deutsch-Josza parity problem. The theoretical lower bound of a classical algorithm for this problem is O(n).
+```
+import myutil; % user-defined libraries
+import mygate;
+
+% keyboard input
+secret = int(
+    input("Secret 'u' for Deustch_Josza parity algorithm"));
+
+% quantum oracle
+ocfun = lambda x : bit_dot(x, secret);
+
+nbit = 5;
+
+% dense mode, 6 qubits, initialize to state 1
+q = <nbit+1, 1>;
+
+% or sparse mode. 
+q = <nbit+1, 1>';
+
+% apply hadamard gates
+for i = [: len q] :
+    had q, i;
+
+% apply oracle
+oracle q, ocfun, nbit;
+
+% using a library function from mygate.qk
+had_multi q, 0, nbit;
+
+% measurement
+result = q ? 0:nbit; 
+```
+
+###### Grover's Search
+This is one of the most celebrated quantum algorithms ever invented. 
+Grover's search can efficiently find the needle in an unsorted haystack in O(sqrt(N)) time, while the trivial lower bound for classical search algorithms is O(N). 
+```
+key = int(input("The key to search"));
+
+% the search oracle
+ocfun = lambda x : { return x == key; };
+
+nbit = 5;
+N = 2 ** nbit;
+q = <nbit, 0>;
+
+for i = [:nbit] :
+    had q, i;
+
+for iter = [: floor(sqrt N)]:
+{
+    % apply search oracle
+    oracle q, ocfun, nbit;
+
+    had_multi q, [:nbit];
+
+    % define a diffuse matrix
+    % initialize to all zeros
+    diffuse = zeros N, N;
+    diffuse[0][0] = 1;
+    for i = [1: len diffuse]:
+        diffuse[i][i] = -1;
+
+    % apply this unitary gate
+    generic_gate q, diffuse;
+
+    had_multi q, [:nbit];
+}
+
+% measure the whole register, 
+% then shift one bit to the right.
+result = (q ?) >> 1;
 ```
