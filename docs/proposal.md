@@ -3,7 +3,7 @@ QUARK
 #####QUantum Analysis and Realization Kit
 A High Level Programming Language for Quantum Computing
 
-####Team
+###Team
 In lexicographical order:
 
 | Name                 | UNI     | Role                        |
@@ -13,7 +13,7 @@ In lexicographical order:
 | Jim Fan              | lf2422  | Language Guru               |
 | Parthiban Loganathan | pl2487  | Manager                     |
 
-####Introduction
+###Introduction
 In the early 1980's, Richard Feynman observed that certain quantum mechanical effects could not be efficiently simulated using classical computation methods. This led to the proposal for the idea of a "quantum computer", a computer that uses the effects of quantum mechanics, such as superposition and entanglement, to its advantage. Though quantum computing is still in relative infancy, in 1994, Peter Shor (Bell Labs) developed a quantum algorithm to factor integers in polynomial time, providing motivation and renewed interest in building quantum computers and discovering other quantum algorithms. 
 
 Classical computers require data to be encoded in binary digits, where each bit is always in a definite state of either 0 or 1. Quantum computation uses qubits in order to represent a superposition of states. Operating on qubits effectively operates on different possible states of being at the same time. By performing a single operation on a one bit qubit, we perform operations on two different states of a qubit at once. With certain algorithms, we can use this parallelism in order to solve problems in significantly less time than a classical computer would take.
@@ -22,8 +22,8 @@ We would like to propose QUARK, a domain-specific imperative programming languag
 
 A basic quantum circuit simulator is included as part of the QUARK architecture. Quantum operators and data types in QUARK compile to C++, which can then be passed onto our quantum simulator.
 
-####Syntax
-######Comments
+###Syntax
+#####Comments
 ```
 % single line comment
 %{
@@ -31,14 +31,14 @@ A basic quantum circuit simulator is included as part of the QUARK architecture.
 }%
 ```
 
-######Variable Declarations
+#####Variable Declarations
 Variables are declared in an imperative style with dynamic typing. There is no need to declare the type of the variable or demarcate a new variable with a keyword. The variable name is on the left and it is assigned a value using `=` operator to the result on the right side of the assignment. Also, every line ending is indicated by a `;` like in Java or C. We also suggest naming variables using underscores.
 ```
 some_variable = "variable";
 some_other_variable = 10;
 ```
 
-######Types
+#####Types
 QUARK supports the following types:
 - Numbers
 - Fractions
@@ -72,7 +72,7 @@ complex = 3+1i % This represents 3+i. We need b=1. It can't be omitted
 complex * -.5i; % Arithmetic operations on complex numbers. This returns .5-1.5i
 (-.5 + .3i) ** 5; % Use **n to raise to the power n
 complex = 2.6 - 1.3i;
-% The following assertions resturn true
+% The following assertions reurns true
 norm(complex) == 2.6**2 + (-1.3)**2; % use norm() to get the norm
 complex[0] == 2.6; % get real part
 complex[1] == -1.3; % get imaginary part
