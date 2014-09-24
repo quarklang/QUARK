@@ -116,13 +116,28 @@ mat[0][1]; % get element at position (0,1)
 ```
 
 ######Quantum Registers
-We support quantum registers that take a size and an initial state.
-You can query a quantum register for its stats using `?`.
+Quantum registers are the essential containers for qubit states and entanglement. Our language (and simulator) supports two modes of a quantum register: dense and sparse mode. Note that they are used for simulation only. Please use sparse mode if you know in advance that your quantum state vector will have relatively few non-zero entries. 
+
+Measuring a register, partially or totally, will force certain states to collapse probabilistically. A measurement is a non-reversible intrusive operation on a physical quantum computer, but our simulator supports an unrealistic mode of repeated measurement to facilitate simulation. 
+
+The measurement operator is `?`, while the unrealistic non-destructive measurement is `?'`
 ```
-size = 5
-qr1 = <size, 1> % dense quantum register with initial state 1
-qr2 = <size, 0>' % sparse quantum register with initial state 0
-qr1?1 % what does this return?
+size = 5;
+% quantum register  construction
+qr1 = <size, 1>; % dense quantum register with initial state 1
+qr2 = <size, 0>'; % sparse quantum register with initial state 0
+
+% measurement
+q ? 1; % measure a single qubit. Returns either 0 or 1
+q ? 2:5; % measure qubit 2 to 4. Returns an integer from 0 to 31 that represents the resultant state.
+q ? :5; % from qubit 0 to 4.
+q ? 3:; % from qubit 3 to the last qubit. 
+q ?; % measure the entire register. The result will range from 0 to 2^size - 1
+
+% same as above, except that you can repeatedly measure without disrupting the quantum states. Use this mode with caution because it is unrealistic.
+q ?' 1;
+q ?' 5:;
+q ?';
 ```
 
 #####Control Flow
@@ -152,7 +167,7 @@ Example of iterating over half of a list
 for val in list[0:len(list)/2]:
     val = val*10;
 ```
-You can also iterate over q-bits in a quantum register
+You can also iterate over qubits in a quantum register
 ```
 q = <10, 0>
 for qbit in [: len(q)]:
@@ -173,7 +188,7 @@ bit(15, 0); % returns 1
 ```
 
 ######len
-`len` is short for length. `len` returns the length of a list, the number of characters in a string, the number of q-bits in a quantum register, or the number of rows in a matrix.
+`len` is short for length. `len` returns the length of a list, the number of characters in a string, the number of qubits in a quantum register, or the number of rows in a matrix.
 
 ```
 list = [1,2,3,4,5];
