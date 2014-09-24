@@ -159,6 +159,11 @@ if 1 == 1 :
     x = 2;
     x += 1;
 }
+else
+{
+    x = 6;
+    x ++;
+}
 ```
 ######for
 Our `for` is similar to python's for
@@ -199,11 +204,11 @@ def f1 a, b = 3
 ######Lambda
 There are two styles of lambda.
 
-The short one has one statement as its body:
+The short version has a single statement as its body:
 ```
 square = lambda x : x * x;
 ```
-The long one has its body enclosed in brackets and can have more complicated control flow. A `return` statement is required if the lambda wants to return a non-void value.
+The long version has its body enclosed in brackets and can have more complicated control flow. A `return` statement is required if the lambda wants to return a non-void value.
 ```
 square = lambda x : { return x * x; };
 (lambda x : {if x < 2: return -1; else return 100;})(30) % return 100
