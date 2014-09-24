@@ -185,3 +185,180 @@ len(q_req); % returns 10
 mat = [[1,2,3],[4,5,6]];
 len mat; % returns 2
 ```
+
+###Sample Code
+#####Classical algorithms
+######`gcd` algorithm
+```
+def gcd(a, b)
+{
+    while a != 0:
+    {
+        c = a;
+        a = b mod a;
+        b = c;
+    }
+    return b;
+}
+```
+
+######Bitwise dot product
+The parentheses at the line of `def` are optional
+```
+def bit_dot a, b
+{
+    limit = 1;
+
+    c = a & b;
+
+    counter = 0;
+    i = 0;
+
+    while limit <= c:
+    {
+        counter += bit c i++;
+        limit <<= 1; % same as limit *= 2
+    }
+
+    return counter mod 2;
+}
+```
+
+#####User-defined quantum gates
+######Multi-qubit hadamard gate operation
+```
+def had_multi(q, lis)
+{
+    %{ if the list is empty, 
+      we apply had() to all bits
+    }%
+
+    if len lis == 0:
+        lis = [: len q];
+
+    for i = lis:
+        had q, i;
+}
+```
+
+Optional arguments are denoted by `arg_name = default_value`
+```
+def had_range(q, start, size = 1)
+{
+    had_multi(q, [start: start+size]);
+}
+```
+
+######Quantum Fourier Transform
+`qft_sub` is the recursive subroutine used by `qft`
+```
+def qft_sub q, start, size
+{
+    if size == 1:
+    {
+        had(q, start);
+        return;
+    }
+
+    % recurse
+    qft_sub(q, start, size-1);
+
+    last = start + size - 1;
+    for t = [start : last]:
+        c_phase_shift q, PI / 2**(last - t), last, t;
+
+    had q, last ;
+}
+
+def qft(q, start = 0, size = len q)
+{
+    qft_sub q start size;
+
+    % reverse the qubits
+    for tar = [start : start + size/2]:
+        swap q, tar, tar+tarSize-1-tar;
+}
+```
+
+##### Sample quantum algorithms
+Almost all quantum algorithms consist of a classical part and a quantum part. 
+Classical part typically involves pre- or post-processing on a normal computer. Quantum part involves qubits and quantum circuits. 
+###### Deutsch-Josza Parity algorithm
+An efficient O(1) quantum algorithm to solve the Deutsch-Josza parity problem. The theoretical lower bound of a classical algorithm for this problem is O(n).
+```
+import myutil; % user-defined libraries
+import mygate;
+
+% keyboard input
+secret = int(
+    input("Secret 'u' for Deustch_Josza parity algorithm"));
+
+% quantum oracle
+ocfun = lambda x : bit_dot(x, secret);
+
+nbit = 5;
+
+% initialize a quantum register
+
+% dense mode, 6 qubits, initialize to state 1
+q = <nbit+1, 1>;
+
+% or sparse mode. Mathematically equivalent
+q = <nbit+1, 1>';
+
+% apply hadamard gates
+for i = [: len q] :
+    had q, i;
+
+% apply oracle
+oracle q, ocfun, nbit;
+
+% using a library function from mygate.qk
+had_multi q, 0, nbit;
+
+% measurement
+result = q ? 0:nbit; 
+```
+
+###### Grover's Search
+This is one of the most celebrated quantum algorithms ever invented. 
+Grover's search can efficiently find the needle in an unsorted haystack in O(sqrt(N)) time, while the trivial lower bound for classical search algorithms is O(N). 
+```
+key = int(input("The key to search"));
+
+% the search oracle
+ocfun = lambda x : { return x == key; };
+
+nbit = 5;
+
+N = 2 ** nbit;
+
+q = <nbit, 0>;
+
+for i = [:nbit] :
+    had q, i;
+
+for iter = [: floor(sqrt N)]:
+{
+    % apply search oracle
+    oracle q, ocfun, nbit;
+
+    had_multi q, [:nbit];
+
+    % define a diffuse matrix
+    % initialize to all zeros
+    diffuse = zeros N, N;
+    diffuse[0][0] = 1;
+    for i = [1: len diffuse]:
+        diffuse[i][i] = -1;
+
+    % apply this unitary gate
+    generic_gate q, diffuse;
+
+    had_multi q, [:nbit];
+}
+
+% measure the whole register, 
+% then shift one bit to the right.
+result = (q ?) >> 1;
+```
