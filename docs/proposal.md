@@ -188,7 +188,7 @@ len mat; % returns 2
 
 ###Sample Code
 #####Classical algorithms
-######`gcd` algorithm
+######gcd algorithm
 ```
 def gcd(a, b)
 {
@@ -245,7 +245,7 @@ Optional arguments are denoted by `arg_name = default_value`
 ```
 def had_range(q, start, size = 1)
 {
-    had_multi(q, [start: start+size]);
+    had_multi q, [start: start+size] ;
 }
 ```
 
@@ -265,6 +265,7 @@ def qft_sub q, start, size
 
     last = start + size - 1;
     for t = [start : last]:
+    % control gates are prefixed with 'c_'
         c_phase_shift q, PI / 2**(last - t), last, t;
 
     had q, last ;
@@ -298,12 +299,10 @@ ocfun = lambda x : bit_dot(x, secret);
 
 nbit = 5;
 
-% initialize a quantum register
-
 % dense mode, 6 qubits, initialize to state 1
 q = <nbit+1, 1>;
 
-% or sparse mode. Mathematically equivalent
+% or sparse mode. 
 q = <nbit+1, 1>';
 
 % apply hadamard gates
@@ -330,9 +329,7 @@ key = int(input("The key to search"));
 ocfun = lambda x : { return x == key; };
 
 nbit = 5;
-
 N = 2 ** nbit;
-
 q = <nbit, 0>;
 
 for i = [:nbit] :
