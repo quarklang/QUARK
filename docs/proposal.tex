@@ -19,10 +19,7 @@
 % use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 % use microtype if available
-\IfFileExists{microtype.sty}{%
-\usepackage{microtype}
-\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
-}{}
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
 \usepackage{longtable,booktabs}
 \ifxetex
   \usepackage[setpagesize=false, % page size defined by xetex
@@ -50,26 +47,26 @@
 
 \begin{document}
 
-\section{QUARK}\label{quark}
-
-\subparagraph{QUantum Analysis and Realization
-Kit}\label{quantum-analysis-and-realization-kit}
-
-A High Level Programming Language for Quantum Computing
+QUARK \#\#\#\#\#QUantum Analysis and Realization Kit A High Level
+Programming Language for Quantum Computing ---
 
 \subsubsection{Team}\label{team}
 
 In lexicographical order:
 
 \begin{longtable}[c]{@{}lll@{}}
-\toprule
-Name & UNI & Role\tabularnewline
-\midrule
-\endhead
-Daria Jung & djj2115 & Verification and Validation\tabularnewline
-Jamis Johnson & jmj2180 & System Architect\tabularnewline
-Jim Fan & lf2422 & Language Guru\tabularnewline
-Parthiban Loganathan & pl2487 & Manager\tabularnewline
+\toprule\addlinespace
+Name & UNI & Role
+\\\addlinespace
+\midrule\endhead
+Daria Jung & djj2115 & Verification and Validation
+\\\addlinespace
+Jamis Johnson & jmj2180 & System Architect
+\\\addlinespace
+Jim Fan & lf2422 & Language Guru
+\\\addlinespace
+Parthiban Loganathan & pl2487 & Manager
+\\\addlinespace
 \bottomrule
 \end{longtable}
 
@@ -92,8 +89,9 @@ Operating on qubits effectively operates on different possible states of
 being at the same time. By performing a single operation on a one bit
 qubit, we perform operations on two different states of a qubit at once.
 With certain algorithms, we can use this parallelism in order to solve
-problems in significantly less time than a classical computer would
-take.
+problems in significantly less time than a classical computer.
+
+\subsubsection{Proposal}\label{proposal}
 
 We would like to propose QUARK, a domain-specific imperative programming
 language to allow for expression of quantum algorithms. The purpose of
@@ -176,6 +174,7 @@ complex = 3+1i % This represents 3+i. We need b=1. It can't be omitted
 complex * -.5i; % Arithmetic operations on complex numbers. This returns .5-1.5i
 (-.5 + .3i) ** 5; % Use **n to raise to the power n
 complex = 2.6 - 1.3i;
+
 % The following assertions reurns true
 norm(complex) == 2.6**2 + (-1.3)**2; % use norm() to get the norm
 complex[0] == 2.6; % get real part
@@ -280,10 +279,10 @@ colon.
 
 \begin{verbatim}
 l = [1, 2];
-if len l == 0 :
+if len l == 0:
     return l;
 
-if 1 == 1 :
+if 1 == 1:
 {
     x = 2;
     x += 1;
@@ -297,7 +296,7 @@ else
 
 for
 
-Our \texttt{for} is similar to python's for
+Our \texttt{for} is similar to Python's for
 
 \begin{verbatim}
 for number in numbers:
@@ -325,7 +324,7 @@ while
 boolean expression becomes false
 
 \begin{verbatim}
-while val != 0 :
+while val != 0:
     val -= 1;
 \end{verbatim}
 
@@ -396,7 +395,7 @@ len mat; % returns 2
 
 \subparagraph{Classical algorithms}\label{classical-algorithms}
 
-gcd algorithm
+GCD
 
 \begin{verbatim}
 def gcd(a, b)

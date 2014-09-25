@@ -1,7 +1,7 @@
 QUARK
-=====
 #####QUantum Analysis and Realization Kit
 A High Level Programming Language for Quantum Computing
+---
 
 ###Team
 In lexicographical order:
@@ -16,8 +16,9 @@ In lexicographical order:
 ###Introduction
 In the early 1980's, Richard Feynman observed that certain quantum mechanical effects could not be efficiently simulated using classical computation methods. This led to the proposal for the idea of a "quantum computer", a computer that uses the effects of quantum mechanics, such as superposition and entanglement, to its advantage. Though quantum computing is still in relative infancy, in 1994, Peter Shor (Bell Labs) developed a quantum algorithm to factor integers in polynomial time, providing motivation and renewed interest in building quantum computers and discovering other quantum algorithms. 
 
-Classical computers require data to be encoded in binary digits, where each bit is always in a definite state of either 0 or 1. Quantum computation uses qubits in order to represent a superposition of states. Operating on qubits effectively operates on different possible states of being at the same time. By performing a single operation on a one bit qubit, we perform operations on two different states of a qubit at once. With certain algorithms, we can use this parallelism in order to solve problems in significantly less time than a classical computer would take.
+Classical computers require data to be encoded in binary digits, where each bit is always in a definite state of either 0 or 1. Quantum computation uses qubits in order to represent a superposition of states. Operating on qubits effectively operates on different possible states of being at the same time. By performing a single operation on a one bit qubit, we perform operations on two different states of a qubit at once. With certain algorithms, we can use this parallelism in order to solve problems in significantly less time than a classical computer.
 
+###Proposal
 We would like to propose QUARK, a domain-specific imperative programming language to allow for expression of quantum algorithms. The purpose of QUARK is to define quantum computing algorithms in a user-friendly way and construct real quantum circuit instructions. In theory, our language could produce quantum circuits that could be run on actual quantum computers in the future. QUARK incorporates classical computing methods and control structures, which allow operations on quantum and classical data. It supports user defined operators and functions to make the esoteric notion of writing algorithms for quantum computers a reality. Built in data types like complex numbers, fractions, matrices and quantum registers combined with a robust standard library that supports Hadamard and other quantum gates make QUARK a great way to get started with quantum computing.
 
 A basic quantum circuit simulator is included as part of the QUARK architecture. Quantum operators and data types in QUARK compile to C++, which can then be passed onto our quantum simulator.
@@ -76,6 +77,7 @@ complex = 3+1i % This represents 3+i. We need b=1. It can't be omitted
 complex * -.5i; % Arithmetic operations on complex numbers. This returns .5-1.5i
 (-.5 + .3i) ** 5; % Use **n to raise to the power n
 complex = 2.6 - 1.3i;
+
 % The following assertions reurns true
 norm(complex) == 2.6**2 + (-1.3)**2; % use norm() to get the norm
 complex[0] == 2.6; % get real part
@@ -161,10 +163,10 @@ The condition is terminated by a colon.
 
 ```
 l = [1, 2];
-if len l == 0 :
+if len l == 0:
     return l;
 
-if 1 == 1 :
+if 1 == 1:
 {
     x = 2;
     x += 1;
@@ -177,7 +179,7 @@ else
 ```
 
 ######for
-Our `for` is similar to python's for
+Our `for` is similar to Python's for
 
 ```
 for number in numbers:
@@ -203,7 +205,7 @@ for qbit in [: len(q)]:
 `while` is python style and continually runs the block until the boolean expression becomes false
 
 ```
-while val != 0 :
+while val != 0:
     val -= 1;
 ```
 
@@ -261,7 +263,7 @@ len mat; % returns 2
 
 ###Sample Code
 #####Classical algorithms
-######gcd algorithm
+######GCD
 
 ```
 def gcd(a, b)
