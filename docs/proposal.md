@@ -1,7 +1,9 @@
 QUARK
-#####QUantum Analysis and Realization Kit
-A High Level Programming Language for Quantum Computing
----
+=====
+
+###QUantum Analysis and Realization Kit
+
+*A High Level Programming Language for Quantum Computing*
 
 ###Team
 In lexicographical order:
@@ -362,7 +364,7 @@ Almost all quantum algorithms consist of a classical part and a quantum part.
 Classical part typically involves pre- or post-processing on a normal computer. Quantum part involves qubits and quantum circuits. 
 
 ###### Deutsch-Josza Parity algorithm
-An efficient O(1) quantum algorithm to solve the Deutsch-Josza parity problem. The theoretical lower bound of a classical algorithm for this problem is O(n).
+An efficient $O(1)$ quantum algorithm to solve the Deutsch-Josza parity problem. The theoretical lower bound of a classical algorithm for this problem is $O(n)$.
 
 ```
 import myutil; % user-defined libraries
@@ -398,8 +400,8 @@ result = q ? 0:nbit;
 ```
 
 ###### Grover's Search
-This is one of the most celebrated quantum algorithms ever invented. 
-Grover's search can efficiently find the needle in an unsorted haystack in O(sqrt(N)) time, while the trivial lower bound for classical search algorithms is O(N). 
+This is one of the most celebrated quantum algorithms ever invented.
+Grover's search can efficiently find the needle in an unsorted haystack in $O(\sqrt{n})$ time, while the trivial lower bound for classical search algorithms is $O(n)$. 
 
 ```
 key = int(input("The key to search"));
