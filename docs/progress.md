@@ -1,5 +1,5 @@
-Decisions
-==========
+Progress
+========
 This is a log of all project decisions we make.
 - 9/8/14:
     1. Formed team of Parthiban Loganathan, Jim Fan, Daria Jung and Jamis Johnson.
@@ -21,3 +21,5 @@ This is a log of all project decisions we make.
 - 9/21/14:
   1. Jim and Jamis swapped roles.
   2. Decided on language syntax and started drafting proposal.
+- 9/24/14:
+  1. Submitted proposal.
