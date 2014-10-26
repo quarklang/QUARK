@@ -77,7 +77,7 @@ the syntax
 
 *complex* is the literal used to denote the complex type and is composed of numbers having the form:
 
-    *complex-type ::= number +/- number i*
+*complex-type ::= number +/- number i*
 
 The real and imaginary parts can be accessed using `re` and `im`.
 
@@ -87,7 +87,7 @@ There are two quantum register types: sparse and dense. The bracket literals, `<
 to denote a quantum register and an optional apostrophe suffix, `'` means the quantum register is 
 treated as sparse.
 
-    *quantum-type ::== <number,number> | <number,number>'*
+*quantum-type ::== <number,number> | <number,number>'*
 
 The first number is the size of the quantum register and the right number is the initial state.
 
@@ -101,4 +101,4 @@ We use the **str** literal to indicate a string type.
 
 ######List Type
 
-    *list-type :== [primitive-type]*
+*list-type :== [primitive-type]*
