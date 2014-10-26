@@ -97,8 +97,67 @@ Booleans use the literal *bool* and can take the value of the literals `true` or
 
 ######String Type
 
-We use the **str** literal to indicate a string type.
+We use the **str** literal to indicate a string type, and strings are sequential alphabetic characters or 
+escape sequences wrapped in single or double quotes.
 
 ######List Type
 
 *list-type :== [primitive-type]*
+
+######Function Type
+
+Functions accept zero or more variables and return a primitive type or list type.
+
+#####Expressions
+
+*expression :== 
+base-expression | 
+multiplicative-expression | 
+additive-expression | 
+relational-expression | 
+equality-expression | 
+logical-expression | 
+assignment |
+function-call*
+
+######Base Expression
+
+*base-expression ::= identifier | constant | (expression)*
+
+######Multiplicative Expression
+
+*multiplicative-expression ::=
+expression \* expression | 
+expression / expression | 
+expression % expression*
+
+######Additive Expression
+*additive-expression ::=
+expression + expression | 
+expression - expression*
+
+######Relational Expression
+*relational-expression :==
+expression > expression | 
+expression < expression | 
+expression <= expression | 
+expression >= expression*
+
+######Equality Expression
+*equality-expression :==
+expression == expression
+expression != expression*
+
+######Logical Expression
+*logical-expression ::=
+expression and expression
+expression or expression*
+
+######Assignment
+*assignment :== identifier = expression*
+
+Assignments are right associative and therefore can be chained together such as: `alice = bob = "missing"`
+
+######Function Calls
+*function-call ::= identifier ( argument-list ) | identifier ()
+argument-list ::= argument-list , expression | expression*
