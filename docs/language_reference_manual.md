@@ -20,22 +20,24 @@ Identifiers are case sensitive.
 #####Keywords
 The following identifiers are reserved
 ```
-num complex frac bool string had had_multi if else while return for in len bit
+qreg num complex frac bool str if elif else while return for in len bit and or null
 ```
+
 
 #####Constants
 ######Number Constants
 Numbers are represented as either a sequence of digits or an integer part, a decimal point, a fraction part, and an 
 optionally-signed exponent part which consists of an 'e' and a sequence of integers. If the decimal point and the 
-exponent part are included then the fraction part is necessary. All numbers are considerred as floats.
+exponent part are included then the fraction part is necessary. All numbers are considerred as floats and will be 
+compiled down to c++'s 8-byte, double precision type.
 
 ######String Constants
 Strings can one or more string constants enclosed in double or single quotes. Individual
 string constants can be alphabetical characters - both lower and uppper case - and 
-special reserved escape sequences which are composed of a 
-backslash `\` followed by an alphabetical character. The following escape sequences are defined:
+special reserved escape sequences which are composed of a backslash `\` followed 
+by an alphabetical character. The following escape sequences are defined:
 
-- `\\\\`
+- `\\`
 - `\n`
 - `\'`
 - `\"`
@@ -43,6 +45,33 @@ backslash `\` followed by an alphabetical character. The following escape sequen
 - `\r`
 
 
-#####Comments
-#####Comments
-#####Comments
+#####Syntax Notation
+In this definition we will use **bold** to define literals and *italics* for categories. 
+We use Backus-Naur Form to speficy the grammar.
+
+######Types
+
+type-specifier ::= primitive-type | array-type | function-type | null
+
+Identifiers have an associated type and the null type has no value.
+
+######Primitive Types
+
+primitive-type ::= number-type | fraction-type | complex-type | quantum-register-type | boolean-type | string-type
+
+######Number Type
+
+Numbers are denoted using the following liteal:
+
+```num```
+
+All numbers will be compiled to c++ doubles.
+
+######String Type
+
+We use the `str` literal to indicate a string type.
+
+######Complex Type
+
+######Quantum Register Type
+
