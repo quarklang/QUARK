@@ -18,7 +18,8 @@ Identifiers are made up of alphabetical characters, numbers, underscores, and th
 Identifiers are case sensitive.
 
 #####Keywords
-The following identifiers are reserved
+The following identifiers are reserved:
+
 ```
 qreg num complex frac bool str if elif else while return for in len bit and or null
 ```
@@ -51,27 +52,53 @@ We use Backus-Naur Form to speficy the grammar.
 
 ######Types
 
-type-specifier ::= primitive-type | array-type | function-type | null
+*type-specifier ::= primitive-type | array-type | function-type | null*
 
 Identifiers have an associated type and the null type has no value.
 
 ######Primitive Types
 
-primitive-type ::= number-type | fraction-type | complex-type | quantum-register-type | boolean-type | string-type
+*primitive-type ::= number-type | fraction-type | complex-type | quantum-register-type | boolean-type | string-type*
 
 ######Number Type
 
-Numbers are denoted using the following liteal:
-
-```num```
+Numbers are denoted using the following the literal **num**
 
 All numbers will be compiled to c++ doubles.
 
-######String Type
+######Fraction Type
 
-We use the `str` literal to indicate a string type.
+Fractions are given by the following literal *frac* and can be constructed using 
+the syntax
+
+*fraction-type ::= number-type $ number-type*
 
 ######Complex Type
 
+*complex* is the literal used to denote the complex type and is composed of numbers having the form:
+
+    *complex-type ::= number +/- number i*
+
+The real and imaginary parts can be accessed using `re` and `im`.
+
 ######Quantum Register Type
 
+There are two quantum register types: sparse and dense. The bracket literals, `<` and `>` are used 
+to denote a quantum register and an optional apostrophe suffix, `'` means the quantum register is 
+treated as sparse.
+
+    *quantum-type ::== <number,number> | <number,number>'*
+
+The first number is the size of the quantum register and the right number is the initial state.
+
+######Boolean Type
+
+Booleans use the literal *bool* and can take the value of the literals `true` or `false`.
+
+######String Type
+
+We use the **str** literal to indicate a string type.
+
+######List Type
+
+    *list-type :== [primitive-type]*
