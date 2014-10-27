@@ -21,7 +21,7 @@ Identifiers are case sensitive.
 The following identifiers are reserved:
 
 ```
-qreg num complex frac bool str if elif else while return for in len bit and or null import
+qreg num complex frac bool str if elif else while return for in len bit and or null import mod
 ```
 
 
