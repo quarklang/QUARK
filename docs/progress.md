@@ -23,3 +23,5 @@ This is a log of all project decisions we make.
   2. Decided on language syntax and started drafting proposal.
 - 9/24/14:
   1. Submitted proposal.
+- 10/26/14:
+  1. Submitted first draft of Language Reference Manual.
