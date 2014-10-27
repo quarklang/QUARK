@@ -87,7 +87,7 @@ There are two quantum register types: sparse and dense. The bracket literals, `<
 to denote a quantum register and an optional apostrophe suffix, `'` means the quantum register is 
 treated as sparse.
 
-*quantum-type ::== <number,number> | <number,number>'*
+*quantum-register-type ::== \<number,number\> | \<number,number\>'*
 
 The first number is the size of the quantum register and the right number is the initial state.
 
