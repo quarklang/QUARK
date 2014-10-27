@@ -29,7 +29,7 @@ qreg num complex frac bool str if elif else while return for in len bit and or n
 ######Number Constants
 Numbers are represented as either a sequence of digits or an integer part, a decimal point, a fraction part, and an 
 optionally-signed exponent part which consists of an 'e' and a sequence of integers. If the decimal point and the 
-exponent part are included then the fraction part is necessary. All numbers are considerred as floats and will be 
+exponent part are included then the fraction part is necessary. All numbers are considered as floats and will be 
 compiled down to c++'s 8-byte, double precision type.
 
 ######String Constants
