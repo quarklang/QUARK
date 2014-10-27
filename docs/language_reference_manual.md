@@ -129,7 +129,7 @@ function-call*
 *multiplicative-expression ::=
 expression \* expression | 
 expression / expression | 
-expression % expression*
+expression mod expression*
 
 ######Additive Expression
 *additive-expression ::=
@@ -251,7 +251,7 @@ range ::= expression : expression : expression | expression : expression*
 
 *expression / expression*
 
-*expression % expression*
+*expression mod expression*
 
 *expression < expression*
 
