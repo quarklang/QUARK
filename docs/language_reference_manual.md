@@ -183,7 +183,7 @@ parameter-list ::= param, parameter-list | param | ϵ*
 
 ######Blocks
 *statement-block ::= { statement-list }
-statement-list ::=  statement; statement-list | ϵ*
+statement-list ::=  statement, statement-list | ϵ*
 
 ######Selection Statements
 *selection-statement ::= if ( expression ) statement else statement | if ( expression ) statement*
@@ -202,161 +202,158 @@ range ::= expression : expression : expression | expression : expression*
 *import-statement ::= *`import` *string-literal*
 
 ######Grammar
-*top-level ::=
-top-level-statement top-level
-top-level-statement
-top-level-statement ::=
-datatype identifier ( param-list ) { statment-seq }
-datatype identifier ( param-list );
-declaration
-include-statement
-statement-seq ::=
-statement statement-seq
-18<epsilon>
-include-statement ::= include string-literal ;
-datatype ::=
-int | char | float | bool | char | int8 | byte | uint8
-int16 | uint16 | int | int32 | uint | uint32 | int64
-uint64 | double | float | float32 | double | float64
-complex | complex64 | complex128 | string
-expression ::=
-expression + expression
-expression - expression
-expression * expression
-expression / expression
-expression % expression
-expression << expression
-expression >> expression
-expression < expression
-expression <= expression
-expression > expression
-expression >= expression
-expression == expression
-expression != expression
-19expression & expression
-expression ˆ expression
-expression | expression
-expression || expression
-expression && expression
-lvalue += expression
-lvalue -= expression
-lvalue *= expression
-lvalue /= expression
-lvalue %= expression
-lvalue <<= expression
-lvalue >>= expression
-lvalue |= expression
-lvalue &= expression
-lvalue ˆ= expressionGrammar
-top-level ::=
-top-level-statement top-level
-top-level-statement
-top-level-statement ::=
-datatype identifier ( param-list ) { statment-seq }
-datatype identifier ( param-list );
-declaration
-include-statement
-statement-seq ::=
-statement statement-seq
-<epsilon>
-include-statement ::= include string-literal ;
-datatype ::=
-int | char | float | bool | char | int8 | byte | uint8
-int16 | uint16 | int | int32 | uint | uint32 | int64
-uint64 | double | float | float32 | double | float64
-complex | complex64 | complex128 | string
-expression ::=
-expression + expression
-expression - expression
-expression * expression
-expression / expression
-expression % expression
-expression << expression
-expression >> expression
-expression < expression
-expression <= expression
-expression > expression
-expression >= expression
-expression == expression
-expression != expression
-19expression & expression
-expression ˆ expression
-expression | expression
-expression || expression
-expression && expression
-lvalue += expression
-lvalue -= expression
-lvalue *= expression
-lvalue /= expression
-lvalue %= expression
-lvalue <<= expression
-lvalue >>= expression
-lvalue |= expression
-lvalue &= expression
-lvalue ˆ= expression
--expression
-!expression
-~expression
-expression++
-expression--
-(expression)
-20lvalue = expression
-lvalue
-expression [expression-list]
-expression [expression-list] = expression
-constant
-datatype (expression)
-{expression-list}
-identifier ()
-identifier (expression-list)
-@identifier (identifier,expression-list)
-lvalue ::=
-identifier
-expression [expression-list]
-expression-list ::=
-expression , expression-list
-expression
-declaration ::=
-identifier := expression;
-datatype identifier ;
-datatype identifier [];
-datatype identifier [expression-list];
-21statement ::=
-if (expression) statement else statement
-if (expression)statement
-while ( expression ) statement
-for ( iterator-list ) statement
-pfor ( iterator-list ) statement
-{ statement-seq }
-expression ;
-;
-declaration
-return expression ;
-return;
-iterator-list ::=
-iterator , iterator-list
-iterator
-iterator ::=
-identifier in range
-identifier in expression
-range ::=
-expression : expression : expression
-expression : expression
-22: expression : expression
-: expression
-param ::=
-datatype identifier
-datatype identifier []
-non-empty-param-list ::=
-param , non-empty-param-list
-param
-param-list ::=
-non-empty-param-list
-<epsilon>
-constant ::=
-int
-int64
-float
-complex
-string
-char*
+*top-level ::=*
+
+
+*top-level-statement top-level*
+
+
+
+*top-level-statement*
+
+
+
+*top-level-statement ::=*
+
+*datatype identifier ( param-list ) { statment-block }*
+
+*datatype identifier ( param-list )*
+
+*declaration*
+
+*import-statement*
+
+
+
+*statement-block ::=*
+
+*statement statement-block*
+
+*ϵ*
+
+
+
+*import-statement ::=* `import` *string-literal*
+
+
+
+*datatype ::= `number | frac | complex | qreg | bool | string | null`*
+
+
+
+*expression ::=*
+
+*expression + expression*
+
+*expression - expression*
+
+*expression * expression*
+
+*expression / expression*
+
+*expression % expression*
+
+*expression < expression*
+
+*expression <= expression*
+
+*expression > expression*
+
+*expression >= expression*
+
+*expression == expression*
+
+*expression != expression*
+
+*expression* `or` *expression*
+
+*expression* `and` *expression*
+
+*(expression)*
+
+*constant*
+
+*{expression-list}*
+
+*identifier ()*
+
+*identifier (expression-list)*
+
+
+
+*expression-list ::=*
+
+*expression , expression-list*
+
+*expression*
+
+
+
+*declaration ::=*
+
+*identifier = expression*
+
+*datatype identifier*
+
+*datatype [identifier]*
+
+
+
+*statement ::=*
+
+*if (expression) statement else statement*
+
+*if (expression)statement*
+
+*while ( expression ) statement*
+
+*for ( iterator ) statement*
+
+*{ statement-block }*
+
+*expression*
+
+*declaration*
+
+*return expression*
+
+*return*
+
+
+
+*iterator ::=*
+
+*identifier in range*
+
+*identifier in expression*
+
+
+
+*range ::=*
+
+*expression : expression : expression*
+
+*expression : expression*
+
+
+
+*param ::=*
+
+*datatype identifier*
+
+*datatype [identifier]*
+
+
+
+*param-list ::=*
+
+*param, param-list*
+
+*param*
+
+*ϵ*
+
+
+
+*constant ::= `number | frac | complex | qreg | bool | string | null`*
+
