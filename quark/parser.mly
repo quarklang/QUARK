@@ -14,8 +14,8 @@
 %token RETURN
 %token EOF
 %token <int> INT
-%token <float> FLOAT_LITERAL
-%token <string> IDENT TYPE STRING
+%token <float> FLOAT
+%token <string> ID TYPE STRING
 
 %right EQUAL PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
 
@@ -59,12 +59,12 @@ expr:
   | expr MODULO expr { Binop($1, Mod, $3) }
   | expr LSHIFT expr { Binop($1, Lshift, $3) }
   | expr RSHIFT expr { Binop($1, Rshift, $3) }
-  | expr LT expr     { Binop($1, Less, $3) }
-  | expr LTE expr    { Binop($1, LessEq, $3) }
-  | expr GT expr     { Binop($1, Greater, $3) }
-  | expr GTE expr    { Binop($1, GreaterEq, $3) }
-  | expr EE expr     { Binop($1, Eq, $3) }
-  | expr NE expr     { Binop($1, NotEq, $3) }
+  | expr LESS_THAN expr     { Binop($1, Less, $3) }
+  | expr LESS_THAN_EQUAL expr    { Binop($1, LessEq, $3) }
+  | expr GREATER_THAN expr     { Binop($1, Greater, $3) }
+  | expr GREATER_THAN_EQUAL expr    { Binop($1, GreaterEq, $3) }
+  | expr EQUALS expr     { Binop($1, Eq, $3) }
+  | expr NOT_EQUALS expr     { Binop($1, NotEq, $3) }
   | expr BITAND expr { Binop($1, BitAnd, $3) }
   | expr BITXOR expr { Binop($1, BitXor, $3) }
   | expr BITOR expr  { Binop($1, BitOr, $3) }
