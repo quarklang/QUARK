@@ -17,19 +17,18 @@ rule token = parse
   | '(' { LPAREN }  | ')' { RPAREN }
   | '{' { LCURLY }  | '}' { RCURLY }
   | '[' { LSQUARE } | ']' { RSQUARE }
-  | '=' { EQUAL }
+  | '=' { EQUAL_TO }
   | ''' { PRIME }
   | '?' { QUERY }
 
   | '+' { PLUS } | '-' { MINUS } | '*' { TIMES } | '/' { DIVIDE }
-  | '%' { MODULO }
+  | "mod" { MODULO }
   | "<<" { LSHIFT } | ">>" { RSHIFT }
   | '<' { LESS_THAN } | "<=" { LESS_THAN_EQUAL }
   | '>' { GREATER_THAN } | ">=" { GREATER_THAN_EQUAL }
   | "==" { EQUALS } | "!=" { NOT_EQUALS }
   | '&' { BITAND } | '^' { BITXOR } | '|' { BITOR }
   | "&&" { LOGAND } | "||" { LOGOR }
-  | "mod" { MODULO }
 
   | '!' { LOGNOT } | '~' { BITNOT }
   | "++" { INCREMENT } | "--" { DECREMENT }
