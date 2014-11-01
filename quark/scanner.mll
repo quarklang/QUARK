@@ -1,36 +1,73 @@
 { open Parser }
 
+let digit = ['0'-'9']
+let letter = ['a'-'z' 'A'-'Z' '_']
+let sign = ['+' '-']
+let floating =
+    digit+ '.' digit* | '.' digit+
+  | digit+ ('.' digit*)? 'e' '-'? digit+
+  | '.' digit+ 'e' '-'? digit+
+let complex = 
+    (floating sign | sign?) floating 'i'
+    
 rule token = parse
-  [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
-| "/*"     { comment lexbuf }           (* Comments *)
-| '('      { LPAREN }
-| ')'      { RPAREN }
-| '{'      { LBRACE }
-| '}'      { RBRACE }
-| ';'      { SEMI }
-| ','      { COMMA }
-| '+'      { PLUS }
-| '-'      { MINUS }
-| '*'      { TIMES }
-| '/'      { DIVIDE }
-| '='      { ASSIGN }
-| "=="     { EQ }
-| "!="     { NEQ }
-| '<'      { LT }
-| "<="     { LEQ }
-| ">"      { GT }
-| ">="     { GEQ }
-| "if"     { IF }
-| "else"   { ELSE }
-| "for"    { FOR }
-| "while"  { WHILE }
-| "return" { RETURN }
-| "int"    { INT }
-| ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
-| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
-| eof { EOF }
-| _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
+  | [' ' '\t' '\r' '\n'] { token lexbuf }
+  | ';' { SEMICOLON }
+  | ':' { COLON }
+  | ',' { COMMA }
+  | '$' { DOLLAR }
+  | '(' { LPAREN }  | ')' { RPAREN }
+  | '{' { LCURLY }  | '}' { RCURLY }
+  | '[' { LSQUARE } | ']' { RSQUARE }
+  | '=' { EQUAL }
+  | '?' { QUERY }
 
-and comment = parse
-  "*/" { token lexbuf }
-| _    { comment lexbuf }
+  | '+' { PLUS } | '-' { MINUS } | '*' { TIMES } | '/' { DIVIDE }
+  | '%' { MODULO }
+  | "<<" { LSHIFT } | ">>" { RSHIFT }
+  | '<' { LT } | "<=" { LTE }
+  | '>' { GT } | ">=" { GTE }
+  | "==" { EQUALS } | "!=" { NOT_EQUALS }
+  | '&' { BITAND } | '^' { BITXOR } | '|' { BITOR }
+  | "&&" { LOGAND } | "||" { LOGOR }
+  | "mod" { MODULO }
+
+  | '!' { LOGNOT } | '~' { BITNOT }
+  | "++" { INC } | "--" { DEC }
+  | "**" { POWER }
+
+  | "+=" { PLUS_EQUALS } | "-=" { MINUS_EQUALS }
+  | "*=" { TIMES_EQUALS } | "/-" { DIVIDE_EQUALS }
+
+  | sign? digit+ "/" digit+ as lit { FRACTION(lit) }
+
+  | "true" { TRUE }
+  | "false" { FALSE }
+
+  | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING(str) }
+
+  | "bool" | "int" | "float" | "complex" | "void" | "string" | "list"
+      as primitive { TYPE(primitive) }
+
+  | "return" { RETURN }
+  | "if" { IF }
+  | "else" { ELSE }
+  | "for" { FOR }
+  | "while" { WHILE }
+  | "in" { IN }
+
+  | letter (letter | digit)* as lit { ID(lit) }
+
+  | "%{" { comments lexbuf }
+  | "%" {inline_comments lexbuf}
+
+  | eof { EOF }
+
+and comments = parse
+  | "}%"                { token lexbuf}
+  | _                   { comments lexbuf}
+
+and inline_comments = parse
+  | "\n"  {token lexbuf}
+  | _ {inline_comments lexbuf}
+
