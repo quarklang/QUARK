@@ -7,9 +7,7 @@ let floating =
     digit+ '.' digit* | '.' digit+
   | digit+ ('.' digit*)? 'e' '-'? digit+
   | '.' digit+ 'e' '-'? digit+
-let complex = 
-    (floating sign | sign?) floating 'i'
-    
+        
 rule token = parse
   | [' ' '\t' '\r' '\n'] { token lexbuf }
   | ';' { SEMICOLON }
@@ -20,13 +18,14 @@ rule token = parse
   | '{' { LCURLY }  | '}' { RCURLY }
   | '[' { LSQUARE } | ']' { RSQUARE }
   | '=' { EQUAL }
+  | ''' { PRIME }
   | '?' { QUERY }
 
   | '+' { PLUS } | '-' { MINUS } | '*' { TIMES } | '/' { DIVIDE }
   | '%' { MODULO }
   | "<<" { LSHIFT } | ">>" { RSHIFT }
-  | '<' { LT } | "<=" { LTE }
-  | '>' { GT } | ">=" { GTE }
+  | '<' { LESS_THAN } | "<=" { LESS_THAN_EQUAL }
+  | '>' { GREATER_THAN } | ">=" { GREATER_THAN_EQUAL }
   | "==" { EQUALS } | "!=" { NOT_EQUALS }
   | '&' { BITAND } | '^' { BITXOR } | '|' { BITOR }
   | "&&" { LOGAND } | "||" { LOGOR }
@@ -40,9 +39,13 @@ rule token = parse
   | "*=" { TIMES_EQUALS } | "/-" { DIVIDE_EQUALS }
 
   | sign? digit+ "/" digit+ as lit { FRACTION(lit) }
+  | (floating sign | sign?) floating 'i' { COMPLEX(lit) }
 
   | "true" { TRUE }
   | "false" { FALSE }
+
+  | "<#" { LQREGISTER }
+  | "#>" { RQREGISTER }
 
   | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING(str) }
 
@@ -64,10 +67,10 @@ rule token = parse
   | eof { EOF }
 
 and comments = parse
-  | "}%"                { token lexbuf}
-  | _                   { comments lexbuf}
+  | "}%" { token lexbuf}
+  | _ { comments lexbuf}
 
 and inline_comments = parse
-  | "\n"  {token lexbuf}
+  | "\n" {token lexbuf}
   | _ {inline_comments lexbuf}
 
