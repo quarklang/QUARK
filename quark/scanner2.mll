@@ -1,39 +1,50 @@
 { open Parser }
 
-let decdigit = ['0'-'9']
+let digit = ['0'-'9']
 let letter = ['a'-'z' 'A'-'Z' '_']
+let sign = ['+' '-']
 let floating =
-    decdigit+ '.' decdigit* | '.' decdigit+
-  | decdigit+ ('.' decdigit*)? 'e' '-'? decdigit+
-  | '.' decdigit+ 'e' '-'? decdigit+
-
+    digit+ '.' digit* | '.' digit+
+  | digit+ ('.' digit*)? 'e' '-'? digit+
+  | '.' digit+ 'e' '-'? digit+
+let complex = 
+    (floating sign | sign?) floating 'i'
+    
 rule token = parse
   | [' ' '\t' '\r' '\n'] { token lexbuf }
   | ';' { SEMICOLON }
   | ':' { COLON }
-  | '.' { DOT }
   | ',' { COMMA }
   | '$' { DOLLAR }
   | '(' { LPAREN }  | ')' { RPAREN }
   | '{' { LCURLY }  | '}' { RCURLY }
   | '[' { LSQUARE } | ']' { RSQUARE }
   | '=' { EQUAL }
+  | '?' { QUERY }
 
   | '+' { PLUS } | '-' { MINUS } | '*' { TIMES } | '/' { DIVIDE }
   | '%' { MODULO }
   | "<<" { LSHIFT } | ">>" { RSHIFT }
   | '<' { LT } | "<=" { LTE }
   | '>' { GT } | ">=" { GTE }
-  | "==" { EE } | "!=" { NE }
+  | "==" { EQUALS } | "!=" { NOT_EQUALS }
   | '&' { BITAND } | '^' { BITXOR } | '|' { BITOR }
   | "&&" { LOGAND } | "||" { LOGOR }
+  | "mod" { MODULO }
 
   | '!' { LOGNOT } | '~' { BITNOT }
   | "++" { INC } | "--" { DEC }
+  | "**" { POWER }
 
   | "+=" { PLUS_EQUALS } | "-=" { MINUS_EQUALS }
   | "*=" { TIMES_EQUALS } | "/-" { DIVIDE_EQUALS }
-  | "%=" { MODULO_EQUALS }
+
+  | sign? digit+ "/" digit+ as lit { FRACTION(lit) }
+
+  | "true" { TRUE }
+  | "false" { FALSE }
+
+  | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING(str) }
 
   | "bool" | "int" | "float" | "complex" | "void" | "string" | "list"
       as primitive { TYPE(primitive) }
@@ -45,7 +56,7 @@ rule token = parse
   | "while" { WHILE }
   | "in" { IN }
 
-  | letter (letter | decdigit)* as lit { ID(lit) }
+  | letter (letter | digit)* as lit { ID(lit) }
 
   | "%{" { comments lexbuf }
   | "%" {inline_comments lexbuf}
