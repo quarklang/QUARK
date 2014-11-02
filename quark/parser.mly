@@ -85,6 +85,10 @@ expr:
   | lvalue BITAND_EQUALS expr { AssignOp($1, BitAnd, $3) }
   | lvalue BITXOR_EQUALS expr { AssignOp($1, BitXor, $3) }
 
+  | MINUS expr %prec UMINUS { Unop(Neg, $2) }
+  | LOGNOT expr { Unop(LogNot, $2) }
+  | BITNOT expr { Unop(BitNot, $2) }
+
   | lvalue DEC { PostOp($1, Dec) }
   | lvalue INC { PostOp($1, Inc) }
 
