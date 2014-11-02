@@ -14,8 +14,8 @@
 %token IF ELSE WHILE FOR IN
 %token RETURN
 %token EOF
-%token <int> INT
-%token <float> FLOAT
+%token <int> INT_LITERAL
+%token <float> FLOAT_LITERAL
 %token <string> ID TYPE STRING COMPLEX FRACTION
 
 %right EQUAL_TO PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
@@ -43,7 +43,7 @@
 %%
 
 ident:
-    IDENT { Ident($1) }
+    ID { Ident($1) }
 
 datatype:
     TYPE { type_of_string $1 }
@@ -123,7 +123,6 @@ statement:
 
   | WHILE LPAREN expr RPAREN statement { WhileStatement($3, $5) }
   | FOR LPAREN iterator_list RPAREN statement { ForStatement($3, $5) }
-  | PFOR LPAREN iterator_list RPAREN statement { PforStatement($3, $5) }
 
   | LCURLY statement_seq RCURLY { CompoundStatement($2) }
 
