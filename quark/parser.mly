@@ -14,8 +14,8 @@
 %token IF ELSE WHILE FOR IN
 %token RETURN
 %token EOF
-%token <int> INT
-%token <float> FLOAT
+%token <int> INT_LITERAL
+%token <float> FLOAT_LITERAL
 %token <string> ID TYPE STRING COMPLEX FRACTION
 
 %right EQUAL_TO PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
@@ -43,7 +43,7 @@
 %%
 
 ident:
-    IDENT { Ident($1) }
+    ID { Ident($1) }
 
 datatype:
     TYPE { type_of_string $1 }
@@ -52,7 +52,6 @@ datatype:
 lvalue:
   | ident { Variable($1) }
   | ident LSQUARE expr_list RSQUARE { ArrayElem($1, $3) }
-  | expr DOT ident { ComplexAccess($1, $3) }
 
 expr:
   | expr PLUS expr   { Binop($1, Add, $3) }
@@ -96,16 +95,15 @@ expr:
   | LPAREN expr RPAREN { $2 }
 
   | lvalue EQUAL_TO expr { Assign($1, $3) }
-  | lvalue            { Lval($1) }
+  | lvalue              { Lval($1) }
 
   | INT_LITERAL                 { IntLit($1) }
-  | INT64_LITERAL               { Int64Lit($1) }
   | FLOAT_LITERAL               { FloatLit($1) }
   | HASH LPAREN expr COMMA expr RPAREN { ComplexLit($3, $5) }
   | STRING_LITERAL              { StringLit($1) }
-  | CHAR_LITERAL                { CharLit($1) }
   | datatype LPAREN expr RPAREN { Cast($1, $3) }
   | LCURLY expr_list RCURLY     { ArrayLit($2) }
+  | LQREGISTER expr COMMA expr RQREGISTER { QRegLit($2, $4) }
 
   | ident LPAREN RPAREN               { FunctionCall($1, []) }
   | ident LPAREN expr_list RPAREN { FunctionCall ($1, $3) }
@@ -130,7 +128,6 @@ statement:
 
   | WHILE LPAREN expr RPAREN statement { WhileStatement($3, $5) }
   | FOR LPAREN iterator_list RPAREN statement { ForStatement($3, $5) }
-  | PFOR LPAREN iterator_list RPAREN statement { PforStatement($3, $5) }
 
   | LCURLY statement_seq RCURLY { CompoundStatement($2) }
 
