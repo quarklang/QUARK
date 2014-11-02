@@ -37,8 +37,8 @@ rule token = parse
   | "+=" { PLUS_EQUALS } | "-=" { MINUS_EQUALS }
   | "*=" { TIMES_EQUALS } | "/-" { DIVIDE_EQUALS }
 
-  | sign? digit+ as lit { INT(lit) } 
-  | floating as lit { FLOAT(lit) }
+  | sign? digit+ as lit { INT_LITERAL(lit) } 
+  | floating as lit { FLOAT_LITERAL(lit) }
   | sign? digit+ "/" digit+ as lit { FRACTION(lit) }
   | (floating sign | sign?) floating 'i' { COMPLEX(lit) }
 

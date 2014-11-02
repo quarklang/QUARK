@@ -52,7 +52,6 @@ datatype:
 lvalue:
   | ident { Variable($1) }
   | ident LSQUARE expr_list RSQUARE { ArrayElem($1, $3) }
-  | expr DOT ident { ComplexAccess($1, $3) }
 
 expr:
   | expr PLUS expr   { Binop($1, Add, $3) }
@@ -86,24 +85,18 @@ expr:
   | lvalue BITAND_EQUALS expr { AssignOp($1, BitAnd, $3) }
   | lvalue BITXOR_EQUALS expr { AssignOp($1, BitXor, $3) }
 
-  | MINUS expr %prec UMINUS { Unop(Neg, $2) }
-  | LOGNOT expr { Unop(LogNot, $2) }
-  | BITNOT expr { Unop(BitNot, $2) }
-
   | lvalue DEC { PostOp($1, Dec) }
   | lvalue INC { PostOp($1, Inc) }
 
   | LPAREN expr RPAREN { $2 }
 
   | lvalue EQUAL_TO expr { Assign($1, $3) }
-  | lvalue            { Lval($1) }
+  | lvalue              { Lval($1) }
 
   | INT_LITERAL                 { IntLit($1) }
-  | INT64_LITERAL               { Int64Lit($1) }
   | FLOAT_LITERAL               { FloatLit($1) }
   | HASH LPAREN expr COMMA expr RPAREN { ComplexLit($3, $5) }
   | STRING_LITERAL              { StringLit($1) }
-  | CHAR_LITERAL                { CharLit($1) }
   | datatype LPAREN expr RPAREN { Cast($1, $3) }
   | LCURLY expr_list RCURLY     { ArrayLit($2) }
 
