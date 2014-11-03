@@ -20,6 +20,7 @@ rule token = parse
   | '=' { EQUAL_TO }
   | ''' { PRIME }
   | '?' { QUERY }
+  | 'i' { COMPLEX }
 
   | '+' { PLUS } | '-' { MINUS } | '*' { TIMES } | '/' { DIVIDE }
   | "mod" { MODULO }
@@ -39,8 +40,8 @@ rule token = parse
 
   | sign? digit+ as lit { INT_LITERAL(lit) } 
   | floating as lit { FLOAT_LITERAL(lit) }
+
   | sign? digit+ "/" digit+ as lit { FRACTION(lit) }
-  | (floating sign | sign?) floating 'i' { COMPLEX(lit) }
 
   | "true" { TRUE }
   | "false" { FALSE }

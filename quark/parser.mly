@@ -55,6 +55,7 @@ lvalue:
 
 expr:
   | expr PLUS expr   { Binop($1, Add, $3) }
+  | expr PLUS expr COMPLEX { Binop($1, Complex, $3) }
   | expr MINUS expr  { Binop($1, Sub, $3) }
   | expr TIMES expr  { Binop($1, Mul, $3) }
   | expr DIVIDE expr { Binop($1, Div, $3) }
@@ -72,7 +73,6 @@ expr:
   | expr BITOR expr  { Binop($1, BitOr, $3) }
   | expr LOGAND expr { Binop($1, LogAnd, $3) }
   | expr LOGOR expr  { Binop($1, LogOr, $3) }
-
 
   | lvalue PLUS_EQUALS expr   { AssignOp($1, Add, $3) }
   | lvalue MINUS_EQUALS expr  { AssignOp($1, Sub, $3) }
