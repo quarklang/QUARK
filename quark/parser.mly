@@ -103,7 +103,7 @@ expr:
   | datatype LPAREN expr RPAREN { Cast($1, $3) }
   | LCURLY expr_list RCURLY     { ArrayLit($2) }
   | LQREGISTER expr COMMA expr RQREGISTER { QRegLit($2, $4) }
-  | expr (PLUS | MINUS) expr COMPLEX { ComplexLit($1, $3) }
+  | expr (PLUS | MINUS) expr COMPLEX { Complex($1, $3) }
 
   | ident LPAREN RPAREN               { FunctionCall($1, []) }
   | ident LPAREN expr_list RPAREN { FunctionCall ($1, $3) }
