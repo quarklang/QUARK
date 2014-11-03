@@ -12,11 +12,12 @@
 %token LOGNOT BITNOT DECREMENT INCREMENT
 %token DOLLAR PRIME QUERY POWER
 %token IF ELSE WHILE FOR IN
+%token COMPLEX
 %token RETURN
 %token EOF
 %token <int> INT_LITERAL
 %token <float> FLOAT_LITERAL
-%token <string> ID TYPE STRING COMPLEX FRACTION
+%token <string> ID TYPE STRING FRACTION
 
 %right EQUAL_TO PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
 
@@ -55,7 +56,6 @@ lvalue:
 
 expr:
   | expr PLUS expr   { Binop($1, Add, $3) }
-  | expr PLUS expr COMPLEX { Binop($1, Complex, $3) }
   | expr MINUS expr  { Binop($1, Sub, $3) }
   | expr TIMES expr  { Binop($1, Mul, $3) }
   | expr DIVIDE expr { Binop($1, Div, $3) }
@@ -99,11 +99,11 @@ expr:
 
   | INT_LITERAL                 { IntLit($1) }
   | FLOAT_LITERAL               { FloatLit($1) }
-  | HASH LPAREN expr COMMA expr RPAREN { ComplexLit($3, $5) }
   | STRING_LITERAL              { StringLit($1) }
   | datatype LPAREN expr RPAREN { Cast($1, $3) }
   | LCURLY expr_list RCURLY     { ArrayLit($2) }
   | LQREGISTER expr COMMA expr RQREGISTER { QRegLit($2, $4) }
+  | expr (PLUS | MINUS) expr COMPLEX { ComplexLit($1, $3) }
 
   | ident LPAREN RPAREN               { FunctionCall($1, []) }
   | ident LPAREN expr_list RPAREN { FunctionCall ($1, $3) }
