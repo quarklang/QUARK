@@ -50,10 +50,6 @@ datatype:
     TYPE { type_of_string $1 }
   | TYPE LSQUARE RSQUARE { ArrayType(type_of_string $1) }
 
-lvalue:
-  | ident { Variable($1) }
-  | ident LSQUARE expr_list RSQUARE { ArrayElem($1, $3) }
-
 expr:
   | expr PLUS expr   { Binop($1, Add, $3) }
   | expr MINUS expr  { Binop($1, Sub, $3) }
@@ -74,23 +70,9 @@ expr:
   | expr LOGAND expr { Binop($1, LogAnd, $3) }
   | expr LOGOR expr  { Binop($1, LogOr, $3) }
 
-  | lvalue PLUS_EQUALS expr   { AssignOp($1, Add, $3) }
-  | lvalue MINUS_EQUALS expr  { AssignOp($1, Sub, $3) }
-  | lvalue TIMES_EQUALS expr  { AssignOp($1, Mul, $3) }
-  | lvalue DIVIDE_EQUALS expr { AssignOp($1, Div, $3) }
-  | lvalue MODULO_EQUALS expr { AssignOp($1, Mod, $3) }
-  | lvalue LSHIFT_EQUALS expr { AssignOp($1, Lshift, $3) }
-  | lvalue RSHIFT_EQUALS expr { AssignOp($1, Rshift, $3) }
-  | lvalue BITOR_EQUALS expr  { AssignOp($1, BitOr, $3) }
-  | lvalue BITAND_EQUALS expr { AssignOp($1, BitAnd, $3) }
-  | lvalue BITXOR_EQUALS expr { AssignOp($1, BitXor, $3) }
-
   | MINUS expr %prec UMINUS { Unop(Neg, $2) }
   | LOGNOT expr { Unop(LogNot, $2) }
   | BITNOT expr { Unop(BitNot, $2) }
-
-  | lvalue DEC { PostOp($1, Dec) }
-  | lvalue INC { PostOp($1, Inc) }
 
   | LPAREN expr RPAREN { $2 }
 
