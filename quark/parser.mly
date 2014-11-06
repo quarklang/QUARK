@@ -12,12 +12,12 @@
 %token LOGNOT BITNOT DECREMENT INCREMENT
 %token DOLLAR PRIME QUERY POWER
 %token IF ELSE WHILE FOR IN
-%token COMPLEX
+%token COMPLEX FRACTION
 %token RETURN
 %token EOF
 %token <int> INT_LITERAL
 %token <float> FLOAT_LITERAL
-%token <string> ID TYPE STRING FRACTION
+%token <string> ID TYPE STRING
 
 %right EQUAL_TO PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
 
@@ -58,7 +58,7 @@ expr:
   | expr PLUS expr   { Binop($1, Add, $3) }
   | expr MINUS expr  { Binop($1, Sub, $3) }
   | expr TIMES expr  { Binop($1, Mul, $3) }
-  | expr DIVIDE expr { Binop($1, Div, $3) }
+  | expr DIVIDE expr { Fraction($1, $3) }
   | expr MODULO expr { Binop($1, Mod, $3) }
   | expr LSHIFT expr { Binop($1, Lshift, $3) }
   | expr RSHIFT expr { Binop($1, Rshift, $3) }

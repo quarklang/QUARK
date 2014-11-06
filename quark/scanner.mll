@@ -41,8 +41,6 @@ rule token = parse
   | sign? digit+ as lit { INT_LITERAL(lit) } 
   | floating as lit { FLOAT_LITERAL(lit) }
 
-  | sign? digit+ "/" digit+ as lit { FRACTION(lit) }
-
   | "true" { TRUE }
   | "false" { FALSE }
 
