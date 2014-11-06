@@ -1,15 +1,15 @@
 %{ open Ast %}
 
 %token LPAREN RPAREN LCURLY RCURLY LSQUARE RSQUARE
-%token LQREGISTER RQREGISTER
+%token LQREG RQREG
 %token COMMA SEMICOLON COLON
 %token EQUAL_TO
 %token PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
-%token LSHIFT_EQUALS RSHIFT_EQUALS BITOR_EQUALS BITAND_EQUALS BITXOR_EQUALS
-%token LSHIFT RSHIFT BITAND BITOR BITXOR LOGAND LOGOR
-%token LESS_THAN LESS_THAN_EQUAL GREATER_THAN GREATER_THAN_EQUAL EQUALS NOT_EQUALS
+%token LSHIFT_EQUALS RSHIFT_EQUALS BITOR_EQUALS BITAND_EQUALS BITXOR_EQUALS *)
+%token LSHIFT RSHIFT BITAND BITOR BITXOR AND OR
+%token LT LTE GT GTE EQ NOT_EQ
 %token PLUS MINUS TIMES DIVIDE MODULO
-%token LOGNOT BITNOT DECREMENT INCREMENT
+%token NOT BITNOT DECREMENT INCREMENT
 %token DOLLAR PRIME QUERY POWER
 %token IF ELSE WHILE FOR IN
 %token COMPLEX FRACTION
@@ -22,18 +22,18 @@
 %right EQUAL_TO PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
 
 %left DOLLAR
-%left LOGOR
-%left LOGAND
+%left OR
+%left AND
 %left BITOR
 %left BITXOR
 %left BITAND
 %left EQUALS NOT_EQUALS
-%left LESS_THAN LESS_THAN_EQUAL GREATER_THAN GREATER_THAN_EQUAL
+%left LT LTE GT GTE
 %left LSHIFT RSHIFT
 %left PLUS MINUS
 %left TIMES DIVIDE MODULO
 
-%right LOGNOT BITNOT POWER
+%right NOT BITNOT POWER
 
 %nonassoc IF
 %nonassoc ELSE
@@ -47,47 +47,55 @@ ident:
     ID { Ident($1) }
 
 datatype:
+  (* TODO 
+   * I don't like how this type_of_string func is implemented in AST.
+   * We should be doing pattern matching ... I think. *)
     TYPE { type_of_string $1 }
   | TYPE LSQUARE RSQUARE { ArrayType(type_of_string $1) }
 
 expr:
+  (* arithmetic *)
   | expr PLUS expr   { Binop($1, Add, $3) }
   | expr MINUS expr  { Binop($1, Sub, $3) }
   | expr TIMES expr  { Binop($1, Mul, $3) }
-  | expr DIVIDE expr { Fraction($1, $3) }
+  (* note: DIVIDE creates a Faction literal not Binop *)
   | expr MODULO expr { Binop($1, Mod, $3) }
-  | expr LSHIFT expr { Binop($1, Lshift, $3) }
-  | expr RSHIFT expr { Binop($1, Rshift, $3) }
-  | expr LESS_THAN expr     { Binop($1, Less, $3) }
-  | expr LESS_THAN_EQUAL expr    { Binop($1, LessEq, $3) }
-  | expr GREATER_THAN expr     { Binop($1, Greater, $3) }
-  | expr GREATER_THAN_EQUAL expr    { Binop($1, GreaterEq, $3) }
-  | expr EQUALS expr     { Binop($1, Eq, $3) }
-  | expr NOT_EQUALS expr     { Binop($1, NotEq, $3) }
-  | expr BITAND expr { Binop($1, BitAnd, $3) }
-  | expr BITXOR expr { Binop($1, BitXor, $3) }
-  | expr BITOR expr  { Binop($1, BitOr, $3) }
-  | expr LOGAND expr { Binop($1, LogAnd, $3) }
-  | expr LOGOR expr  { Binop($1, LogOr, $3) }
 
+  (* logical *)
+  | expr LT expr            { Binop($1, Less, $3) }
+  | expr LTE expr           { Binop($1, LessEq, $3) }
+  | expr GT expr            { Binop($1, Greater, $3) }
+  | expr GTE expr           { Binop($1, GreaterEq, $3) }
+  | expr EQ expr            { Binop($1, Eq, $3) }
+  | expr NOT_EQ expr        { Binop($1, NotEq, $3) }
+  | expr AND expr           { Binop($1, And, $3) }
+  | expr OR expr            { Binop($1, Or, $3) }
   | MINUS expr %prec UMINUS { Unop(Neg, $2) }
-  | LOGNOT expr { Unop(LogNot, $2) }
-  | BITNOT expr { Unop(BitNot, $2) }
+  | NOT expr                { Unop(Not, $2) }
 
+  (* unary *)
+  | BITNOT expr             { Unop(BitNot, $2) }
+  | expr BITAND expr        { Binop($1, BitAnd, $3) }
+  | expr BITXOR expr        { Binop($1, BitXor, $3) }
+  | expr BITOR expr         { Binop($1, BitOr, $3) }
+  | expr LSHIFT expr        { Binop($1, Lshift, $3) }
+  | expr RSHIFT expr        { Binop($1, Rshift, $3) }
+
+  (* TODO does this work? *)
   | LPAREN expr RPAREN { $2 }
 
   (* literals *)
   | INT                         { Int($1) }
   | FLOAT                       { Float($1) }
+  | expr DIVIDE expr            { Fraction($1, $3) }
   | STRING                      { String($1) }
   | LCURLY expr_list RCURLY     { Array($2) }
-  | LQREGISTER expr COMMA expr RQREGISTER { QReg($2, $4) }
-  | expr (PLUS | MINUS) expr COMPLEX { Complex($1, $3) }
+  | LQREG expr COMMA expr RQREG { QReg($2, $4) }
+  | expr (PLUS | MINUS) expr COPLEX { Complex($1, $3) }
 
+  (* functions *)
   | ident LPAREN RPAREN               { FunctionCall($1, []) }
   | ident LPAREN expr_list RPAREN { FunctionCall ($1, $3) }
-  | AT ident LPAREN ident COMMA expr RPAREN
-      { HigherOrderFunctionCall($2, $4, $6) }
 
 expr_list:
   | expr COMMA expr_list { $1 :: $3 }
