@@ -15,8 +15,8 @@
 %token COMPLEX FRACTION
 %token RETURN
 %token EOF
-%token <int> INT_LITERAL
-%token <float> FLOAT_LITERAL
+%token <int> INT
+%token <float> FLOAT
 %token <string> ID TYPE STRING
 
 %right EQUAL_TO PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
@@ -94,15 +94,12 @@ expr:
 
   | LPAREN expr RPAREN { $2 }
 
-  | lvalue EQUAL_TO expr { Assign($1, $3) }
-  | lvalue              { Lval($1) }
-
-  | INT_LITERAL                 { IntLit($1) }
-  | FLOAT_LITERAL               { FloatLit($1) }
-  | STRING_LITERAL              { StringLit($1) }
-  | datatype LPAREN expr RPAREN { Cast($1, $3) }
-  | LCURLY expr_list RCURLY     { ArrayLit($2) }
-  | LQREGISTER expr COMMA expr RQREGISTER { QRegLit($2, $4) }
+  (* literals *)
+  | INT                         { Int($1) }
+  | FLOAT                       { Float($1) }
+  | STRING                      { String($1) }
+  | LCURLY expr_list RCURLY     { Array($2) }
+  | LQREGISTER expr COMMA expr RQREGISTER { QReg($2, $4) }
   | expr (PLUS | MINUS) expr COMPLEX { Complex($1, $3) }
 
   | ident LPAREN RPAREN               { FunctionCall($1, []) }
@@ -149,9 +146,9 @@ iterator:
 
 range:
   | expr COLON expr COLON expr { Range($1, $3, $5) }
-  | expr COLON expr { Range($1, $3, IntLit(1l)) }
-  | COLON expr COLON expr { Range(IntLit(0l), $2, $4) }
-  | COLON expr { Range(IntLit(0l), $2, IntLit(1l)) }
+  | expr COLON expr { Range($1, $3, Int(1l)) }
+  | COLON expr COLON expr { Range(Int(0l), $2, $4) }
+  | COLON expr { Range(Int(0l), $2, Int(1l)) }
 
 top_level_statement:
   | datatype ident LPAREN param_list RPAREN LCURLY statement_seq RCURLY
