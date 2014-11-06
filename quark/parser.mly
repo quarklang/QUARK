@@ -54,24 +54,33 @@ datatype:
   | TYPE LSQUARE RSQUARE { ArrayType(type_of_string $1) }
 
 expr:
+  | num_expr
+  | bool_expr
+
+(* resolves to boolean *)
+bool_expr:
+  (* logical *)
+  | expr LT expr        { Binop($1, Less, $3) }
+  | expr LTE expr       { Binop($1, LessEq, $3) }
+  | expr GT expr        { Binop($1, Greater, $3) }
+  | expr GTE expr       { Binop($1, GreaterEq, $3) }
+  | expr EQ expr        { Binop($1, Eq, $3) }
+  | expr NOT_EQ expr    { Binop($1, NotEq, $3) }
+  | expr AND expr       { Binop($1, And, $3) }
+  | expr OR expr        { Binop($1, Or, $3) }
+  (* TODO add later
+  | MINUS num_expr %prec UMINUS { Unop(Neg, $2) }
+  | NOT num_expr                { Unop(Not, $2) }
+  *)
+
+(* resolves to a number *)
+num_expr:
   (* arithmetic *)
-  | expr PLUS expr   { Binop($1, Add, $3) }
-  | expr MINUS expr  { Binop($1, Sub, $3) }
+  | num_expr PLUS num_expr   { Binop($1, Add, $3) }
+  | num_expr MINUS num_expr  { Binop($1, Sub, $3) }
   | expr TIMES expr  { Binop($1, Mul, $3) }
   (* note: DIVIDE creates a Faction literal not Binop *)
   | expr MODULO expr { Binop($1, Mod, $3) }
-
-  (* logical *)
-  | expr LT expr            { Binop($1, Less, $3) }
-  | expr LTE expr           { Binop($1, LessEq, $3) }
-  | expr GT expr            { Binop($1, Greater, $3) }
-  | expr GTE expr           { Binop($1, GreaterEq, $3) }
-  | expr EQ expr            { Binop($1, Eq, $3) }
-  | expr NOT_EQ expr        { Binop($1, NotEq, $3) }
-  | expr AND expr           { Binop($1, And, $3) }
-  | expr OR expr            { Binop($1, Or, $3) }
-  | MINUS expr %prec UMINUS { Unop(Neg, $2) }
-  | NOT expr                { Unop(Not, $2) }
 
   (* unary *)
   | BITNOT expr             { Unop(BitNot, $2) }
@@ -90,8 +99,8 @@ expr:
   | expr DIVIDE expr            { Fraction($1, $3) }
   | STRING                      { String($1) }
   | LCURLY expr_list RCURLY     { Array($2) }
-  | LQREG expr COMMA expr RQREG { QReg($2, $4) }
-  | expr (PLUS | MINUS) expr COPLEX { Complex($1, $3) }
+  | LQREG num_expr COMMA num_expr RQREG { QReg($2, $4) }
+  | num_expr (PLUS | MINUS) num_expr COMPLEX { Complex($1, $3) }
 
   (* functions *)
   | ident LPAREN RPAREN               { FunctionCall($1, []) }
