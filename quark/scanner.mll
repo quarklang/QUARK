@@ -9,7 +9,10 @@ let floating =
   | '.' digit+ 'e' '-'? digit+
         
 rule token = parse
+  (* whitespace *)
   | [' ' '\t' '\r' '\n'] { token lexbuf }
+
+  (* meaningful character sequences *)
   | ';' { SEMICOLON }
   | ':' { COLON }
   | ',' { COMMA }
@@ -20,39 +23,60 @@ rule token = parse
   | '=' { EQUAL_TO }
   | ''' { PRIME }
   | '?' { QUERY }
+  | 'i' { COMPLEX }
+  | "<#" { LQREG }
+  | "#>" { RQREG }
 
-  | '+' { PLUS } | '-' { MINUS } | '*' { TIMES } | '/' { DIVIDE }
+
+  (* arithmetic *)
+  | '+' { PLUS }
+  | '-' { MINUS }
+  | '*' { TIMES }
+  | '/' { DIVIDE }
   | "mod" { MODULO }
-  | "<<" { LSHIFT } | ">>" { RSHIFT }
-  | '<' { LESS_THAN } | "<=" { LESS_THAN_EQUAL }
-  | '>' { GREATER_THAN } | ">=" { GREATER_THAN_EQUAL }
-  | "==" { EQUALS } | "!=" { NOT_EQUALS }
-  | '&' { BITAND } | '^' { BITXOR } | '|' { BITOR }
-  | "&&" { LOGAND } | "||" { LOGOR }
 
-  | '!' { LOGNOT } | '~' { BITNOT }
-  | "++" { INCREMENT } | "--" { DECREMENT }
-  | "**" { POWER }
+  (* logical *)
+  | '<'     { LT }
+  | "<="    { LTE }
+  | '>'     { GT }
+  | ">="    { GTE }
+  | "=="    { EQ }
+  | "!="    { NOT_EQ }
+  | "and"   { AND }
+  | "or"    { OR }
+  | '!'     { NOT }
+  | "**"    { POWER }
 
-  | "+=" { PLUS_EQUALS } | "-=" { MINUS_EQUALS }
-  | "*=" { TIMES_EQUALS } | "/-" { DIVIDE_EQUALS }
+  (* unary *)
+  (* TODO I suggest we change the bit syntax. 
+   *      memorizing symbols is hard and perl-esque *)
+  | '~'     { BITNOT }
+  | '&'     { BITAND }
+  | '^'     { BITXOR }
+  | '|'     { BITOR }
+  | "<<"    { LSHIFT }
+  | ">>"    { RSHIFT }
 
-  | sign? digit+ as lit { INT_LITERAL(lit) } 
-  | floating as lit { FLOAT_LITERAL(lit) }
-  | sign? digit+ "/" digit+ as lit { FRACTION(lit) }
-  | (floating sign | sign?) floating 'i' { COMPLEX(lit) }
+  (* special assignment *)
+  | "+=" { PLUS_EQUALS }
+  | "-=" { MINUS_EQUALS }
+  | "*=" { TIMES_EQUALS }
+  | "/-" { DIVIDE_EQUALS }
+  | "++" { INCREMENT }
+  | "--" { DECREMENT }
 
+  (* literals *) 
+  | sign? digit+ as lit { INT(lit) } 
+  | floating as lit { FLOAT(lit) }
   | "true" { TRUE }
   | "false" { FALSE }
-
-  | "<#" { LQREGISTER }
-  | "#>" { RQREGISTER }
-
   | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING(str) }
 
-  | "bool" | "int" | "float" | "complex" | "void" | "string" | "list"
+  (* datatypes *)
+  | ["bool" "int" "float" "complex" "void" "string" "list"]
       as primitive { TYPE(primitive) }
 
+  (* keywords *);
   | "return" { RETURN }
   | "if" { IF }
   | "else" { ELSE }
@@ -60,11 +84,14 @@ rule token = parse
   | "while" { WHILE }
   | "in" { IN }
 
+  (* ID *)
   | letter (letter | digit)* as lit { ID(lit) }
 
+  (* comments *)
   | "%{" { comments lexbuf }
   | "%" {inline_comments lexbuf}
 
+  (* end of file *)
   | eof { EOF }
 
 and comments = parse
