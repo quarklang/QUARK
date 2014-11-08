@@ -47,9 +47,9 @@ ident:
     ID { Ident($1) }
 
 datatype:
-  (* TODO 
+  /* TODO 
    * I don't like how this type_of_string func is implemented in AST.
-   * We should be doing pattern matching ... I think. *)
+   * We should be doing pattern matching ... I think. */
     TYPE { type_of_string $1 }
   | TYPE LSQUARE RSQUARE { ArrayType(type_of_string $1) }
 
@@ -68,21 +68,21 @@ bool_expr:
   | expr NOT_EQ expr    { Binop($1, NotEq, $3) }
   | expr AND expr       { Binop($1, And, $3) }
   | expr OR expr        { Binop($1, Or, $3) }
-  (* TODO add later
+  /* TODO add later
   | MINUS num_expr %prec UMINUS { Unop(Neg, $2) }
   | NOT num_expr                { Unop(Not, $2) }
-  *)
+  */
 
-(* resolves to a number *)
+/* resolves to a number */
 num_expr:
-  (* arithmetic *)
+  /* arithmetic */
   | num_expr PLUS num_expr   { Binop($1, Add, $3) }
   | num_expr MINUS num_expr  { Binop($1, Sub, $3) }
   | expr TIMES expr  { Binop($1, Mul, $3) }
   | expr DIVIDE expr  { Binop($1, Div, $3) }
   | expr MODULO expr { Binop($1, Mod, $3) }
 
-  (* unary *)
+  /* unary */
   | BITNOT expr             { Unop(BitNot, $2) }
   | expr BITAND expr        { Binop($1, BitAnd, $3) }
   | expr BITXOR expr        { Binop($1, BitXor, $3) }
@@ -90,10 +90,10 @@ num_expr:
   | expr LSHIFT expr        { Binop($1, Lshift, $3) }
   | expr RSHIFT expr        { Binop($1, Rshift, $3) }
 
-  (* TODO does this work? *)
+  /* TODO does this work? */
   | LPAREN expr RPAREN { $2 }
 
-  (* literals *)
+  /* literals */
   | INT                         { Int($1) }
   | FLOAT                       { Float($1) }
   | expr DOLLAR expr            { Fraction($1, $3) }
@@ -102,7 +102,7 @@ num_expr:
   | LQREG num_expr COMMA num_expr RQREG { QReg($2, $4) }
   | num_expr (PLUS | MINUS) num_expr COMPLEX { Complex($1, $3) }
 
-  (* functions *)
+  /* functions */
   | ident LPAREN RPAREN               { FunctionCall($1, []) }
   | ident LPAREN expr_list RPAREN { FunctionCall ($1, $3) }
 
