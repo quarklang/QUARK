@@ -79,7 +79,7 @@ num_expr:
   | num_expr PLUS num_expr   { Binop($1, Add, $3) }
   | num_expr MINUS num_expr  { Binop($1, Sub, $3) }
   | expr TIMES expr  { Binop($1, Mul, $3) }
-  (* note: DIVIDE creates a Faction literal not Binop *)
+  | expr DIVIDE expr  { Binop($1, Div, $3) }
   | expr MODULO expr { Binop($1, Mod, $3) }
 
   (* unary *)
@@ -96,7 +96,7 @@ num_expr:
   (* literals *)
   | INT                         { Int($1) }
   | FLOAT                       { Float($1) }
-  | expr DIVIDE expr            { Fraction($1, $3) }
+  | expr DOLLAR expr            { Fraction($1, $3) }
   | STRING                      { String($1) }
   | LCURLY expr_list RCURLY     { Array($2) }
   | LQREG num_expr COMMA num_expr RQREG { QReg($2, $4) }
