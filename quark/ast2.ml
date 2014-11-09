@@ -88,24 +88,11 @@ type statement =
   | VoidReturnStatement
 
 let type_of_string = function
-  | "bool" -> Bool
-  | "char" -> Char
-  | "int8" -> Int8
-  | "uint8" -> UInt8
-  | "int16" -> Int16
-  | "uint16" -> UInt16
-  | "int" -> Int32
-  | "int32" -> Int32
-  | "uint" -> UInt32
-  | "uint32" -> UInt32
-  | "int64" -> Int64
-  | "uint64" -> UInt64
-  | "double" -> Float64
-  | "float" -> Float32
-  | "float32" -> Float32
-  | "float64" -> Float64
-  | "complex" -> Complex64
-  | "complex64" -> Complex64
-  | "complex128" -> Complex128
+  | "int" -> Int
+  | "float" -> Float
+  | "complex" -> Complex
+  | "fraction" -> Fraction
+  | "qreg" -> QReg
+  | "string" -> String
   | "void" -> Void
   | dtype -> raise (Invalid_type dtype)
