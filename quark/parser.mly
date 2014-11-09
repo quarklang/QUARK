@@ -57,9 +57,9 @@ expr:
   | num_expr
   | bool_expr
 
-(* resolves to boolean *)
+/* resolves to boolean */
 bool_expr:
-  (* logical *)
+  /* logical */
   | expr LT expr        { Binop($1, Less, $3) }
   | expr LTE expr       { Binop($1, LessEq, $3) }
   | expr GT expr        { Binop($1, Greater, $3) }
