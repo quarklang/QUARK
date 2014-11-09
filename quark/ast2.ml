@@ -20,23 +20,22 @@ type binop =
   | And
   | Or
 
-type unop = Neg | LogNot | BitNot
+type unop = 
+  | Neg 
+  | Not 
+  | BitNot
 
-type postop = Dec | Inc
+(* Not sure if we need this *)
+type postop = 
+  | Dec 
+  | Inc
 
 type datatype =
-  | Bool | Char | Int8
-  | UInt8
-  | Int16
-  | UInt16
-  | Int32
-  | UInt32
-  | Int64
-  | UInt64
-  | Float32
-  | Float64
-  | Complex64
-  | Complex128
+  | Int
+  | Float
+  | Fraction
+  | Complex
+  | QReg
   | String
   | Void
   | ArrayType of datatype
