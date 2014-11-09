@@ -13,6 +13,7 @@
 %token DOLLAR PRIME QUERY POWER
 %token IF ELSE WHILE FOR IN
 %token COMPLEX FRACTION
+%token DEF
 %token RETURN
 %token EOF
 %token <int> INT
@@ -52,6 +53,10 @@ datatype:
    * We should be doing pattern matching ... I think. */
     TYPE { type_of_string $1 }
   | TYPE LSQUARE RSQUARE { ArrayType(type_of_string $1) }
+
+lvalue:
+  | ident { Variable($1) }
+  | ident LSQUARE expr_list RSQUARE { ArrayElem($1, $3) }
 
 expr:
   | num_expr
@@ -93,6 +98,10 @@ num_expr:
   /* TODO does this work? */
   | LPAREN expr RPAREN { $2 }
 
+  /* ASSIGNMENT */
+  | lvalue EQUAL expr { Assign($1, $3) }
+  | lvalue            { Lval($1) }
+
   /* literals */
   | INT                         { Int($1) }
   | FLOAT                       { Float($1) }
@@ -103,8 +112,8 @@ num_expr:
   | num_expr (PLUS | MINUS) num_expr COMPLEX { Complex($1, $3) }
 
   /* functions */
-  | ident LPAREN RPAREN               { FunctionCall($1, []) }
-  | ident LPAREN expr_list RPAREN { FunctionCall ($1, $3) }
+  | DEF ident LPAREN RPAREN               { FunctionCall($2, []) }
+  | DEF ident LPAREN expr_list RPAREN { FunctionCall ($2, $3) }
 
 expr_list:
   | expr COMMA expr_list { $1 :: $3 }

@@ -45,20 +45,18 @@ type ident = Ident of string
 type lvalue =
   | Variable of ident
   | ArrayElem of ident * expr list
-  | ComplexAccess of expr * ident
+  (* | ComplexAccess of expr * ident *)
 and expr =
   | Binop of expr * binop * expr
   | AssignOp of lvalue * binop * expr
   | Unop of unop * expr
   | PostOp of lvalue * postop
   | Assign of lvalue * expr
-  | IntLit of int32
-  | Int64Lit of int64
+  | IntLit of int
   | FloatLit of float
-  | ComplexLit of expr * expr
-  | StringLit of string
-  | CharLit of char
-  | ArrayLit of expr list
+  | Complex of expr * expr
+  | String of string
+  | Array of expr list
   | Cast of datatype * expr
   | FunctionCall of ident * expr list
   | HigherOrderFunctionCall of ident * ident * expr
