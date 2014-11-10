@@ -7,7 +7,7 @@
 %token PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
 %token LSHIFT_EQUALS RSHIFT_EQUALS BITOR_EQUALS BITAND_EQUALS BITXOR_EQUALS
 %token LSHIFT RSHIFT BITAND BITOR BITXOR AND OR
-%token LT LTE GT GTE EQ NOT_EQ
+%token LT LTE GT GTE EQUALS NOT_EQUALS
 %token PLUS MINUS TIMES DIVIDE MODULO
 %token NOT BITNOT DECREMENT INCREMENT
 %token DOLLAR PRIME QUERY POWER
@@ -23,6 +23,8 @@
 %right ASSIGN PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
 
 %left DOLLAR
+%left FRACTION
+%left COMPLEX
 %left OR
 %left AND
 %left BITOR
@@ -33,6 +35,7 @@
 %left LSHIFT RSHIFT
 %left PLUS MINUS
 %left TIMES DIVIDE MODULO
+%left DEF
 
 %right NOT BITNOT POWER
 
@@ -65,26 +68,27 @@ lvalue:
 /* resolves to boolean */
 expr:
   /* logical */
-  | expr LT expr        { Binop($1, Less, $3) }
-  | expr LTE expr       { Binop($1, LessEq, $3) }
-  | expr GT expr        { Binop($1, Greater, $3) }
-  | expr GTE expr       { Binop($1, GreaterEq, $3) }
-  | expr EQ expr        { Binop($1, Eq, $3) }
-  | expr NOT_EQ expr    { Binop($1, NotEq, $3) }
-  | expr AND expr       { Binop($1, And, $3) }
-  | expr OR expr        { Binop($1, Or, $3) }
+  | expr LT expr          { Binop($1, Less, $3) }
+  | expr LTE expr         { Binop($1, LessEq, $3) }
+  | expr GT expr          { Binop($1, Greater, $3) }
+  | expr GTE expr         { Binop($1, GreaterEq, $3) }
+  | expr EQUALS expr      { Binop($1, Eq, $3) }
+  | expr NOT_EQUALS expr  { Binop($1, NotEq, $3) }
+  | expr AND expr         { Binop($1, And, $3) }
+  | expr OR expr          { Binop($1, Or, $3) }
+  
   /* TODO add later
   | MINUS num_expr %prec UMINUS { Unop(Neg, $2) }
   | NOT num_expr                { Unop(Not, $2) }
   */
 
-/* resolves to a number */
+  /* resolves to a number */
   /* arithmetic */
-  | expr PLUS expr   { Binop($1, Add, $3) }
-  | expr MINUS expr  { Binop($1, Sub, $3) }
-  | expr TIMES expr  { Binop($1, Mul, $3) }
+  | expr PLUS expr    { Binop($1, Add, $3) }
+  | expr MINUS expr   { Binop($1, Sub, $3) }
+  | expr TIMES expr   { Binop($1, Mul, $3) }
   | expr DIVIDE expr  { Binop($1, Div, $3) }
-  | expr MODULO expr { Binop($1, Mod, $3) }
+  | expr MODULO expr  { Binop($1, Mod, $3) }
 
   /* unary */
   | BITNOT expr             { Unop(BitNot, $2) }
