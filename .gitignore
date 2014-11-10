@@ -12,6 +12,11 @@
 *.cmxs
 *.cmxa
 
+# Repo specific
+scanner.ml
+parser.mli
+parser.ml
+
 # Vagrant
 .vagrant
 

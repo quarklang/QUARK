@@ -3,9 +3,9 @@
 %token LPAREN RPAREN LCURLY RCURLY LSQUARE RSQUARE
 %token LQREG RQREG
 %token COMMA SEMICOLON COLON
-%token EQUAL_TO
+%token ASSIGN DECL_ASSIGN
 %token PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
-%token LSHIFT_EQUALS RSHIFT_EQUALS BITOR_EQUALS BITAND_EQUALS BITXOR_EQUALS *)
+%token LSHIFT_EQUALS RSHIFT_EQUALS BITOR_EQUALS BITAND_EQUALS BITXOR_EQUALS
 %token LSHIFT RSHIFT BITAND BITOR BITXOR AND OR
 %token LT LTE GT GTE EQ NOT_EQ
 %token PLUS MINUS TIMES DIVIDE MODULO
@@ -13,13 +13,14 @@
 %token DOLLAR PRIME QUERY POWER
 %token IF ELSE WHILE FOR IN
 %token COMPLEX FRACTION
+%token DEF
 %token RETURN
 %token EOF
 %token <int> INT
 %token <float> FLOAT
 %token <string> ID TYPE STRING
 
-%right EQUAL_TO PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
+%right ASSIGN PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
 
 %left DOLLAR
 %left OR
@@ -35,7 +36,7 @@
 
 %right NOT BITNOT POWER
 
-%nonassoc IF
+%nonassoc IFX
 %nonassoc ELSE
 
 %start top_level
@@ -53,13 +54,17 @@ datatype:
     TYPE { type_of_string $1 }
   | TYPE LSQUARE RSQUARE { ArrayType(type_of_string $1) }
 
-expr:
-  | num_expr
-  | bool_expr
+lvalue:
+  | ident { Variable($1) }
+  | ident LSQUARE expr_list RSQUARE { ArrayElem($1, $3) }
 
-(* resolves to boolean *)
-bool_expr:
-  (* logical *)
+/* expr:
+  | num_expr
+  | bool_expr */
+
+/* resolves to boolean */
+expr:
+  /* logical */
   | expr LT expr        { Binop($1, Less, $3) }
   | expr LTE expr       { Binop($1, LessEq, $3) }
   | expr GT expr        { Binop($1, Greater, $3) }
@@ -74,10 +79,9 @@ bool_expr:
   */
 
 /* resolves to a number */
-num_expr:
   /* arithmetic */
-  | num_expr PLUS num_expr   { Binop($1, Add, $3) }
-  | num_expr MINUS num_expr  { Binop($1, Sub, $3) }
+  | expr PLUS expr   { Binop($1, Add, $3) }
+  | expr MINUS expr  { Binop($1, Sub, $3) }
   | expr TIMES expr  { Binop($1, Mul, $3) }
   | expr DIVIDE expr  { Binop($1, Div, $3) }
   | expr MODULO expr { Binop($1, Mod, $3) }
@@ -93,28 +97,33 @@ num_expr:
   /* TODO does this work? */
   | LPAREN expr RPAREN { $2 }
 
+  /* ASSIGNMENT */
+  | lvalue ASSIGN expr { Assign($1, $3) }
+  | lvalue            { Lval($1) }
+
   /* literals */
   | INT                         { Int($1) }
   | FLOAT                       { Float($1) }
   | expr DOLLAR expr            { Fraction($1, $3) }
   | STRING                      { String($1) }
   | LCURLY expr_list RCURLY     { Array($2) }
-  | LQREG num_expr COMMA num_expr RQREG { QReg($2, $4) }
-  | num_expr (PLUS | MINUS) num_expr COMPLEX { Complex($1, $3) }
+  | LQREG expr COMMA expr RQREG { QReg($2, $4) }
+  | expr PLUS expr COMPLEX      { Complex($1, $3) }
+  | expr MINUS expr COMPLEX     { Complex($1, $3) }
 
   /* functions */
-  | ident LPAREN RPAREN               { FunctionCall($1, []) }
-  | ident LPAREN expr_list RPAREN { FunctionCall ($1, $3) }
+  | DEF ident LPAREN RPAREN             { FunctionCall($2, []) }
+  | DEF ident LPAREN expr_list RPAREN   { FunctionCall ($2, $4) }
 
 expr_list:
   | expr COMMA expr_list { $1 :: $3 }
   | expr                 { [$1] }
 
 decl:
-  | ident DECL_EQUAL expr SC               { AssigningDecl($1, $3) }
-  | datatype ident SC                      { PrimitiveDecl($1, $2) }
-  | datatype ident LSQUARE RSQUARE SC      { ArrayDecl($1, $2, []) }
-  | datatype ident LSQUARE expr_list RSQUARE SC { ArrayDecl($1, $2, $4) }
+  | ident DECL_ASSIGN expr SEMICOLON                    { AssigningDecl($1, $3) }
+  | datatype ident SEMICOLON                            { PrimitiveDecl($1, $2) }
+  | datatype ident LSQUARE RSQUARE SEMICOLON            { ArrayDecl($1, $2, []) }
+  | datatype ident LSQUARE expr_list RSQUARE SEMICOLON  { ArrayDecl($1, $2, $4) }
 
 statement:
   | IF LPAREN expr RPAREN statement ELSE statement
@@ -127,12 +136,12 @@ statement:
 
   | LCURLY statement_seq RCURLY { CompoundStatement($2) }
 
-  | expr SC { Expression($1) }
-  | SC { EmptyStatement }
+  | expr SEMICOLON { Expression($1) }
+  | SEMICOLON { EmptyStatement }
   | decl { Declaration($1) }
 
-  | RETURN expr SC { ReturnStatement($2) }
-  | RETURN SC { VoidReturnStatement }
+  | RETURN expr SEMICOLON { ReturnStatement($2) }
+  | RETURN SEMICOLON { VoidReturnStatement }
 
 
 iterator_list:
@@ -152,12 +161,8 @@ range:
 top_level_statement:
   | datatype ident LPAREN param_list RPAREN LCURLY statement_seq RCURLY
       { FunctionDecl(false, $1, $2, $4, $7) }
-  | DEVICE datatype ident LPAREN param_list RPAREN LCURLY statement_seq RCURLY
-      { FunctionDecl(true, $2, $3, $5, $8) }
-  | datatype ident LPAREN param_list RPAREN SC
+  | datatype ident LPAREN param_list RPAREN SEMICOLON
       { ForwardDecl(false, $1, $2, $4) }
-  | DEVICE datatype ident LPAREN param_list RPAREN SC
-      { ForwardDecl(true, $2, $3, $5) }
   | decl { Declaration($1) }
 
 param:
@@ -180,6 +185,7 @@ top_level:
 statement_seq:
   | statement statement_seq {$1 :: $2 }
   | { [] }
+
 
 %%
 
