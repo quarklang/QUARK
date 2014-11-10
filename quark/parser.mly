@@ -106,14 +106,13 @@ expr:
   | lvalue            { Lval($1) }
 
   /* literals */
-  | INT                         { Int($1) }
-  | FLOAT                       { Float($1) }
-  | expr DOLLAR expr            { Fraction($1, $3) }
-  | STRING                      { String($1) }
-  | LCURLY expr_list RCURLY     { Array($2) }
-  | LQREG expr COMMA expr RQREG { QReg($2, $4) }
-  | expr PLUS expr COMPLEX      { Complex($1, $3) }
-  | expr MINUS expr COMPLEX     { Complex($1, $3) }
+  | INT                                     { Int($1) }
+  | FLOAT                                   { Float($1) }
+  | expr DOLLAR expr                        { Fraction($1, $3) }
+  | STRING                                  { String($1) }
+  | LCURLY expr_list RCURLY                 { Array($2) }
+  | LQREG expr COMMA expr RQREG             { QReg($2, $4) }
+  | COMPLEX LPAREN expr COMMA expr RPAREN   { Complex($3, $5) }
 
   /* functions */
   | DEF ident LPAREN RPAREN             { FunctionCall($2, []) }
