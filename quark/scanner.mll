@@ -73,10 +73,17 @@ rule token = parse
   | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING(str) }
 
   (* datatypes *)
-  | ["bool" "int" "float" "complex" "void" "string" "list"]
+
+  | "bool" 
+  | "int" 
+  | "float" 
+  | "complex" 
+  | "void" 
+  | "string" 
+  | "list"
       as primitive { TYPE(primitive) }
 
-  (* keywords *);
+  (* keywords *)
   | "return" { RETURN }
   | "if" { IF }
   | "else" { ELSE }
