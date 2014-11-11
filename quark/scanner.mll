@@ -20,7 +20,7 @@ rule token = parse
   | '(' { LPAREN }  | ')' { RPAREN }
   | '{' { LCURLY }  | '}' { RCURLY }
   | '[' { LSQUARE } | ']' { RSQUARE }
-  | '=' { EQUAL_TO }
+  | '=' { ASSIGN }
   | ''' { PRIME }
   | '?' { QUERY }
   | 'i' { COMPLEX }
@@ -48,8 +48,6 @@ rule token = parse
   | "**"    { POWER }
 
   (* unary *)
-  (* TODO I suggest we change the bit syntax. 
-   *      memorizing symbols is hard and perl-esque *)
   | '~'     { BITNOT }
   | '&'     { BITAND }
   | '^'     { BITXOR }
@@ -73,14 +71,13 @@ rule token = parse
   | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING(str) }
 
   (* datatypes *)
-
   | "bool" 
   | "int" 
   | "float" 
   | "complex" 
   | "void" 
   | "string" 
-  | "list"
+  | "array"
       as primitive { TYPE(primitive) }
 
   (* keywords *)
