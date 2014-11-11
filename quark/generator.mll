@@ -6,7 +6,11 @@ open Type
 
 let print = "print"
 
-let imports = ""
+let imports =
+  "#include \"qureg.h\"\n" ^
+   "#include \"qumat.h\"\n" ^
+   "#include \"qugate.h\"\n" ^
+   "#include \"algor.h\"\n"
 
 let code_event_base = "struct " ^ prefix_event^
   " {\n\tunsigned int time;\n\tunsigned int inc_time;\n\tstd::string name;\n\t" ^
