@@ -102,7 +102,7 @@ expr:
   | STRING                                  { String($1) }
   | LCURLY expr_list RCURLY                 { Array($2) }
   | LQREG expr COMMA expr RQREG             { QReg($2, $4) }
-  | COMPLEX LPAREN expr COMMA expr RPAREN   { Complex($3, $5) }
+  | COMPLEX LPAREN FLOAT COMMA FLOAT RPAREN   { Complex($3, $5) }
 
   /* functions */
   | DEF ident LPAREN RPAREN             { FunctionCall($2, []) }
