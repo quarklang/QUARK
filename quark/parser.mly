@@ -148,9 +148,9 @@ iterator:
 
 range:
   | expr COLON expr COLON expr { Range($1, $3, $5) }
-  | expr COLON expr { Range($1, $3, IntLit(1l)) }
-  | COLON expr COLON expr { Range(IntLit(0l), $2, $4) }
-  | COLON expr { Range(Int(0l), $2, IntLit(1l)) }
+  | expr COLON expr { Range($1, $3, IntLit(1)) }
+  | COLON expr COLON expr { Range(IntLit(0), $2, $4) }
+  | COLON expr { Range(IntLit(0), $2, IntLit(1)) }
 
 top_level_statement:
   | datatype ident LPAREN param_list RPAREN LCURLY statement_seq RCURLY
