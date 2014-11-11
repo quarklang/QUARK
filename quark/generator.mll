@@ -5,11 +5,9 @@ open Pretty_c
 open Type
 
 let print = "print"
-let get_time = "print_time"
-let prefix_array = "a_"
-let prefix_global_var = "u_"
-let prefix_event = "event_"
-let prefix_event_list = "event_q_"
+
+let imports = ""
+
 let code_event_base = "struct " ^ prefix_event^
   " {\n\tunsigned int time;\n\tunsigned int inc_time;\n\tstd::string name;\n\t" ^
   "virtual unsigned int get_time() {};\n\t" ^
@@ -59,30 +57,37 @@ let gen_link = function
 
 let gen_unop = function
   Neg -> "-"
-| Inc -> "++"
-| Dec -> "--"
 | Not -> "!"
+
+let gen_postop = function
+  Inc -> "++"
+| Dec -> "--"
 
 let gen_binop = function
   Add -> "+"
 | Sub -> "-"
-| Mult -> "*"
+| Mul -> "*"
 | Div -> "/"
-| Equal -> "=="
-| Neq -> "!="
-| Less -> "<"
-| Leq -> "<="
-| Greater -> ">"
-| Geq -> ">="
 | Mod -> "%"
+| Lshift -> "<<"
+| Rshift -> ">>"
+| Less -> "<"
+| LessEq -> "<="
+| Greater -> ">"
+| GreaterEq -> ">="
+| Eq -> "=="
+| NotEq -> "!="
+| BitAnd -> "&"
+| BitXor -> "^"
+| BitOr -> "|"
 | And -> "&&"
 | Or -> "||"
 
-let gen_var_type = function
+let gen_datatype = function
   Int -> "int"
 | Float -> "float"
-| String -> "std::string"
 | Boolean -> "bool"
+| String -> "std::string"
 | Void -> "void"
 
 let gen_plain_var_type = function
