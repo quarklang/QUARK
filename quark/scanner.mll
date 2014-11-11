@@ -40,8 +40,8 @@ rule token = parse
   | "<="    { LTE }
   | '>'     { GT }
   | ">="    { GTE }
-  | "=="    { EQ }
-  | "!="    { NOT_EQ }
+  | "=="    { EQUALS }
+  | "!="    { NOT_EQUALS }
   | "and"   { AND }
   | "or"    { OR }
   | '!'     { NOT }
@@ -64,10 +64,10 @@ rule token = parse
   | "--" { DECREMENT }
 
   (* literals *) 
-  | sign? digit+ as lit { INT(lit) } 
-  | floating as lit { FLOAT(lit) }
-  | "true" { TRUE }
-  | "false" { FALSE }
+  | sign? digit+ as lit { INT(int_of_string lit) } 
+  | floating as lit { FLOAT(float_of_string lit) }
+  | "true" as lit { BOOL(bool_of_string lit) }
+  | "false" as lit { BOOL(bool_of_string lit) }
   | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING(str) }
 
   (* datatypes *)

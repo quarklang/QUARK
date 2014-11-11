@@ -33,6 +33,7 @@ type postop =
 type datatype =
   | Int
   | Float
+  | Bool
   | Fraction
   | Complex
   | QReg
@@ -53,10 +54,13 @@ and expr =
   | PostOp of lvalue * postop
   | Assign of lvalue * expr
   | IntLit of int
+  | BoolLit of bool
+  | FractionLit of expr * expr
+  | QRegLit of int * int
   | FloatLit of float
-  | Complex of expr * expr
-  | String of string
-  | Array of expr list
+  | ComplexLit of float * float
+  | StringLit of string
+  | ArrayLit of expr list
   | Cast of datatype * expr
   | FunctionCall of ident * expr list
   | HigherOrderFunctionCall of ident * ident * expr
@@ -90,6 +94,7 @@ type statement =
 let type_of_string = function
   | "int" -> Int
   | "float" -> Float
+  | "bool" -> Bool
   | "complex" -> Complex
   | "fraction" -> Fraction
   | "qreg" -> QReg
