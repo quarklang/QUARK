@@ -3,9 +3,7 @@ QUARK (QUantum Analysis and Realization Kit)
 
 ####COMS 4115 Project: Quantum Computing Language
 
-A language implemented in OCaml to build quantum circuits.
-
-More to come...
+A language and compiler implemented in OCaml to build quantum circuits.
 
 ####Instructions
 - Install [Vagrant](https://www.vagrantup.com/downloads.html)
