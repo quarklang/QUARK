@@ -101,7 +101,7 @@ expr:
   | expr DOLLAR expr                        { Fraction($1, $3) }
   | STRING                                  { String($1) }
   | LCURLY expr_list RCURLY                 { Array($2) }
-  | LQREG expr COMMA expr RQREG             { QReg($2, $4) }
+  | LQREG INT COMMA INT RQREG             { QReg($2, $4) }
   | COMPLEX LPAREN FLOAT COMMA FLOAT RPAREN   { Complex($3, $5) }
 
   /* functions */
