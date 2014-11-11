@@ -37,7 +37,7 @@
 %left TIMES DIVIDE MODULO
 %left DEF
 
-%right NOT BITNOT POWER
+%right NOT BITNOT POWER UMINUS
 
 %nonassoc IFX
 %nonassoc ELSE
