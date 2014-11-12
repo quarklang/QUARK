@@ -25,3 +25,5 @@ This is a log of all project decisions we make.
   1. Submitted proposal.
 - 10/26/14:
   1. Submitted first draft of Language Reference Manual.
+- 11/10/14:
+  1. Made significant progress on scanner, parser and ast.

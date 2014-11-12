@@ -1,17 +1,16 @@
-##QUark Language Reference Manual
+##Quark Language Reference Manual
 
 *Daria Jung (djj2115), Jamis Johnson (jmj2180), Jim Fan (lf2422), Parthiban Loganathan (pl2487)*
 
 ####Introduction
 
-This is the reference manual for QUark, a high level language for quantum computing. 
+This is the language reference manual for Quark, a high level language for quantum computing. Quark makes it simple to perform complicated mathematical operations required for quantum computing in a simple and intuitive manner. In addition to standard types featured in most common programming languages, Quark supports complex numbers, fractions, matrices and quantum registers.
 
 ####Lexical Conventions
 
 #####Comments
 Single line comments are denoted using a `%` while multi-line comments use `%{  }%`. Anything 
 between the brackets will be commented out.
-
 
 #####Identifiers
 Identifiers are made up of alphabetical characters, numbers, underscores, and the first character cannot be a number.
@@ -23,7 +22,6 @@ The following identifiers are reserved:
 ```
 qreg num complex frac bool str if elif else while return for in len bit and or null import mod
 ```
-
 
 #####Constants
 ######Number Constants
