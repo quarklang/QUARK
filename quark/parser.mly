@@ -106,9 +106,9 @@ expr:
   | LQREG INT COMMA INT RQREG               { QRegLit($2, $4) }
   | COMPLEX LPAREN FLOAT COMMA FLOAT RPAREN { ComplexLit($3, $5) }
 
-  /* functions */
-  | DEF ident LPAREN RPAREN             { FunctionCall($2, []) }
-  | DEF ident LPAREN expr_list RPAREN   { FunctionCall ($2, $4) }
+  /* function call */
+  | ident LPAREN RPAREN             { FunctionCall($1, []) }
+  | ident LPAREN expr_list RPAREN   { FunctionCall ($1, $3) }
 
 expr_list:
   | expr COMMA expr_list { $1 :: $3 }
