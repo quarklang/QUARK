@@ -106,9 +106,9 @@ expr:
   | LQREG INT COMMA INT RQREG               { QRegLit($2, $4) }
   | COMPLEX LPAREN FLOAT COMMA FLOAT RPAREN { ComplexLit($3, $5) }
 
-  /* functions */
-  | DEF ident LPAREN RPAREN             { FunctionCall($2, []) }
-  | DEF ident LPAREN expr_list RPAREN   { FunctionCall ($2, $4) }
+  /* function call */
+  | ident LPAREN RPAREN             { FunctionCall($1, []) }
+  | ident LPAREN expr_list RPAREN   { FunctionCall ($1, $3) }
 
 expr_list:
   | expr COMMA expr_list { $1 :: $3 }
@@ -153,8 +153,8 @@ range:
   | COLON expr { Range(IntLit(0), $2, IntLit(1)) }
 
 top_level_statement:
-  | datatype ident LPAREN param_list RPAREN LCURLY statement_seq RCURLY
-      { FunctionDecl(false, $1, $2, $4, $7) }
+  | DEF datatype ident LPAREN param_list RPAREN LCURLY statement_seq RCURLY
+      { FunctionDecl(false, $2, $3, $5, $8) }
   | datatype ident LPAREN param_list RPAREN SEMICOLON
       { ForwardDecl(false, $1, $2, $4) }
   | decl { Declaration($1) }

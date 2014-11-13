@@ -26,6 +26,7 @@ rule token = parse
   | 'i' { COMPLEX }
   | "<#" { LQREG }
   | "#>" { RQREG }
+  | "def" { DEF }
 
 
   (* arithmetic *)

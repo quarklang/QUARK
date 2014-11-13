@@ -99,3 +99,6 @@ let type_of_string = function
   | "string" -> String
   | "void" -> Void
   | dtype -> raise (Invalid_type dtype)
+
+(* type top_level = 
+   *)
