@@ -12,6 +12,9 @@
 *.cmxs
 *.cmxa
 
+# Output files
+*.out
+
 # Repo specific
 scanner.ml
 parser.mli
