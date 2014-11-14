@@ -32,7 +32,7 @@ type postop =
   | Inc
 
 type datatype = 
-    DataType of Type.t
+  | DataType of Type.t
   | Arraytype of datatype
 
 type ident = Ident of string
@@ -83,5 +83,19 @@ type statement =
   | ForwardDecl of bool * datatype * ident * decl list
   | ReturnStatement of expr
   | VoidReturnStatement
+
+exception Invalid_type of string
+
+(* helper function *)
+let type_of_string = function
+  | "int"       -> Int
+  | "float"     -> Float
+  | "bool"      -> Bool
+  | "fraction"  -> Fraction
+  | "complex"   -> Complex
+  | "qreg"      -> QReg
+  | "string"    -> String
+  | "void"      -> Void
+  | dtype       -> raise (Invalid_type dtype)
 
 (* type top_level = *)
