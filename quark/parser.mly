@@ -1,4 +1,5 @@
 %{ open Ast %}
+%{ open Type %}
 
 %token LPAREN RPAREN LCURLY RCURLY LSQUARE RSQUARE
 %token LQREG RQREG
@@ -52,12 +53,12 @@ ident:
     ID { Ident($1) }
 
 datatype:
-    TYPE { type_of_string $1 }
-  | TYPE LSQUARE RSQUARE { ArrayType(type_of_string $1) }
+    TYPE                    { DataType(type_of_string $1) }
+  | TYPE LSQUARE RSQUARE    { ArrayType(type_of_string $1) }
 
 /* Variables that can be assigned a value */
 lvalue:
-  | ident { Variable($1) }
+  | ident                           { Variable($1) }
   | ident LSQUARE expr_list RSQUARE { ArrayElem($1, $3) }
 
 expr:
