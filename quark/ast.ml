@@ -60,7 +60,7 @@ and expr =
 type decl =
   | AssigningDecl of ident * expr
   | PrimitiveDecl of datatype * ident
-  | ArrayDecl of datatype * ident * expr list
+  | ArrayDecl of datatype * ident
 
 type range = Range of expr * expr * expr
 

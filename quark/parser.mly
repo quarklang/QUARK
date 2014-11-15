@@ -113,7 +113,7 @@ expr:
   | BOOLEAN_LITERAL                                 { BoolLit($1) }
   | expr DOLLAR expr                                { FractionLit($1, $3) }
   | STRING_LITERAL                                  { StringLit($1) }
-  | LCURLY expr_list RCURLY                         { ArrayLit($2) }
+  | LSQUARE expr_list RSQUARE                       { ArrayLit($2) }
   | LQREG INT_LITERAL COMMA INT_LITERAL RQREG       { QRegLit($2, $4) }
   | COMPLEX_SYM LPAREN FLOAT_LITERAL COMMA FLOAT_LITERAL RPAREN { ComplexLit($3, $5) }
 
@@ -128,8 +128,7 @@ expr_list:
 decl:
   | datatype ident ASSIGN expr SEMICOLON                { AssigningDecl($2, $4) }
   | datatype ident SEMICOLON                            { PrimitiveDecl($1, $2) }
-  | datatype ident LSQUARE RSQUARE SEMICOLON            { ArrayDecl($1, $2, []) }
-  | datatype ident LSQUARE expr_list RSQUARE SEMICOLON  { ArrayDecl($1, $2, $4) }
+  | datatype ident LSQUARE RSQUARE SEMICOLON            { ArrayDecl($1, $2) }
 
 statement:
   | IF LPAREN expr RPAREN statement ELSE statement
@@ -173,7 +172,7 @@ top_level_statement:
 
 param:
   | datatype ident { PrimitiveDecl($1, $2) }
-  | datatype ident LSQUARE RSQUARE { ArrayDecl($1, $2, []) }
+  | datatype ident LSQUARE RSQUARE { ArrayDecl($1, $2) }
 
 non_empty_param_list:
   | param COMMA non_empty_param_list { $1 :: $3 }
