@@ -65,6 +65,7 @@ var_type:
 datatype:
     var_type { DataType($1) }
   | var_type LSQUARE RSQUARE { ArrayType(DataType($1)) }
+  | datatype LSQUARE RSQUARE { ArrayType($1) }
 
 /* Variables that can be assigned a value */
 lvalue:
@@ -128,7 +129,6 @@ expr_list:
 decl:
   | datatype ident ASSIGN expr SEMICOLON                { AssigningDecl($2, $4) }
   | datatype ident SEMICOLON                            { PrimitiveDecl($1, $2) }
-  | datatype ident LSQUARE RSQUARE SEMICOLON            { ArrayDecl($1, $2) }
 
 statement:
   | IF LPAREN expr RPAREN statement ELSE statement
@@ -172,7 +172,6 @@ top_level_statement:
 
 param:
   | datatype ident { PrimitiveDecl($1, $2) }
-  | datatype ident LSQUARE RSQUARE { ArrayDecl($1, $2) }
 
 non_empty_param_list:
   | param COMMA non_empty_param_list { $1 :: $3 }
