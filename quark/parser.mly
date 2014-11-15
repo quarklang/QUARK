@@ -1,4 +1,4 @@
-%{ open Ast %}
+%{ open Ast;; open Type %}
 
 %token LPAREN RPAREN LCURLY RCURLY LSQUARE RSQUARE
 %token LQREG RQREG
@@ -12,14 +12,15 @@
 %token NOT UMINUS BITNOT DECREMENT INCREMENT
 %token DOLLAR PRIME QUERY POWER
 %token IF ELSE WHILE FOR IN
-%token COMPLEX FRACTION
+%token COMPLEX_LITERAL FRACTION_LITERAL
 %token DEF
 %token RETURN
 %token EOF
-%token <int> INT
-%token <float> FLOAT
-%token <string> ID TYPE STRING
-%token <bool> BOOL
+%token BOOLEAN STRING INT FLOAT QREG FRACTION COMPLEX VOID
+%token <int> INT_LITERAL
+%token <float> FLOAT_LITERAL
+%token <string> ID TYPE STRING_LITERAL
+%token <bool> BOOLEAN_LITERAL
 
 %right ASSIGN PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
 
@@ -51,9 +52,19 @@
 ident:
     ID { Ident($1) }
 
+var_type:
+    INT      { Int }
+  | FLOAT    { Float }
+  | BOOLEAN  { Bool }
+  | STRING   { String }
+  | QREG     { QReg }
+  | FRACTION { Fraction }
+  | COMPLEX  { Complex }
+  | VOID     { Void }
+
 datatype:
-    TYPE { type_of_string $1 }
-  | TYPE LSQUARE RSQUARE { ArrayType(type_of_string $1) }
+    var_type { Datatype($1) }
+  | var_type LSQUARE RSQUARE { ArrayType(Datatype($1)) }
 
 /* Variables that can be assigned a value */
 lvalue:
@@ -97,14 +108,14 @@ expr:
   | lvalue             { Lval($1) }
 
   /* literals */
-  | INT                                     { IntLit($1) }
-  | FLOAT                                   { FloatLit($1) }
-  | BOOL                                    { BoolLit($1) }
-  | expr DOLLAR expr                        { FractionLit($1, $3) }
-  | STRING                                  { StringLit($1) }
-  | LCURLY expr_list RCURLY                 { ArrayLit($2) }
-  | LQREG INT COMMA INT RQREG               { QRegLit($2, $4) }
-  | COMPLEX LPAREN FLOAT COMMA FLOAT RPAREN { ComplexLit($3, $5) }
+  | INT_LITERAL                                     { IntLit($1) }
+  | FLOAT_LITERAL                                   { FloatLit($1) }
+  | BOOLEAN_LITERAL                                 { BoolLit($1) }
+  | expr DOLLAR expr                                { FractionLit($1, $3) }
+  | STRING_LITERAL                                  { StringLit($1) }
+  | LCURLY expr_list RCURLY                         { ArrayLit($2) }
+  | LQREG INT_LITERAL COMMA INT_LITERAL RQREG       { QRegLit($2, $4) }
+  | COMPLEX_LITERAL LPAREN FLOAT_LITERAL COMMA FLOAT_LITERAL RPAREN { ComplexLit($3, $5) }
 
   /* function call */
   | ident LPAREN RPAREN             { FunctionCall($1, []) }

@@ -1,4 +1,4 @@
-exception Invalid_type of string
+open Type
 
 type binop =
   | Add 
@@ -30,14 +30,7 @@ type postop =
   | Inc
 
 type datatype =
-  | Int
-  | Float
-  | Bool
-  | Fraction
-  | Complex
-  | QReg
-  | String
-  | Void
+  | Datatype of Type.var_type
   | ArrayType of datatype
 
 type ident = Ident of string
@@ -89,7 +82,7 @@ type statement =
   | ReturnStatement of expr
   | VoidReturnStatement
 
-let type_of_string = function
+(* let type_of_string = function
   | "int" -> Int
   | "float" -> Float
   | "bool" -> Bool
@@ -98,7 +91,7 @@ let type_of_string = function
   | "qreg" -> QReg
   | "string" -> String
   | "void" -> Void
-  | dtype -> raise (Invalid_type dtype)
+  | dtype -> raise (Invalid_type dtype) *)
 
 (* type top_level = 
    *)
