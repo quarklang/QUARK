@@ -64,14 +64,23 @@ rule token = parse
   | "++" { INCREMENT }
   | "--" { DECREMENT }
 
-  (* literals *) 
-  | sign? digit+ as lit { INT(int_of_string lit) } 
-  | floating as lit { FLOAT(float_of_string lit) }
-  | "true" as lit { BOOL(bool_of_string lit) }
-  | "false" as lit { BOOL(bool_of_string lit) }
-  | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING(str) }
+  | "bool"      { BOOLEAN }
+  | "string"    { STRING }
+  | "int"       { INT }
+  | "float"     { FLOAT }
+  | "void"      { VOID }
+  | "complex"   { COMPLEX }
+  | "fraction"  { FRACTION }
+  | "qreg"      { QREG }
 
-  (* datatypes *)
+  (* literals *) 
+  | sign? digit+ as lit { INT_LITERAL(int_of_string lit) } 
+  | floating as lit { FLOAT_LITERAL(float_of_string lit) }
+  | "true" as lit { BOOLEAN_LITERAL(bool_of_string lit) }
+  | "false" as lit { BOOLEAN_LITERAL(bool_of_string lit) }
+  | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING_LITERAL(str) }
+
+  (* datatypes
   | "bool" 
   | "int" 
   | "float" 
@@ -80,6 +89,7 @@ rule token = parse
   | "string" 
   | "array"
       as primitive { TYPE(primitive) }
+  *)
 
   (* keywords *)
   | "return" { RETURN }
