@@ -63,8 +63,8 @@ var_type:
   | VOID     { Void }
 
 datatype:
-    var_type { Datatype($1) }
-  | var_type LSQUARE RSQUARE { ArrayType(Datatype($1)) }
+    var_type { DataType($1) }
+  | var_type LSQUARE RSQUARE { ArrayType(DataType($1)) }
 
 /* Variables that can be assigned a value */
 lvalue:
