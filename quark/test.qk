@@ -3,6 +3,11 @@ def int f1(string[][][] a, int[] b, fraction c)
     b = [2,3,4] + [4,5];
     a = ["asdf"];
     1 + 2 - 3 + 4;
+    ;
     return [2,3,4] + b;
+}
+
+def int f2()
+{
     return;
 }

@@ -57,9 +57,9 @@ let rec gen_datatype = function
     | Int -> "int"
     | Float -> "float"
     | Bool -> "bool"
-    | Fraction -> "frac"
-    | Complex -> "complex"
-    | QReg -> "qreg"
+    | Fraction -> "Frac"
+    | Complex -> "CX"
+    | QReg -> "Qureg"
     | String -> "string"
     | Void -> "void"
     | _ -> "misc")
@@ -83,20 +83,20 @@ let rec eval stmts =
   | [] -> print_endline "end"
   | stmt :: rest ->
     begin
-      match stmt with
-      | FunctionDecl(b, returnType, funcName, paramList, stmtList) ->
+      (match stmt with
+      | FunctionDecl(b, returnType, funcId, paramList, stmtList) ->
         begin
-          print_endline @@ gen_param_list paramList;
+          print_endline @@ (gen_id funcId) ^ ": " ^ (gen_param_list paramList);
           eval stmtList;
         end
       | VoidReturnStatement -> print_endline "void_return"
       | ReturnStatement(returnExpr) -> 
 				print_endline @@ "return " ^ (gen_expr returnExpr)
-      | _ -> print_endline "...";
-      eval rest;
+			| EmptyStatement -> print_endline ";"
+      | _ -> print_endline "...");
+			eval rest
     end
 
 let _ =
 	let lexbuf = Lexing.from_channel stdin in
-	let expr = Parser.top_level Scanner.token lexbuf in
-    eval expr
+	eval @@ Parser.top_level Scanner.token lexbuf
