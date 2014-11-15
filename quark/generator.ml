@@ -67,16 +67,21 @@ let gen_datatype = function
  *)
 
 
-let str_id id =
+let gen_id id =
   match id with 
   | Ident(name) -> name
   | _ -> failwith "ident print error"
 
-let rec decl_list_str declList =
+let rec gen_expr ex = 
+	match ex with
+	| _ -> "expr"
+
+let rec gen_decl_list declList =
   List.fold_left (fun s declItem ->
     match declItem with
-    | PrimitiveDecl(datatyp, id) -> s ^ (str_id id) ^ ", "
-    | _ -> failwith "error") ""
+    | PrimitiveDecl(datatyp, id) -> s ^ (gen_id id) ^ ", "
+		| ArrayDecl(datatyp, id) -> s ^ (gen_id id) ^ "[], "
+    | _ -> failwith "decl list error") ""
   declList
 
 let rec eval stmts =
@@ -86,11 +91,12 @@ let rec eval stmts =
     begin
       match stmt with
       | FunctionDecl(b, returnType, funcName, declList, stmtList) ->
-      begin
-        print_endline @@ decl_list_str declList;
-        eval stmtList;
-      end
+        begin
+          print_endline @@ gen_decl_list declList;
+          eval stmtList;
+        end
       | VoidReturnStatement -> print_endline "void_return"
+      | ReturnStatement(returnExpr) -> print_endline @@ gen_expr returnExpr
       | _ -> print_endline "...";
       eval rest;
     end
