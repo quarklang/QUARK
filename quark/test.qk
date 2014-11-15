@@ -1,5 +1,8 @@
-def int test() {
-    int b;
-    int a = 4;
-    return b;
+def int f1(string[][][] a, int[] b, fraction c)
+{
+    b = [2,3,4] + [4,5];
+    a = ["asdf"];
+    1 + 2 - 3 + 4;
+    return [2,3,4] + b;
+    return;
 }

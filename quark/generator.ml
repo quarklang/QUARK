@@ -19,7 +19,8 @@ let header =
   #include <stdint.h>\n\n"
 
 let gen_id = function
-  Ident(id) -> id
+  | Ident(name) -> name
+  | _ -> failwith "ident print error"
 
 let gen_unop = function
   Neg -> "-"
@@ -50,39 +51,32 @@ let gen_binop = function
 | And -> "&&"
 | Or -> "||"
 
-let gen_datatype = function
-  Int -> "int"
-| Float -> "float"
-| Bool -> "bool"
-| Fraction -> "frac"
-| Complex -> "complex"
-| QReg -> "qreg"
-| String -> "std::string"
-| Void -> "void"
-| _ -> "misc"
+let rec gen_datatype = function
+	| DataType(t) -> 
+		(match t with
+    | Int -> "int"
+    | Float -> "float"
+    | Bool -> "bool"
+    | Fraction -> "frac"
+    | Complex -> "complex"
+    | QReg -> "qreg"
+    | String -> "string"
+    | Void -> "void"
+    | _ -> "misc")
+	| ArrayType(t) -> 
+		(gen_datatype t) ^ "[]"
 
-(* let rec eval tree = function
-    IntLit(x) -> print_int x
-  | _ -> print_string "234234"
- *)
 
-
-let gen_id id =
-  match id with 
-  | Ident(name) -> name
-  | _ -> failwith "ident print error"
-
-let rec gen_expr ex = 
-	match ex with
+let rec gen_expr = function
 	| _ -> "expr"
 
-let rec gen_decl_list declList =
-  List.fold_left (fun s declItem ->
-    match declItem with
-    | PrimitiveDecl(datatyp, id) -> s ^ (gen_id id) ^ ", "
-		| ArrayDecl(datatyp, id) -> s ^ (gen_id id) ^ "[], "
-    | _ -> failwith "decl list error") ""
-  declList
+let rec gen_param = function 
+  | PrimitiveDecl(datatyp, id) -> 
+		(gen_datatype datatyp) ^ " " ^ (gen_id id) ^ ", "
+  | _ -> failwith "decl list error"
+
+let rec gen_param_list paramList =
+  List.fold_left (fun s param -> s ^ (gen_param param)) "" paramList
 
 let rec eval stmts =
   match stmts with
@@ -90,13 +84,14 @@ let rec eval stmts =
   | stmt :: rest ->
     begin
       match stmt with
-      | FunctionDecl(b, returnType, funcName, declList, stmtList) ->
+      | FunctionDecl(b, returnType, funcName, paramList, stmtList) ->
         begin
-          print_endline @@ gen_decl_list declList;
+          print_endline @@ gen_param_list paramList;
           eval stmtList;
         end
       | VoidReturnStatement -> print_endline "void_return"
-      | ReturnStatement(returnExpr) -> print_endline @@ gen_expr returnExpr
+      | ReturnStatement(returnExpr) -> 
+				print_endline @@ "return " ^ (gen_expr returnExpr)
       | _ -> print_endline "...";
       eval rest;
     end
