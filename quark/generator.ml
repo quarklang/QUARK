@@ -1,5 +1,6 @@
 open Ast
 open Printf
+open Type
 
 let print = "print"
 
