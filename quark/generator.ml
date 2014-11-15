@@ -66,17 +66,36 @@ let gen_datatype = function
   | _ -> print_string "234234"
  *)
 
-let rec eval tree = 
-  match tree with
-    | [IntLit(x)] -> x
-    | _ -> 2
+
+let str_id id =
+  match id with 
+  | Ident(name) -> name
+  | _ -> failwith "ident print error"
+
+let rec decl_list_str declList =
+  List.fold_left (fun s declItem ->
+    match declItem with
+    | PrimitiveDecl(datatyp, id) -> s ^ (str_id id) ^ ", "
+    | _ -> failwith "error") ""
+  declList
+
+let rec eval stmts =
+  match stmts with
+  | [] -> print_endline "end"
+  | stmt :: rest ->
+    begin
+      match stmt with
+      | FunctionDecl(b, returnType, funcName, declList, stmtList) ->
+      begin
+        print_endline @@ decl_list_str declList;
+        eval stmtList;
+      end
+      | VoidReturnStatement -> print_endline "void_return"
+      | _ -> print_endline "...";
+      eval rest;
+    end
 
 let _ =
-  let lexbuf = Lexing.from_channel stdin in
-  let expr = Parser.top_level Scanner.token lexbuf in
-  expr
-
-  (* let result = eval expr in
-  print_string header;
-  print_endline (string_of_int result);
-  print_string bottom; *)
+	let lexbuf = Lexing.from_channel stdin in
+	let expr = Parser.top_level Scanner.token lexbuf in
+    eval expr
