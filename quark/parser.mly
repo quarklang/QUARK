@@ -10,7 +10,7 @@
 %token LT LTE GT GTE EQUALS NOT_EQUALS
 %token PLUS MINUS TIMES DIVIDE MODULO
 %token NOT UMINUS BITNOT DECREMENT INCREMENT
-%token DOLLAR PRIME QUERY POWER
+%token DOLLAR PRIME QUERY POWER COMPLEX_SYM
 %token IF ELSE WHILE FOR IN
 %token COMPLEX_LITERAL FRACTION_LITERAL
 %token DEF
@@ -26,7 +26,7 @@
 
 %left DOLLAR
 %left FRACTION
-%left COMPLEX
+%left COMPLEX_SYM
 %left OR
 %left AND
 %left BITOR
@@ -115,7 +115,7 @@ expr:
   | STRING_LITERAL                                  { StringLit($1) }
   | LCURLY expr_list RCURLY                         { ArrayLit($2) }
   | LQREG INT_LITERAL COMMA INT_LITERAL RQREG       { QRegLit($2, $4) }
-  | COMPLEX_LITERAL LPAREN FLOAT_LITERAL COMMA FLOAT_LITERAL RPAREN { ComplexLit($3, $5) }
+  | COMPLEX_SYM LPAREN FLOAT_LITERAL COMMA FLOAT_LITERAL RPAREN { ComplexLit($3, $5) }
 
   /* function call */
   | ident LPAREN RPAREN             { FunctionCall($1, []) }
