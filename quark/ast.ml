@@ -30,7 +30,7 @@ type postop =
   | Inc
 
 type datatype =
-  | Datatype of Type.var_type
+  | DataType of Type.var_type
   | ArrayType of datatype
 
 type ident = Ident of string
