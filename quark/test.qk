@@ -1,3 +1,5 @@
-def void test() {
-    "hello";
+def int test() {
+    int b;
+    int a = 4;
+    return b;
 }

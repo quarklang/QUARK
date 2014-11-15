@@ -23,7 +23,7 @@ rule token = parse
   | '=' { ASSIGN }
   | ''' { PRIME }
   | '?' { QUERY }
-  | 'i' { COMPLEX }
+  | 'i' { COMPLEX_SYM }
   | "<#" { LQREG }
   | "#>" { RQREG }
   | "def" { DEF }
