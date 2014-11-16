@@ -205,49 +205,49 @@ let rec eval stmts =
           print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
             (gen_id funcId) ^ surr( gen_param_list paramList ) ^";\n";
 
-			(* statements *)
-			| IfStatement(ex, stmtIf, stmtElse) -> 
-				begin
-					print_endline @@ "if " ^ surr(gen_expr ex);
-					print_endline "{ // start if";
-					eval [stmtIf];
-					print_endline "else";
-					eval [stmtElse];
-					print_endline "} // end if";
-				end
+      (* statements *)
+      | IfStatement(ex, stmtIf, stmtElse) -> 
+        begin
+          print_endline @@ "if " ^ surr(gen_expr ex);
+          print_endline "{ // start if";
+          eval [stmtIf];
+          print_endline "else";
+          eval [stmtElse];
+          print_endline "} // end if";
+        end
 				
-			| WhileStatement(ex, stmt) -> 
-				begin
-					print_endline @@ "while " ^ surr(gen_expr ex);
-					print_endline "{ // start while";
-					eval [stmt];
-					print_endline "} // end while";
-				end
-				
-			| ForStatement(iterList, stmt) -> 
-				begin
+      | WhileStatement(ex, stmt) -> 
+        begin
+          print_endline @@ "while " ^ surr(gen_expr ex);
+          print_endline "{ // start while";
+          eval [stmt];
+          print_endline "} // end while";
+        end
+            
+      | ForStatement(iterList, stmt) -> 
+        begin
           (* for (a in 1:5, b in 7:3:-1) *)
           List.iter (fun iter -> 
             print_endline @@ "for " ^ gen_iterator iter) iterList;
-					print_endline "{ // start for";
-					eval [stmt];
-					print_endline "} // end for";
-				end
-				
-			| CompoundStatement(stmtList) -> 
-				begin
-					print_endline "{ // start compound";
-					eval stmtList;
-					print_endline "} // end compound";
-				end
+          print_endline "{ // start for";
+          eval [stmt];
+          print_endline "} // end for";
+        end
+            
+      | CompoundStatement(stmtList) -> 
+        begin
+          print_endline "{ // start compound";
+          eval stmtList;
+          print_endline "} // end compound";
+        end
 
       | Declaration(dec) -> 
         print_endline @@ gen_decl dec ^ ";"
-			| Expression(ex) -> 
+      | Expression(ex) -> 
         print_endline @@ gen_expr ex ^ ";"
       | ReturnStatement(ex) -> 
-				print_endline @@ "return " ^ gen_expr ex ^ ";"
-			| EmptyStatement -> 
+        print_endline @@ "return " ^ gen_expr ex ^ ";"
+      | EmptyStatement -> 
         print_endline ";"
       | VoidReturnStatement -> 
         print_endline "return; // void"

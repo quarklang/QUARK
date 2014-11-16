@@ -114,15 +114,15 @@ expr:
   | lvalue ASSIGN expr { Assign($1, $3) }
   | lvalue             { Lval($1) }
 
-	/* Special assignment */
-	| lvalue PLUS_EQUALS expr { AssignOp($1, AddEq, $3) }
-	| lvalue MINUS_EQUALS expr { AssignOp($1, SubEq, $3) } 
-	| lvalue TIMES_EQUALS expr { AssignOp($1, MulEq, $3) }
-	| lvalue DIVIDE_EQUALS expr { AssignOp($1, DivEq, $3) }
+  /* Special assignment */
+  | lvalue PLUS_EQUALS expr { AssignOp($1, AddEq, $3) }
+  | lvalue MINUS_EQUALS expr { AssignOp($1, SubEq, $3) } 
+  | lvalue TIMES_EQUALS expr { AssignOp($1, MulEq, $3) }
+  | lvalue DIVIDE_EQUALS expr { AssignOp($1, DivEq, $3) }
 
-	/* Post operation */
-	| lvalue INCREMENT { PostOp($1, Inc) }
-	| lvalue DECREMENT { PostOp($1, Dec) }
+  /* Post operation */
+  | lvalue INCREMENT { PostOp($1, Inc) }
+  | lvalue DECREMENT { PostOp($1, Dec) }
 
   /* Membership testing with keyword 'in' */
   | expr IN expr    { Membership($1, $3) }

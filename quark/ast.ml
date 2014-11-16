@@ -6,7 +6,7 @@ type binop =
   | Mul
   | Div 
   | Mod
-	| Pow
+  | Pow
   | Lshift 
   | Rshift
   | Less 
