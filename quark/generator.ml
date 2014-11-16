@@ -70,7 +70,13 @@ let rec gen_param = function
   | _ -> failwith "decl list fatal error"
 
 let rec gen_param_list paramList =
-  List.fold_left (fun s param -> s ^ (gen_param param)) "" paramList
+  let paramStr = 
+    List.fold_left (fun s param -> s ^ (gen_param param)) "" paramList
+  in
+  (* get rid of the last 2 chars ', ' *)
+  if paramStr = "" then ""
+  else
+    String.sub paramStr 0 ((String.length paramStr) - 2)
 	
 let rec gen_range id = function
 	| Range(IntLit(iStart), IntLit(iEnd), IntLit(iStep)) -> 
@@ -107,11 +113,20 @@ let rec eval stmts =
     begin
       match stmt with
 			(* top level statements *)
-      | FunctionDecl(returnType, funcId, paramList, stmtList) ->
-        begin
-          print_endline @@ (gen_id funcId) ^ ": " ^ (gen_param_list paramList);
-          eval stmtList;
-        end
+      | FunctionDecl(returnTyp, funcId, paramList, stmtList) ->
+        let funcId = gen_id funcId in
+          begin
+            print_endline @@ (gen_datatype returnTyp) ^ " " ^ 
+              funcId ^ "(" ^ (gen_param_list paramList) ^ ")";
+            print_endline @@ "{ // start " ^ funcId;
+            eval stmtList;
+            print_endline @@ "} // end " ^ funcId ^ "\n";
+          end
+      
+      (* TODO: get rid of forward decl *)
+      | ForwardDecl(returnTyp, funcId, paramList) -> 
+          print_endline @@ "*forward* " ^ (gen_datatype returnTyp) ^ " " ^ 
+            (gen_id funcId) ^ "(" ^ (gen_param_list paramList) ^ ");\n";
 
 			(* statements *)
 			| IfStatement(ex, stmtIf, stmtElse) -> 
@@ -153,7 +168,7 @@ let rec eval stmts =
       | VoidReturnStatement -> print_endline "return; // void"
       | ReturnStatement(ex) -> 
 				print_endline @@ "return " ^ (gen_expr ex) ^ ";"
-      | _ -> print_endline "..."
+      | _ -> failwith "nothing for eval()"
     end;
     eval rest
 

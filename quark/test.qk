@@ -29,6 +29,9 @@ def int f1(string[][][] a, int[] b, fraction c)
     return [2,3,4] + b;
 }
 
+int f1(string[][][] a, int b);
+complex[][] c = 3;
+
 def int f2()
 {
     bool b;
