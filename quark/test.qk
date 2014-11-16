@@ -10,7 +10,19 @@ def int f1(string[][][] a, int[] b, fraction c)
     }
     else
         a = 3 ** 4;
+
+    if (3+2>5)
+        a += "sdf" + "roijgowergj";
     
+    while (true)
+    {
+        b -= 2;
+        c ++;
+        b --;
+    }
+    for (a in 1:5) ;
+    for (a in [1, 2, 6]) ;
+
     return [2,3,4] + b;
     return;
 }

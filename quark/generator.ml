@@ -78,6 +78,20 @@ let rec gen_param = function
 
 let rec gen_param_list paramList =
   List.fold_left (fun s param -> s ^ (gen_param param)) "" paramList
+	
+let rec gen_range = function
+	| _ -> "range"
+	
+let rec gen_iterator_list = function
+	| [] -> ""
+	| item :: rest -> 
+    (match item with
+    | RangeIterator(id, rng) -> 
+      (gen_id id) ^ " in " ^ (gen_range rng)
+    | ArrayIterator(id, ex) -> 
+      (gen_id id) ^ " in " ^ (gen_expr ex)) ^
+    (gen_iterator_list rest)
+	
 
 let rec eval stmts =
   match stmts with
@@ -92,7 +106,7 @@ let rec eval stmts =
           eval stmtList;
         end
 				
-			(* statments *)
+			(* statements *)
 			| IfStatement(ex, stmtIf, stmtElse) -> 
 				begin
 					print_endline @@ "if (" ^ gen_expr(ex) ^ ")";
@@ -101,6 +115,22 @@ let rec eval stmts =
 					print_endline "else";
 					eval [stmtElse];
 					print_endline "} // end if";
+				end
+				
+			| WhileStatement(ex, stmt) -> 
+				begin
+					print_endline @@ "while (" ^ gen_expr(ex) ^ ")";
+					print_endline "{ // start while";
+					eval [stmt];
+					print_endline "} // end while";
+				end
+				
+			| ForStatement(iterList, stmt) -> 
+				begin
+					print_endline @@ "for (" ^ gen_iterator_list(iterList) ^ ")";
+					print_endline "{ // start for";
+					eval [stmt];
+					print_endline "} // end for";
 				end
 				
 			| CompoundStatement(stmtList) -> 
