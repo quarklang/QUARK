@@ -52,7 +52,7 @@ let rec gen_datatype = function
     | Float -> "float"
     | Bool -> "bool"
     | Fraction -> "Frac"
-    | Complex -> "CX"
+    | Complex -> "complex<float>"
     | QReg -> "Qureg"
     | String -> "string"
     | Void -> "void"
@@ -63,14 +63,26 @@ let rec gen_datatype = function
 
 let rec gen_expr = function
   (* literals *)
-  | IntLit(x) | FloatLit(x) | BoolLit(x) | StringLit(x) -> x
-  | ArrayLit(exlist) -> "[" ^ (gen_expr_list exlist) ^ "]"
+  | IntLit(x) | FloatLit(x) | BoolLit(x) | StringLit(x) -> 
+    x
+  | ArrayLit(exlist) -> 
+    "[" ^ gen_expr_list exlist ^ "]"
+  | FractionLit(exNum, exDenom) -> 
+    "Frac(" ^ gen_expr exNum ^ ", " ^ gen_expr exDenom ^ ")"
+  | QRegLit(ex1, ex2) -> 
+    "Qureg::create<true>(" ^ gen_expr ex1 ^ ", " ^ gen_expr ex2 ^ ")"
+  | ComplexLit(exReal, exImag) -> 
+    "complex<float>(" ^ gen_expr exReal ^ ", " ^ gen_expr exImag ^ ")"
+  
+  (* Binary ops *)
+  | Binop(ex1, op, ex2) -> 
+    gen_expr ex1 ^ gen_binop op ^ gen_expr ex2
   | _ -> "expr"
 
 and gen_expr_list exlist =
   let exlistStr = 
     List.fold_left 
-      (fun s ex -> s ^ (gen_expr ex) ^ ", ") "" exlist
+      (fun s ex -> s ^ gen_expr ex ^ ", ") "" exlist
   in
   (* get rid of the last 2 chars ', ' *)
   if exlistStr = "" then ""
@@ -86,7 +98,7 @@ let rec gen_param = function
 let rec gen_param_list paramList =
   let paramStr = 
     List.fold_left 
-      (fun s param -> s ^ (gen_param param) ^ ", ") "" paramList
+      (fun s param -> s ^ gen_param param ^ ", ") "" paramList
   in
   if paramStr = "" then ""
   else
@@ -115,9 +127,9 @@ let rec gen_iterator_list = function
 	
 let rec gen_decl = function
   | AssigningDecl(typ, id, expr) -> 
-    (gen_datatype typ) ^ " " ^ (gen_id id) ^ " = " ^ (gen_expr expr)
+    gen_datatype typ ^ " " ^ gen_id id ^ " = " ^ gen_expr expr
   | PrimitiveDecl(typ, id) -> 
-    (gen_datatype typ) ^ " " ^ (gen_id id)
+    gen_datatype typ ^ " " ^ gen_id id
 
 
 let rec eval stmts =
@@ -130,8 +142,8 @@ let rec eval stmts =
       | FunctionDecl(returnTyp, funcId, paramList, stmtList) ->
         let funcId = gen_id funcId in
           begin
-            print_endline @@ (gen_datatype returnTyp) ^ " " ^ 
-              funcId ^ "(" ^ (gen_param_list paramList) ^ ")";
+            print_endline @@ gen_datatype returnTyp ^ " " ^ 
+              funcId ^ "(" ^ gen_param_list paramList ^ ")";
             print_endline @@ "{ // start " ^ funcId;
             eval stmtList;
             print_endline @@ "} // end " ^ funcId ^ "\n";
@@ -139,13 +151,13 @@ let rec eval stmts =
       
       (* TODO: get rid of forward decl *)
       | ForwardDecl(returnTyp, funcId, paramList) -> 
-          print_endline @@ "*forward* " ^ (gen_datatype returnTyp) ^ " " ^ 
-            (gen_id funcId) ^ "(" ^ (gen_param_list paramList) ^ ");\n";
+          print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
+            (gen_id funcId) ^ "(" ^ gen_param_list paramList ^ ");\n";
 
 			(* statements *)
 			| IfStatement(ex, stmtIf, stmtElse) -> 
 				begin
-					print_endline @@ "if (" ^ gen_expr(ex) ^ ")";
+					print_endline @@ "if (" ^ gen_expr ex ^ ")";
 					print_endline "{ // start if";
 					eval [stmtIf];
 					print_endline "else";
@@ -155,7 +167,7 @@ let rec eval stmts =
 				
 			| WhileStatement(ex, stmt) -> 
 				begin
-					print_endline @@ "while (" ^ gen_expr(ex) ^ ")";
+					print_endline @@ "while (" ^ gen_expr ex  ^ ")";
 					print_endline "{ // start while";
 					eval [stmt];
 					print_endline "} // end while";
@@ -163,7 +175,7 @@ let rec eval stmts =
 				
 			| ForStatement(iterList, stmt) -> 
 				begin
-					print_endline @@ "for " ^ gen_iterator_list(iterList);
+					print_endline @@ "for " ^ gen_iterator_list iterList ;
 					print_endline "{ // start for";
 					eval [stmt];
 					print_endline "} // end for";
@@ -176,12 +188,12 @@ let rec eval stmts =
 					print_endline "} // end compound";
 				end
 
-      | Declaration(dec) -> print_endline @@ (gen_decl dec) ^ ";"
-			| Expression(ex) -> print_endline @@ (gen_expr ex) ^ ";"
+      | Declaration(dec) -> print_endline @@ gen_decl dec ^ ";"
+			| Expression(ex) -> print_endline @@ gen_expr ex ^ ";"
 			| EmptyStatement -> print_endline ";"
       | VoidReturnStatement -> print_endline "return; // void"
       | ReturnStatement(ex) -> 
-				print_endline @@ "return " ^ (gen_expr ex) ^ ";"
+				print_endline @@ "return " ^ gen_expr ex ^ ";"
       | _ -> failwith "nothing for eval()"
     end;
     eval rest
