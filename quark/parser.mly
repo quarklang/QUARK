@@ -94,6 +94,7 @@ expr:
   | expr TIMES expr   { Binop($1, Mul, $3) }
   | expr DIVIDE expr  { Binop($1, Div, $3) }
   | expr MODULO expr  { Binop($1, Mod, $3) }
+  | expr POWER expr  { Binop($1, Pow, $3) }
 
   /* Bitwise */
   | expr BITAND expr        { Binop($1, BitAnd, $3) }
