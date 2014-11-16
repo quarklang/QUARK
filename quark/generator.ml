@@ -227,12 +227,20 @@ let rec eval stmts =
 					print_endline "} // end compound";
 				end
 
-      | Declaration(dec) -> print_endline @@ gen_decl dec ^ ";"
-			| Expression(ex) -> print_endline @@ gen_expr ex ^ ";"
-			| EmptyStatement -> print_endline ";"
-      | VoidReturnStatement -> print_endline "return; // void"
+      | Declaration(dec) -> 
+        print_endline @@ gen_decl dec ^ ";"
+			| Expression(ex) -> 
+        print_endline @@ gen_expr ex ^ ";"
       | ReturnStatement(ex) -> 
 				print_endline @@ "return " ^ gen_expr ex ^ ";"
+			| EmptyStatement -> 
+        print_endline ";"
+      | VoidReturnStatement -> 
+        print_endline "return; // void"
+      | BreakStatement -> 
+        print_endline "break; // control"
+      | ContinueStatement -> 
+        print_endline "continue; // control"
       | _ -> failwith "nothing for eval()"
     end;
     eval rest

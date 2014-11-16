@@ -15,7 +15,7 @@
 %token IF ELSE WHILE FOR IN
 %token COMPLEX_LITERAL FRACTION_LITERAL
 %token DEF
-%token RETURN
+%token RETURN BREAK CONTINUE
 %token EOF
 %token BOOLEAN STRING INT FLOAT QREG FRACTION COMPLEX VOID
 %token <string> ID TYPE STRING_LITERAL INT_LITERAL FLOAT_LITERAL BOOLEAN_LITERAL
@@ -162,6 +162,10 @@ statement:
 
   | RETURN expr SEMICOLON { ReturnStatement($2) }
   | RETURN SEMICOLON { VoidReturnStatement }
+  
+  /* Control flow */
+  | BREAK { BreakStatement }
+  | CONTINUE { ContinueStatement }
 
 
 iterator_list:

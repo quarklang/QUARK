@@ -86,3 +86,5 @@ type statement =
   | ForwardDecl of datatype * ident * decl list
   | ReturnStatement of expr
   | VoidReturnStatement
+  | BreakStatement
+  | ContinueStatement

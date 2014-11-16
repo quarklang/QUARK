@@ -81,19 +81,10 @@ rule token = parse
   | "false" as lit { BOOLEAN_LITERAL(lit) }
   | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING_LITERAL(str) }
 
-  (* datatypes
-  | "bool" 
-  | "int" 
-  | "float" 
-  | "complex" 
-  | "void" 
-  | "string" 
-  | "array"
-      as primitive { TYPE(primitive) }
-  *)
-
   (* keywords *)
   | "return" { RETURN }
+  | "break" { BREAK } 
+  | "continue" { CONTINUE }
   | "if" { IF }
   | "else" { ELSE }
   | "for" { FOR }
