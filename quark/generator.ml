@@ -18,9 +18,7 @@ let header =
   #include <stdlib.h>\n\
   #include <stdint.h>\n\n"
 
-let gen_id = function
-  | Ident(name) -> name
-  | _ -> failwith "ident print error"
+let gen_id (Ident name) = name
 
 let gen_unop = function
   Neg -> "-"
@@ -63,7 +61,7 @@ let rec gen_datatype = function
     | QReg -> "Qureg"
     | String -> "string"
     | Void -> "void"
-    | _ -> "misc")
+    | _ -> failwith "datatype fatal error")
 	| ArrayType(t) -> 
 		(gen_datatype t) ^ "[]"
 
@@ -74,20 +72,29 @@ let rec gen_expr = function
 let rec gen_param = function 
   | PrimitiveDecl(datatyp, id) -> 
 		(gen_datatype datatyp) ^ " " ^ (gen_id id) ^ ", "
-  | _ -> failwith "decl list error"
+  | _ -> failwith "decl list fatal error"
 
 let rec gen_param_list paramList =
   List.fold_left (fun s param -> s ^ (gen_param param)) "" paramList
 	
-let rec gen_range = function
-	| _ -> "range"
+let rec gen_range id = function
+	| Range(IntLit(iStart), IntLit(iEnd), IntLit(iStep)) -> 
+    let dir = if iEnd >= iStart then "<" else ">" in
+    let update = if iEnd >= iStart then "+=" else "-=" in
+    let iStart = string_of_int iStart in
+    let iEnd = string_of_int iEnd in
+    if iStep <= 0 then failwith "range step must a positive int"
+    else
+      let iStep = string_of_int iStep in
+      let id = gen_id id in
+      "("^id^"="^iStart^"; "^id^dir^iEnd^"; "^id^update^iStep^")"
+  | _ -> failwith "range fatal error"
 	
 let rec gen_iterator_list = function
 	| [] -> ""
 	| item :: rest -> 
     (match item with
-    | RangeIterator(id, rng) -> 
-      (gen_id id) ^ " in " ^ (gen_range rng)
+    | RangeIterator(id, rng) -> gen_range id rng
     | ArrayIterator(id, ex) -> 
       (gen_id id) ^ " in " ^ (gen_expr ex)) ^
     (gen_iterator_list rest)
@@ -127,7 +134,7 @@ let rec eval stmts =
 				
 			| ForStatement(iterList, stmt) -> 
 				begin
-					print_endline @@ "for (" ^ gen_iterator_list(iterList) ^ ")";
+					print_endline @@ "for " ^ gen_iterator_list(iterList);
 					print_endline "{ // start for";
 					eval [stmt];
 					print_endline "} // end for";
