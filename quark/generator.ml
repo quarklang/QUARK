@@ -70,8 +70,8 @@ let rec gen_expr = function
 	| _ -> "expr"
 
 let rec gen_param = function 
-  | PrimitiveDecl(datatyp, id) -> 
-		(gen_datatype datatyp) ^ " " ^ (gen_id id) ^ ", "
+  | PrimitiveDecl(typ, id) -> 
+		(gen_datatype typ) ^ " " ^ (gen_id id) ^ ", "
   | _ -> failwith "decl list fatal error"
 
 let rec gen_param_list paramList =
@@ -87,7 +87,7 @@ let rec gen_range id = function
     else
       let iStep = string_of_int iStep in
       let id = gen_id id in
-      "("^id^"="^iStart^"; "^id^dir^iEnd^"; "^id^update^iStep^")"
+      "(" ^id^"="^iStart^"; " ^id^dir^iEnd^"; " ^id^update^iStep ^")"
   | _ -> failwith "range fatal error"
 	
 let rec gen_iterator_list = function
@@ -96,9 +96,14 @@ let rec gen_iterator_list = function
     (match item with
     | RangeIterator(id, rng) -> gen_range id rng
     | ArrayIterator(id, ex) -> 
-      (gen_id id) ^ " in " ^ (gen_expr ex)) ^
-    (gen_iterator_list rest)
+      (gen_id id) ^ " in " ^ (gen_expr ex)) ^ 
+      (gen_iterator_list rest)
 	
+let rec gen_decl = function
+  | AssigningDecl(typ, id, expr) -> 
+    (gen_datatype typ) ^ " " ^ (gen_id id) ^ " = " ^ (gen_expr expr)
+  | PrimitiveDecl(typ, id) -> 
+    (gen_datatype typ) ^ " " ^ (gen_id id)
 
 let rec eval stmts =
   match stmts with
@@ -147,6 +152,7 @@ let rec eval stmts =
 					print_endline "} // end compound";
 				end
 
+      | Declaration(dec) -> print_endline @@ (gen_decl dec) ^ ";"
 			| Expression(ex) -> print_endline @@ (gen_expr ex) ^ ";"
 			| EmptyStatement -> print_endline ";"
       | VoidReturnStatement -> print_endline "return; // void"
