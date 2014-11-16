@@ -138,7 +138,7 @@ expr_list:
   | expr                 { [$1] }
 
 decl:
-  | datatype ident ASSIGN expr SEMICOLON                { AssigningDecl($2, $4) }
+  | datatype ident ASSIGN expr SEMICOLON                { AssigningDecl($1, $2, $4) }
   | datatype ident SEMICOLON                            { PrimitiveDecl($1, $2) }
 
 statement:

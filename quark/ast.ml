@@ -59,7 +59,7 @@ and expr =
   | Lval of lvalue
 
 type decl =
-  | AssigningDecl of ident * expr
+  | AssigningDecl of datatype * ident * expr
   | PrimitiveDecl of datatype * ident
 
 type range = Range of expr * expr * expr
