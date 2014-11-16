@@ -23,6 +23,8 @@ rule token = parse
   | '=' { ASSIGN }
   | ''' { PRIME }
   | '?' { QUERY }
+  (* unrealistic query that doesn't disrupt quantum state *)
+  | "?'" { QUERY_UNREAL } 
   | "i(" { COMPLEX_SYM }
   | "<|" { LQREG }  | "|>" { RQREG }
   | "def" { DEF }

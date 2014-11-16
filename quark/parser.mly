@@ -4,6 +4,7 @@
 %token LQREG RQREG
 %token COMMA SEMICOLON COLON
 %token ASSIGN
+%token QUERY QUERY_UNREAL
 %token PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
 %token LSHIFT_EQUALS RSHIFT_EQUALS BITOR_EQUALS BITAND_EQUALS BITXOR_EQUALS
 %token LSHIFT RSHIFT BITAND BITOR BITXOR AND OR
@@ -20,6 +21,8 @@
 %token <string> ID TYPE STRING_LITERAL INT_LITERAL FLOAT_LITERAL BOOLEAN_LITERAL
 
 %right ASSIGN PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
+
+%right QUERY QUERY_UNREAL
 
 %left DOLLAR
 %left FRACTION
@@ -100,6 +103,11 @@ expr:
   | expr LSHIFT expr        { Binop($1, Lshift, $3) }
   | expr RSHIFT expr        { Binop($1, Rshift, $3) }
 
+  /* Query */
+  | expr QUERY expr         { Binop($1, Query, $3) }
+  | expr QUERY_UNREAL expr  { Binop($1, QueryUnreal, $3) }
+
+  /* Parenthesis */
   | LPAREN expr RPAREN { $2 }
 
   /* Assignment */
