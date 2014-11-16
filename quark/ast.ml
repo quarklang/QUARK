@@ -46,11 +46,11 @@ and expr =
   | Unop of unop * expr
   | PostOp of lvalue * postop
   | Assign of lvalue * expr
-  | IntLit of int
-  | BoolLit of bool
+  | IntLit of string
+  | BoolLit of string
   | FractionLit of expr * expr
-  | QRegLit of int * int
-  | FloatLit of float
+  | QRegLit of expr * expr
+  | FloatLit of string
   | StringLit of string
   | ArrayLit of expr list
   | ComplexLit of expr * expr

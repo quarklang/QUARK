@@ -17,10 +17,7 @@
 %token RETURN
 %token EOF
 %token BOOLEAN STRING INT FLOAT QREG FRACTION COMPLEX VOID
-%token <int> INT_LITERAL
-%token <float> FLOAT_LITERAL
-%token <string> ID TYPE STRING_LITERAL
-%token <bool> BOOLEAN_LITERAL
+%token <string> ID TYPE STRING_LITERAL INT_LITERAL FLOAT_LITERAL BOOLEAN_LITERAL
 
 %right ASSIGN PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
 
@@ -127,7 +124,7 @@ expr:
   | STRING_LITERAL                                  { StringLit($1) }
   | LSQUARE expr_list RSQUARE                       { ArrayLit($2) }
   | COMPLEX_SYM expr COMMA expr RPAREN              { ComplexLit($2, $4) }
-  | LQREG INT_LITERAL COMMA INT_LITERAL RQREG       { QRegLit($2, $4) }
+  | LQREG expr COMMA expr RQREG       { QRegLit($2, $4) }
 
   /* function call */
   | ident LPAREN RPAREN             { FunctionCall($1, []) }
@@ -170,9 +167,9 @@ iterator:
 
 range:
   | expr COLON expr COLON expr { Range($1, $3, $5) }
-  | expr COLON expr { Range($1, $3, IntLit(1)) }
-  | COLON expr COLON expr { Range(IntLit(0), $2, $4) }
-  | COLON expr { Range(IntLit(0), $2, IntLit(1)) }
+  | expr COLON expr { Range($1, $3, IntLit("1")) }
+  | COLON expr COLON expr { Range(IntLit("0"), $2, $4) }
+  | COLON expr { Range(IntLit("0"), $2, IntLit("1")) }
 
 top_level_statement:
   | DEF datatype ident LPAREN param_list RPAREN LCURLY statement_seq RCURLY

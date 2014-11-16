@@ -73,10 +73,10 @@ rule token = parse
   | "qreg"      { QREG }
 
   (* literals *) 
-  | digit+ as lit { INT_LITERAL(int_of_string lit) } 
-  | floating as lit { FLOAT_LITERAL(float_of_string lit) }
-  | "true" as lit { BOOLEAN_LITERAL(bool_of_string lit) }
-  | "false" as lit { BOOLEAN_LITERAL(bool_of_string lit) }
+  | digit+ as lit { INT_LITERAL(lit) } 
+  | floating as lit { FLOAT_LITERAL(lit) }
+  | "true" as lit { BOOLEAN_LITERAL(lit) }
+  | "false" as lit { BOOLEAN_LITERAL(lit) }
   | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING_LITERAL(str) }
 
   (* datatypes
