@@ -117,7 +117,8 @@ and gen_expr_list exlist =
     String.sub exlistStr 0 ((String.length exlistStr) - 2)
     
 and gen_lvalue = function
-  | Variable(id) -> gen_id id
+  | Variable(id) -> 
+    gen_id id
   | ArrayElem(id, exlist) -> 
     gen_id id ^ "[" ^ gen_expr_list exlist ^ "]"
   
@@ -148,14 +149,11 @@ let rec gen_range id = function
       exCmp^ id^" += (" ^exStep^ ") : " ^id^ " -= (" ^exStep^ "))"
   | _ -> failwith "range fatal error"
 	
-let rec gen_iterator_list = function
-	| [] -> ""
-	| item :: rest -> 
-    (match item with
-    | RangeIterator(id, rng) -> gen_range id rng
-    | ArrayIterator(id, ex) -> 
-      (gen_id id) ^ " in " ^ (gen_expr ex)) ^ 
-      (gen_iterator_list rest)
+let rec gen_iterator = function
+  | RangeIterator(id, rng) -> 
+    gen_range id rng
+  | ArrayIterator(id, ex) -> 
+    (gen_id id) ^ " in " ^ (gen_expr ex)
 	
 let rec gen_decl = function
   | AssigningDecl(typ, id, ex) -> 
@@ -207,7 +205,9 @@ let rec eval stmts =
 				
 			| ForStatement(iterList, stmt) -> 
 				begin
-					print_endline @@ "for " ^ gen_iterator_list iterList ;
+          (* for (a in 1:5, b in 7:3:-1) *)
+          List.iter (fun iter -> 
+            print_endline @@ "for " ^ gen_iterator iter) iterList;
 					print_endline "{ // start for";
 					eval [stmt];
 					print_endline "} // end for";
