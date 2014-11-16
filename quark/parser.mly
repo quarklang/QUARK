@@ -107,10 +107,10 @@ expr:
   | lvalue             { Lval($1) }
 
 	/* Special assignment */
-	| lvalue PLUS_EQUALS expr { AssignOp($1, Add, $3) }
-	| lvalue MINUS_EQUALS expr { AssignOp($1, Sub, $3) } 
-	| lvalue TIMES_EQUALS expr { AssignOp($1, Mul, $3) }
-	| lvalue DIVIDE_EQUALS expr { AssignOp($1, Div, $3) }
+	| lvalue PLUS_EQUALS expr { AssignOp($1, AddEq, $3) }
+	| lvalue MINUS_EQUALS expr { AssignOp($1, SubEq, $3) } 
+	| lvalue TIMES_EQUALS expr { AssignOp($1, MulEq, $3) }
+	| lvalue DIVIDE_EQUALS expr { AssignOp($1, DivEq, $3) }
 
 	/* Post operation */
 	| lvalue INCREMENT { PostOp($1, Inc) }

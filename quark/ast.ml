@@ -20,6 +20,10 @@ type binop =
   | BitOr 
   | And
   | Or
+  | AddEq
+  | SubEq
+  | MulEq
+  | DivEq
 
 type unop = 
   | Neg 
