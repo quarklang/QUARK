@@ -24,8 +24,7 @@ rule token = parse
   | ''' { PRIME }
   | '?' { QUERY }
   | "i(" { COMPLEX_SYM }
-  | "<#" { LQREG }
-  | "#>" { RQREG }
+  | "<|" { LQREG }  | "|>" { RQREG }
   | "def" { DEF }
 
 
