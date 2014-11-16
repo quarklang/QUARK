@@ -126,8 +126,8 @@ expr:
   | expr DOLLAR expr                                { FractionLit($1, $3) }
   | STRING_LITERAL                                  { StringLit($1) }
   | LSQUARE expr_list RSQUARE                       { ArrayLit($2) }
+  | COMPLEX_SYM expr COMMA expr RPAREN              { ComplexLit($2, $4) }
   | LQREG INT_LITERAL COMMA INT_LITERAL RQREG       { QRegLit($2, $4) }
-  | COMPLEX_SYM expr COMMA expr RPAREN { ComplexExpr($2, $4) }
 
   /* function call */
   | ident LPAREN RPAREN             { FunctionCall($1, []) }

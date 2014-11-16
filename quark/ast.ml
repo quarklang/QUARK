@@ -53,7 +53,7 @@ and expr =
   | FloatLit of float
   | StringLit of string
   | ArrayLit of expr list
-  | ComplexExpr of expr * expr
+  | ComplexLit of expr * expr
   | Cast of datatype * expr
   | FunctionCall of ident * expr list
   | Lval of lvalue
