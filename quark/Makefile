@@ -33,10 +33,10 @@ parser.ml parser.mli : parser.mly
 	ocamlyacc parser.mly
 
 %.cmo : %.ml
-	ocamlc -w A -c $<
+	ocamlc -w +a-4 -c $<
 
 %.cmi : %.mli
-	ocamlc -w A -c $<
+	ocamlc -w +a-4 -c $<
 
 .PHONY : clean
 clean :

@@ -109,6 +109,16 @@ expr:
   | lvalue ASSIGN expr { Assign($1, $3) }
   | lvalue             { Lval($1) }
 
+	/* Special assignment */
+	| lvalue PLUS_EQUALS expr { AssignOp($1, Add, $3) }
+	| lvalue MINUS_EQUALS expr { AssignOp($1, Sub, $3) } 
+	| lvalue TIMES_EQUALS expr { AssignOp($1, Mul, $3) }
+	| lvalue DIVIDE_EQUALS expr { AssignOp($1, Div, $3) }
+
+	/* Post operation */
+	| lvalue INCREMENT { PostOp($1, Inc) }
+	| lvalue DECREMENT { PostOp($1, Dec) }
+
   /* literals */
   | INT_LITERAL                                     { IntLit($1) }
   | FLOAT_LITERAL                                   { FloatLit($1) }
