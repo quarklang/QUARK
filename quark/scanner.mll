@@ -44,7 +44,7 @@ rule token = parse
   | "!="    { NOT_EQUALS }
   | "and"   { AND }
   | "or"    { OR }
-  | '!'     { NOT }
+  | "not"     { NOT }
   | "**"    { POWER }
 
   (* unary *)
