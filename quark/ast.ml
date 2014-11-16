@@ -60,9 +60,9 @@ and expr =
   | StringLit of string
   | ArrayLit of expr list
   | ComplexLit of expr * expr
-  | Cast of datatype * expr
-  | FunctionCall of ident * expr list
   | Lval of lvalue
+  | Membership of expr * expr
+  | FunctionCall of ident * expr list
 
 type decl =
   | AssigningDecl of datatype * ident * expr

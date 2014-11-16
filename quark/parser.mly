@@ -22,6 +22,7 @@
 
 %right ASSIGN PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS MODULO_EQUALS
 
+%left IN 
 %right QUERY QUERY_UNREAL
 
 %left DOLLAR
@@ -93,7 +94,7 @@ expr:
   | expr TIMES expr   { Binop($1, Mul, $3) }
   | expr DIVIDE expr  { Binop($1, Div, $3) }
   | expr MODULO expr  { Binop($1, Mod, $3) }
-  | expr POWER expr  { Binop($1, Pow, $3) }
+  | expr POWER expr   { Binop($1, Pow, $3) }
 
   /* Bitwise */
   | expr BITAND expr        { Binop($1, BitAnd, $3) }
@@ -122,6 +123,9 @@ expr:
 	/* Post operation */
 	| lvalue INCREMENT { PostOp($1, Inc) }
 	| lvalue DECREMENT { PostOp($1, Dec) }
+
+  /* Membership testing with keyword 'in' */
+  | expr IN expr    { Membership($1, $3) }
 
   /* literals */
   | INT_LITERAL                                     { IntLit($1) }

@@ -14,6 +14,9 @@ let header =
 let top = "\nint main(void) { \n"
 let bottom = "\n}\n"
 
+(* surround with parenthesis *)
+let surr str = "(" ^ str ^ ")"
+
 let gen_id (Ident name) = name
 
 let gen_unop = function
@@ -107,9 +110,18 @@ let rec gen_expr = function
   | PostOp(lval, op) -> 
     gen_lvalue lval ^" "^ gen_postop op
     
+  (* Membership testing with keyword 'in' *)
+  | Membership(exElem, exArray) -> 
+    (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
+    (* Shouldn't change over calls!!! *)
+    let exElem = gen_expr exElem in
+    let exArray = gen_expr exArray in
+      "std::find(" ^surr exArray^ ".begin(), " ^surr exArray^ ".end(), " ^
+      exElem^ ") != " ^surr exArray^ ".end()"
+    
   (* Function calls *)
   | FunctionCall(funcId, exlist) -> 
-    gen_id funcId ^"("^ gen_expr_list exlist ^")"
+    gen_id funcId ^ surr( gen_expr_list exlist )
   
   | _ -> failwith "some expr not parsed"
 
@@ -149,18 +161,20 @@ let rec gen_range id = function
     let exStart = gen_expr exStart in
     let exEnd = gen_expr exEnd in
     let exStep = gen_expr exStep in
-    let exCmp = "(" ^exEnd^ ")>(" ^exStart^ ") ? " in
+    (* !!!! Needs to assign exStart, exEnd and exStep to compiled temp vars *)
+    (* Shouldn't change over iteration!!! *)
+    let exCmp = surr exEnd ^">"^ surr exStart ^" ? " in
     let id = gen_id id in
       "(" ^id^ "=" ^exStart^ "; " ^
-      exCmp^ id^" < (" ^exEnd^ ") : " ^id^ " > (" ^exEnd^ "); " ^
-      exCmp^ id^" += (" ^exStep^ ") : " ^id^ " -= (" ^exStep^ "))"
+      exCmp^ id^" < " ^surr exEnd^ " : " ^id^ " > " ^surr exEnd^ "; " ^
+      exCmp^ id^" += " ^surr exStep^ " : " ^id^ " -= " ^surr exStep^ ")"
   | _ -> failwith "range fatal error"
 	
 let rec gen_iterator = function
   | RangeIterator(id, rng) -> 
     gen_range id rng
   | ArrayIterator(id, ex) -> 
-    (gen_id id) ^ " in " ^ (gen_expr ex)
+    gen_id id ^ " in " ^ gen_expr ex
 	
 let rec gen_decl = function
   | AssigningDecl(typ, id, ex) -> 
@@ -180,7 +194,7 @@ let rec eval stmts =
         let funcId = gen_id funcId in
           begin
             print_endline @@ gen_datatype returnTyp ^ " " ^ 
-              funcId ^ "(" ^ gen_param_list paramList ^ ")";
+              funcId ^ surr( gen_param_list paramList );
             print_endline @@ "{ // start " ^ funcId;
             eval stmtList;
             print_endline @@ "} // end " ^ funcId ^ "\n";
@@ -189,12 +203,12 @@ let rec eval stmts =
       (* TODO: get rid of forward decl *)
       | ForwardDecl(returnTyp, funcId, paramList) -> 
           print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
-            (gen_id funcId) ^ "(" ^ gen_param_list paramList ^ ");\n";
+            (gen_id funcId) ^ surr( gen_param_list paramList ) ^";\n";
 
 			(* statements *)
 			| IfStatement(ex, stmtIf, stmtElse) -> 
 				begin
-					print_endline @@ "if (" ^ gen_expr ex ^ ")";
+					print_endline @@ "if " ^ surr(gen_expr ex);
 					print_endline "{ // start if";
 					eval [stmtIf];
 					print_endline "else";
@@ -204,7 +218,7 @@ let rec eval stmts =
 				
 			| WhileStatement(ex, stmt) -> 
 				begin
-					print_endline @@ "while (" ^ gen_expr ex  ^ ")";
+					print_endline @@ "while " ^ surr(gen_expr ex);
 					print_endline "{ // start while";
 					eval [stmt];
 					print_endline "} // end while";
