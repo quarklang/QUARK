@@ -13,11 +13,6 @@ let imports =
 let top = "\nint main(void) { \n"
 let bottom = "\n}\n"
 
-let header = 
-  "#include <stdio.h>\n\
-  #include <stdlib.h>\n\
-  #include <stdint.h>\n\n"
-
 let gen_id (Ident name) = name
 
 let gen_unop = function
@@ -112,12 +107,12 @@ let rec eval stmts =
     begin
       match stmt with
 			(* top level statements *)
-      | FunctionDecl(b, returnType, funcId, paramList, stmtList) ->
+      | FunctionDecl(returnType, funcId, paramList, stmtList) ->
         begin
           print_endline @@ (gen_id funcId) ^ ": " ^ (gen_param_list paramList);
           eval stmtList;
         end
-				
+
 			(* statements *)
 			| IfStatement(ex, stmtIf, stmtElse) -> 
 				begin

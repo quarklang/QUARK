@@ -176,9 +176,9 @@ range:
 
 top_level_statement:
   | DEF datatype ident LPAREN param_list RPAREN LCURLY statement_seq RCURLY
-      { FunctionDecl(false, $2, $3, $5, $8) }
+      { FunctionDecl($2, $3, $5, $8) }
   | datatype ident LPAREN param_list RPAREN SEMICOLON
-      { ForwardDecl(false, $1, $2, $4) }
+      { ForwardDecl($1, $2, $4) }
   | decl { Declaration($1) }
 
 param:
