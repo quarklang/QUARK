@@ -47,7 +47,7 @@ def int log2_int(int x)
 
 %{
 	If size == 0, continue until 0
-%}
+}%
 def int[] to_continued_fraction(fraction frac, int size)
 {
 	int[] cfrac;
@@ -70,7 +70,8 @@ def fraction to_fraction(int[] cfrac, int size)
 	if (size < 1)
 		size = len(cfrac);
 	ans = 1$cfrac[size - 1];
-	for (int i in [size - 2 : 0])
+    int i;
+	for (i in (size - 2):0)
 	{
 		ans += cfrac[i];
 		ans = ~ans;
@@ -89,7 +90,7 @@ def int shor_oracle(int x)
 
 def int main()
 {
-	qureg q0 = <# nbit * 2, 0 #>;
+	qureg q0 = <| nbit * 2, 0 |>;
 
 	qft(q0, 0, nbit);
 
@@ -112,11 +113,12 @@ def int main()
 		while (mTrial < 10)
 		{
             mTrial ++;
-			measured = q ? nbit;
+			measured = q ?' nbit;
 			if (measured != 0)
 			{
 				int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
-				for (int size in [len(cfrac):0])
+                int size;
+				for (size in len(cfrac):0)
 				{
 					int p = num(to_fraction(cfrac, size));
 					int P = p;
