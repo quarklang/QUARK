@@ -90,18 +90,18 @@ def int shor_oracle(int x)
 
 def int main()
 {
-	qureg q0 = <| nbit * 2, 0 |>;
+	qreg q0 = <| nbit * 2, 0 |>;
 
 	qft(q0, 0, nbit);
 
-	int b, i;
+	int b; int i;
 	while (true)
 	{
 		b = rand_int(2, M);
 
 		if (gcd(b, M) != 1) continue;
 
-		qureg q = qclone(q);
+		qreg q = qclone(q);
 
 		apply_oracle(q, "shor_oracle", nbit);
 

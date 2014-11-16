@@ -49,6 +49,7 @@ let gen_binop = function
 | SubEq -> "-="
 | MulEq -> "*="
 | DivEq -> "/="
+| _ -> failwith "unhandled binop"
 
 
 let rec gen_datatype = function
@@ -89,6 +90,7 @@ let rec gen_expr = function
       | Query -> "measure_top(" ^ex1^ ", " ^ex2^ ", true)"
       | QueryUnreal -> "measure_top(" ^ex1^ ", " ^ex2^ ", false)"
       | _ -> ex1 ^" "^ gen_binop op ^" "^ ex2)
+  
   (* Unary ops *)
   | Unop(op, ex) -> 
     gen_unop op ^ gen_expr ex
