@@ -79,16 +79,15 @@ let rec gen_param_list paramList =
     String.sub paramStr 0 ((String.length paramStr) - 2)
 	
 let rec gen_range id = function
-	| Range(IntLit(iStart), IntLit(iEnd), IntLit(iStep)) -> 
-    let dir = if iEnd >= iStart then "<" else ">" in
-    let update = if iEnd >= iStart then "+=" else "-=" in
-    let iStart = string_of_int iStart in
-    let iEnd = string_of_int iEnd in
-    if iStep <= 0 then failwith "range step must a positive int"
-    else
-      let iStep = string_of_int iStep in
-      let id = gen_id id in
-      "(" ^id^"="^iStart^"; " ^id^dir^iEnd^"; " ^id^update^iStep ^")"
+	| Range(exStart, exEnd, exStep) -> 
+    let exStart = gen_expr exStart in
+    let exEnd = gen_expr exEnd in
+    let exStep = gen_expr exStep in
+    let exCmp = "(" ^exEnd^ ")>(" ^exStart^ ") ? " in
+    let id = gen_id id in
+      "(" ^id^ "=" ^exStart^ "; " ^
+      exCmp^ id^" < (" ^exEnd^ ") : " ^id^ " > (" ^exEnd^ "); " ^
+      exCmp^ id^" += (" ^exStep^ ") : " ^id^ " -= (" ^exStep^ "))"
   | _ -> failwith "range fatal error"
 	
 let rec gen_iterator_list = function
