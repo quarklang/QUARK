@@ -39,7 +39,7 @@ type ident = Ident of string
 type lvalue =
   | Variable of ident
   | ArrayElem of ident * expr list
-  (* | ComplexAccess of expr * ident *)
+
 and expr =
   | Binop of expr * binop * expr
   | AssignOp of lvalue * binop * expr
@@ -51,9 +51,9 @@ and expr =
   | FractionLit of expr * expr
   | QRegLit of int * int
   | FloatLit of float
-  | ComplexLit of float * float
   | StringLit of string
   | ArrayLit of expr list
+  | ComplexExpr of expr * expr
   | Cast of datatype * expr
   | FunctionCall of ident * expr list
   | Lval of lvalue

@@ -127,7 +127,7 @@ expr:
   | STRING_LITERAL                                  { StringLit($1) }
   | LSQUARE expr_list RSQUARE                       { ArrayLit($2) }
   | LQREG INT_LITERAL COMMA INT_LITERAL RQREG       { QRegLit($2, $4) }
-  | COMPLEX_SYM LPAREN FLOAT_LITERAL COMMA FLOAT_LITERAL RPAREN { ComplexLit($3, $5) }
+  | COMPLEX_SYM expr COMMA expr RPAREN { ComplexExpr($2, $4) }
 
   /* function call */
   | ident LPAREN RPAREN             { FunctionCall($1, []) }
