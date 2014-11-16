@@ -16,22 +16,22 @@ def int f1(string[][][] a, int[] b, fraction c)
     
     while (true)
     {
-        b -= 2;
+        b -= f2i(2);
         c[1] ++;
-        b[21, 3-c[2]**3] --;
-        a[i++, j--] = 3;
+        b[21, 3-c[2]**3] = b[c[4 mod d[7]]] --;
+        a[i++, j--] = myfunc(3);
     }
     
     for (a in :5:1) ;
     for (a in 5:-1:2) ;
     for (a in [1, 14 mod 3, 6+1, -3*2]) ;
     
-
-    return [2,3,4] + b;
+    return [2,3,4] + b + (c << 2);
 }
 
 int f1(string[][][] a, int b);
-complex[][] c = 3$(2 - 5 mod 7);
+fraction[][] c = 3$(2 - 5 mod 7);
+complex[] a_3 = [i(3 mod -b, b **(-c)), i(-6 | ~-9, true and not false)];
 
 def int f2i()
 {
@@ -40,5 +40,7 @@ def int f2i()
     qreg q = <| 3<<2, 14 >> 1 |>;
     
     b = i(f1("sfo@", b), f2());
+    a_3;
+    b[i(3, -2), 5 <<2];
     return;
 }

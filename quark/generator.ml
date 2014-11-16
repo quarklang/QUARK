@@ -4,11 +4,12 @@ open Type
 
 let print = "print"
 
-let imports =
+let header =
   "#include \"qureg.h\"\n" ^
    "#include \"qumat.h\"\n" ^
    "#include \"qugate.h\"\n" ^
-   "#include \"algor.h\"\n"
+   "using namespace Qumat;\n" ^
+   "using namespace Qugate;\n"
 
 let top = "\nint main(void) { \n"
 let bottom = "\n}\n"
@@ -18,7 +19,7 @@ let gen_id (Ident name) = name
 let gen_unop = function
   Neg -> "-"
 | Not -> "!"
-| _ -> "misc"
+| BitNot -> "~"
 
 let gen_postop = function
   Inc -> "++"
@@ -44,6 +45,11 @@ let gen_binop = function
 | BitOr -> "|"
 | And -> "&&"
 | Or -> "||"
+| AddEq -> "+="
+| SubEq -> "-="
+| MulEq -> "*="
+| DivEq -> "/="
+
 
 let rec gen_datatype = function
 	| DataType(t) -> 
@@ -55,16 +61,17 @@ let rec gen_datatype = function
     | Complex -> "complex<float>"
     | QReg -> "Qureg"
     | String -> "string"
-    | Void -> "void"
-    | _ -> failwith "datatype fatal error")
+    | Void -> "void")
 	| ArrayType(t) -> 
 		(gen_datatype t) ^ "[]"
 
 
 let rec gen_expr = function
   (* literals *)
-  | IntLit(x) | FloatLit(x) | BoolLit(x) | StringLit(x) -> 
+  | IntLit(x) | FloatLit(x) | BoolLit(x) -> 
     x
+  | StringLit(s) -> 
+    "\"" ^ s ^ "\""
   | ArrayLit(exlist) -> 
     "[" ^ gen_expr_list exlist ^ "]"
   | FractionLit(exNum, exDenom) -> 
@@ -76,8 +83,28 @@ let rec gen_expr = function
   
   (* Binary ops *)
   | Binop(ex1, op, ex2) -> 
-    gen_expr ex1 ^ gen_binop op ^ gen_expr ex2
-  | _ -> "expr"
+    gen_expr ex1 ^" "^ gen_binop op ^" "^ gen_expr ex2
+  (* Unary ops *)
+  | Unop(op, ex) -> 
+    gen_unop op ^ gen_expr ex
+  
+  (* Assignment *)
+  | Assign(lval, ex) -> 
+    gen_lvalue lval ^ " = " ^ gen_expr ex
+  | Lval(lval) -> 
+    gen_lvalue lval
+  
+  (* Special assignment *)
+  | AssignOp(lval, op, ex) -> 
+    gen_lvalue lval ^" "^ gen_binop op ^" "^ gen_expr ex
+  | PostOp(lval, op) -> 
+    gen_lvalue lval ^" "^ gen_postop op
+    
+  (* Function calls *)
+  | FunctionCall(funcId, exlist) -> 
+    gen_id funcId ^"("^ gen_expr_list exlist ^")"
+  
+  | _ -> failwith "some expr not parsed"
 
 and gen_expr_list exlist =
   let exlistStr = 
@@ -88,6 +115,11 @@ and gen_expr_list exlist =
   if exlistStr = "" then ""
   else
     String.sub exlistStr 0 ((String.length exlistStr) - 2)
+    
+and gen_lvalue = function
+  | Variable(id) -> gen_id id
+  | ArrayElem(id, exlist) -> 
+    gen_id id ^ "[" ^ gen_expr_list exlist ^ "]"
   
 
 let rec gen_param = function 
@@ -126,8 +158,8 @@ let rec gen_iterator_list = function
       (gen_iterator_list rest)
 	
 let rec gen_decl = function
-  | AssigningDecl(typ, id, expr) -> 
-    gen_datatype typ ^ " " ^ gen_id id ^ " = " ^ gen_expr expr
+  | AssigningDecl(typ, id, ex) -> 
+    gen_datatype typ ^ " " ^ gen_id id ^ " = " ^ gen_expr ex
   | PrimitiveDecl(typ, id) -> 
     gen_datatype typ ^ " " ^ gen_id id
 
