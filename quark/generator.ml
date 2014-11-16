@@ -62,18 +62,32 @@ let rec gen_datatype = function
 
 
 let rec gen_expr = function
-	| _ -> "expr"
+  (* literals *)
+  | IntLit(x) | FloatLit(x) | BoolLit(x) | StringLit(x) -> x
+  | ArrayLit(exlist) -> "[" ^ (gen_expr_list exlist) ^ "]"
+  | _ -> "expr"
+
+and gen_expr_list exlist =
+  let exlistStr = 
+    List.fold_left 
+      (fun s ex -> s ^ (gen_expr ex) ^ ", ") "" exlist
+  in
+  (* get rid of the last 2 chars ', ' *)
+  if exlistStr = "" then ""
+  else
+    String.sub exlistStr 0 ((String.length exlistStr) - 2)
+  
 
 let rec gen_param = function 
   | PrimitiveDecl(typ, id) -> 
-		(gen_datatype typ) ^ " " ^ (gen_id id) ^ ", "
+		(gen_datatype typ) ^ " " ^ (gen_id id)
   | _ -> failwith "decl list fatal error"
 
 let rec gen_param_list paramList =
   let paramStr = 
-    List.fold_left (fun s param -> s ^ (gen_param param)) "" paramList
+    List.fold_left 
+      (fun s param -> s ^ (gen_param param) ^ ", ") "" paramList
   in
-  (* get rid of the last 2 chars ', ' *)
   if paramStr = "" then ""
   else
     String.sub paramStr 0 ((String.length paramStr) - 2)
@@ -104,6 +118,7 @@ let rec gen_decl = function
     (gen_datatype typ) ^ " " ^ (gen_id id) ^ " = " ^ (gen_expr expr)
   | PrimitiveDecl(typ, id) -> 
     (gen_datatype typ) ^ " " ^ (gen_id id)
+
 
 let rec eval stmts =
   match stmts with
