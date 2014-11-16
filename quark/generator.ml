@@ -37,6 +37,7 @@ let gen_binop = function
 | Mul -> "*"
 | Div -> "/"
 | Mod -> "%"
+| Pow -> "**"
 | Lshift -> "<<"
 | Rshift -> ">>"
 | Less -> "<"
@@ -80,22 +81,43 @@ let rec gen_param_list paramList =
 
 let rec eval stmts =
   match stmts with
-  | [] -> print_endline "end"
+  | [] -> ()
   | stmt :: rest ->
     begin
-      (match stmt with
+      match stmt with
+			(* top level statements *)
       | FunctionDecl(b, returnType, funcId, paramList, stmtList) ->
         begin
           print_endline @@ (gen_id funcId) ^ ": " ^ (gen_param_list paramList);
           eval stmtList;
         end
-      | VoidReturnStatement -> print_endline "void_return"
-      | ReturnStatement(returnExpr) -> 
-				print_endline @@ "return " ^ (gen_expr returnExpr)
+				
+			(* statments *)
+			| IfStatement(ex, stmtIf, stmtElse) -> 
+				begin
+					print_endline @@ "if (" ^ gen_expr(ex) ^ ")";
+					print_endline "{ // start if";
+					eval [stmtIf];
+					print_endline "else";
+					eval [stmtElse];
+					print_endline "} // end if";
+				end
+				
+			| CompoundStatement(stmtList) -> 
+				begin
+					print_endline "{ // start compound";
+					eval stmtList;
+					print_endline "} // end compound";
+				end
+
+			| Expression(ex) -> print_endline @@ (gen_expr ex) ^ ";"
 			| EmptyStatement -> print_endline ";"
-      | _ -> print_endline "...");
-			eval rest
-    end
+      | VoidReturnStatement -> print_endline "return; // void"
+      | ReturnStatement(ex) -> 
+				print_endline @@ "return " ^ (gen_expr ex) ^ ";"
+      | _ -> print_endline "..."
+    end;
+    eval rest
 
 let _ =
 	let lexbuf = Lexing.from_channel stdin in

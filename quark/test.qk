@@ -4,7 +4,15 @@ def int f1(string[][][] a, int[] b, fraction c)
     a = ["asdf"];
     1 + 2 - 3 + 4;
     ;
+    if (1+2==6)
+    {
+        int c = 4 << 1;
+    }
+    else
+        a = 3 ** 4;
+    
     return [2,3,4] + b;
+    return;
 }
 
 def int f2()
