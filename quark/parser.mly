@@ -64,7 +64,6 @@ var_type:
 
 datatype:
     var_type { DataType($1) }
-  | var_type LSQUARE RSQUARE { ArrayType(DataType($1)) }
   | datatype LSQUARE RSQUARE { ArrayType($1) }
 
 /* Variables that can be assigned a value */
