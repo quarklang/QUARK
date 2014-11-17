@@ -1,4 +1,4 @@
-def int exp_mod(int b, int e, int m)
+def int exp_mod: int b, int e, int m
 {
     int remainder;
     int x = 1;
@@ -15,7 +15,7 @@ def int exp_mod(int b, int e, int m)
     return x;
 }
 
-def int smallest_period(int b, int M)
+def int smallest_period: int b, int M
 {
     int i = 1;
     while exp_mod(b, i, M) != 1:
@@ -23,7 +23,7 @@ def int smallest_period(int b, int M)
     return i;
 }
 
-def int long_pow(int a, int p)
+def int long_pow: int a, int p
 {
 	if p == 1:
 		return a;
@@ -34,7 +34,7 @@ def int long_pow(int a, int p)
 		return partial * partial;
 }
 
-def int log2_int(int x)
+def int log2_int: int x
 {
 	int ans = 0;
 	while x > 0:
@@ -48,7 +48,7 @@ def int log2_int(int x)
 %{
 	If size == 0, continue until 0
 }%
-def int[] to_continued_fraction(fraction frac, int size)
+def int[] to_continued_fraction: fraction frac, int size
 {
 	int[] cfrac;
 	int i = 0;
@@ -65,7 +65,7 @@ def int[] to_continued_fraction(fraction frac, int size)
 	return cfrac;
 }
 
-def fraction to_fraction(int[] cfrac, int size)
+def fraction to_fraction: int[] cfrac, int size
 {
 	if size < 1:
 		size = len(cfrac);
@@ -83,12 +83,12 @@ int M = 17 * 13;
 int nbit = log2_int(M) + 1;
 
 % This is the user defined function that should be passed as a string argument
-def int shor_oracle(int x)
+def int shor_oracle: int x
 {
 	return exp_mod(nbit, x, M);
 }
 
-def int main()
+def int main:
 {
 	qreg q0 = <| nbit * 2, 0 |>;
 

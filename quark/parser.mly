@@ -187,9 +187,9 @@ range:
   | COLON expr { Range(IntLit("0"), $2, IntLit("1")) }
 
 top_level_statement:
-  | DEF datatype ident LPAREN param_list RPAREN LCURLY statement_seq RCURLY
-      { FunctionDecl($2, $3, $5, $8) }
-  | datatype ident LPAREN param_list RPAREN SEMICOLON
+  | DEF datatype ident COLON param_list LCURLY statement_seq RCURLY
+      { FunctionDecl($2, $3, $5, $7) }
+  | datatype ident COLON param_list SEMICOLON
       { ForwardDecl($1, $2, $4) }
   | decl { Declaration($1) }
 

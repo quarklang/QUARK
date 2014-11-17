@@ -1,10 +1,10 @@
-def void query(int a)
+def void query: int a
 {
     q ? a[3];
     a ?' nbit - 1;
 }
 
-def int f1(string[][][] a, int[] b, fraction c)
+def int f1: string[][][] a, int[] b, fraction c
 {
     b = [2,3,4] + [4,5];
     a = ["asdf"];
@@ -36,11 +36,11 @@ def int f1(string[][][] a, int[] b, fraction c)
     return [2,3,4] + b + (c << 2);
 }
 
-int f1(string[][][] a, int b);
+int f1: string[][][] a, int b;
 fraction[][] c = 3$(2 - 5 mod 7);
 complex[] a_3 = [i(3 mod -b, b **(-c)), i(-6 | ~-9, true and not false)];
 
-def int f2i()
+def int f2i:
 {
     bool b;
     int[][] c = [[2,3$5,4-3**2], [5,6,7]];
