@@ -1,3 +1,13 @@
+type vartype =
+  | Int
+  | Float
+  | Bool
+  | Fraction
+  | Complex
+  | QReg
+  | String
+  | Void
+
 type binop =
   | Add 
   | Sub 
@@ -35,7 +45,7 @@ type postop =
   | Inc
 
 type datatype =
-  | DataType of Type.var_type
+  | DataType of vartype
   | ArrayType of datatype
   | MatrixType of datatype
 

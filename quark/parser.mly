@@ -1,4 +1,4 @@
-%{ open Ast;; open Type %}
+%{ open Ast;; %}
 
 %token LPAREN RPAREN LCURLY RCURLY LSQUARE RSQUARE
 %token LQREG RQREG
@@ -53,7 +53,7 @@
 ident:
     ID { Ident($1) }
 
-var_type:
+vartype:
     INT      { Int }
   | FLOAT    { Float }
   | BOOLEAN  { Bool }
@@ -64,7 +64,7 @@ var_type:
   | VOID     { Void }
 
 datatype:
-  | var_type { DataType($1) }
+  | vartype { DataType($1) }
   | datatype LSQUARE RSQUARE { ArrayType($1) }
   | datatype LSQUARE LSQUARE RSQUARE RSQUARE { MatrixType($1) }
 
