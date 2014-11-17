@@ -80,6 +80,8 @@ rule token = parse
   | "true" as lit { BOOLEAN_LITERAL(lit) }
   | "false" as lit { BOOLEAN_LITERAL(lit) }
   | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING_LITERAL(str) }
+  | "PI" { FLOAT_LITERAL("3.141592653589793") }
+  | "E" { FLOAT_LITERAL("2.718281828459045") }
 
   (* keywords *)
   | "return" { RETURN }
