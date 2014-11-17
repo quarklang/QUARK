@@ -54,20 +54,32 @@ let gen_binop = function
 | DivEq -> "/="
 | _ -> failwith "unhandled binop"
 
+let gen_vartype = function
+  | Int -> "int64_t"
+  | Float -> "float"
+  | Bool -> "bool"
+  | Fraction -> "Frac"
+  | Complex -> "complex<float>"
+  | QReg -> "Qureg"
+  | String -> "string"
+  | Void -> "void"
 
 let rec gen_datatype = function
 	| DataType(t) -> 
-		(match t with
-    | Int -> "int64_t"
-    | Float -> "float"
-    | Bool -> "bool"
-    | Fraction -> "Frac"
-    | Complex -> "complex<float>"
-    | QReg -> "Qureg"
-    | String -> "string"
-    | Void -> "void")
+    gen_vartype t
 	| ArrayType(t) -> 
-		(gen_datatype t) ^ "[]"
+		gen_datatype t ^ "[]"
+	| MatrixType(t) -> 
+   (match t with
+    | DataType(matType) -> 
+      (match matType with
+      (* only support 3 numerical types *)
+      | Int | Float | Complex -> 
+      "Matrix<" ^ gen_vartype matType ^ ", Dynamic, Dynamic>"
+      | _ -> failwith "Non-numerical matrix type")
+    (* we shouldn't support float[][[]] *)
+    | _ -> 
+      failwith "Bad matrix type")
 
 
 let rec gen_expr = function

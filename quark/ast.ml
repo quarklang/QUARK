@@ -1,5 +1,3 @@
-open Type
-
 type binop =
   | Add 
   | Sub 
@@ -39,6 +37,7 @@ type postop =
 type datatype =
   | DataType of Type.var_type
   | ArrayType of datatype
+  | MatrixType of datatype
 
 type ident = Ident of string
 

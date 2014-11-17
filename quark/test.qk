@@ -36,7 +36,7 @@ def int f1: string[][][] a, int[] b, fraction c
     return [2,3,4] + b + (c << 2);
 }
 
-int f1: string[][][] a, int b;
+int f1: complex[[]] a, int b;
 fraction[][] c = 3$(2 - 5 mod 7);
 complex[] a_3 = [i(3 mod -b, b **(-c)), i(-6 | ~-9, true and not false)];
 
@@ -49,5 +49,11 @@ def int f2i:
     b = i(f1("sfo@", b), f2());
     a_3;
     b[i(3, -2), 5 <<2];
+
+    % bool[[]] boolmat; % error: non-numerical matrix type
+    % float[][[]] boolmat; % error: bad matrix type
+    float[[]] mat; % matrix
+    complex[[]] mat2 = [[i(sin(pi/2), -1)], [i(3$2, cos(pi/3))]];
+
     return;
 }
