@@ -177,14 +177,14 @@ iterator_list:
   | iterator { [$1] }
 
 iterator:
-  | ident IN range { RangeIterator($1, $3) }
+  | ident IN LSQUARE range RSQUARE { RangeIterator($1, $4) }
   | ident IN expr { ArrayIterator($1, $3) }
 
 range:
-  | LSQUARE expr COLON expr COLON expr RSQUARE { Range($2, $4, $6) }
-  | LSQUARE expr COLON expr RSQUARE { Range($2, $4, IntLit("1")) }
-  | LSQUARE COLON expr COLON expr RSQUARE { Range(IntLit("0"), $3, $5) }
-  | LSQUARE COLON expr RSQUARE { Range(IntLit("0"), $3, IntLit("1")) }
+  | expr COLON expr COLON expr { Range($1, $3, $5) }
+  | expr COLON expr { Range($1, $3, IntLit("1")) }
+  | COLON expr COLON expr { Range(IntLit("0"), $2, $4) }
+  | COLON expr { Range(IntLit("0"), $2, IntLit("1")) }
 
 top_level_statement:
   | DEF datatype ident LPAREN param_list RPAREN LCURLY statement_seq RCURLY
