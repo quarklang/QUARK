@@ -31,7 +31,7 @@ def int main:
 			while grover_oracle(ans) == 0:
 				ans = q ?' nbit;
 
-		probAtKey += [prefix_prob(q, nbit, key)];
+		probAtKey &= [prefix_prob(q, nbit, key)];
 	}
 
 	print("Found key: ", ans);

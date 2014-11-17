@@ -62,6 +62,7 @@ rule token = parse
   | "-=" { MINUS_EQUALS }
   | "*=" { TIMES_EQUALS }
   | "/=" { DIVIDE_EQUALS }
+  | "&=" { BITAND_EQUALS }
   | "++" { INCREMENT }
   | "--" { DECREMENT }
 

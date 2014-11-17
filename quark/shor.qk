@@ -54,7 +54,8 @@ def int[] to_continued_fraction: fraction frac, int size
 	int i = 0;
 	while size < 1 or i < size:
 	{
-        cfrac = cfrac + [num(frac) / denom(frac)];
+        % array concatenation
+        cfrac &= [num(frac) / denom(frac)];
 		frac -= cfrac[i];
 		if num(frac) == 0 : break;
 

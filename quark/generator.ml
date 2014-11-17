@@ -51,6 +51,7 @@ let gen_binop = function
 | SubEq -> "-="
 | MulEq -> "*="
 | DivEq -> "/="
+| AndEq -> "&="
 | _ -> failwith "unhandled binop"
 
 let gen_vartype = function
@@ -97,6 +98,7 @@ let rec gen_expr = function
     "complex<float>(" ^ gen_expr exReal ^ ", " ^ gen_expr exImag ^ ")"
   
   (* Binary ops *)
+  (* '+' used for matrix addition, '&' for array concatenation *)
   | Binop(ex1, op, ex2) -> 
     let ex1 = gen_expr ex1 in
     let ex2 = gen_expr ex2 in

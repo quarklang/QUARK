@@ -32,6 +32,7 @@ type binop =
   | SubEq
   | MulEq
   | DivEq
+  | AndEq
   | Query
   | QueryUnreal
 
