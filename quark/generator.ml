@@ -58,7 +58,7 @@ let gen_binop = function
 let rec gen_datatype = function
 	| DataType(t) -> 
 		(match t with
-    | Int -> "int"
+    | Int -> "int64_t"
     | Float -> "float"
     | Bool -> "bool"
     | Fraction -> "Frac"
