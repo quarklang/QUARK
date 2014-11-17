@@ -3,12 +3,12 @@ def int exp_mod(int b, int e, int m)
     int remainder;
     int x = 1;
 
-    while (e != 0)
+    while e != 0:
     {
         remainder = e mod 2;
         e = e >> 1;
 
-        if (remainder == 1)
+        if remainder == 1:
             x = (x * b) mod m;
         b = (b * b) mod m;
     }
@@ -18,17 +18,17 @@ def int exp_mod(int b, int e, int m)
 def int smallest_period(int b, int M)
 {
     int i = 1;
-    while (exp_mod(b, i, M) != 1)
+    while exp_mod(b, i, M) != 1:
         i ++;
     return i;
 }
 
 def int long_pow(int a, int p)
 {
-	if (p == 1)
+	if p == 1:
 		return a;
 	int partial = long_pow(a, p / 2);
-	if (p mod 2 == 1)
+	if p mod 2 == 1:
 		return partial * partial * a;
 	else
 		return partial * partial;
@@ -37,7 +37,7 @@ def int long_pow(int a, int p)
 def int log2_int(int x)
 {
 	int ans = 0;
-	while (x > 0)
+	while x > 0:
 	{
 		x = x >> 1;
         ans ++;
@@ -52,11 +52,11 @@ def int[] to_continued_fraction(fraction frac, int size)
 {
 	int[] cfrac;
 	int i = 0;
-	while (size < 1 or i < size)
+	while size < 1 or i < size:
 	{
         cfrac = cfrac + [num(frac) / denom(frac)];
 		frac -= cfrac[i];
-		if (num(frac) == 0) break;
+		if num(frac) == 0 : break;
 
         % denom/num built-in
 		frac = ~frac;
@@ -67,11 +67,11 @@ def int[] to_continued_fraction(fraction frac, int size)
 
 def fraction to_fraction(int[] cfrac, int size)
 {
-	if (size < 1)
+	if size < 1:
 		size = len(cfrac);
 	ans = 1$cfrac[size - 1];
     int i;
-	for (i in (size - 2):0)
+	for i in [(size - 1):0] :
 	{
 		ans += cfrac[i];
 		ans = ~ans;
@@ -95,11 +95,11 @@ def int main()
 	qft(q0, 0, nbit);
 
 	int b; int i;
-	while (true)
+	while true:
 	{
 		b = rand_int(2, M);
 
-		if (gcd(b, M) != 1) continue;
+		if gcd(b, M) != 1: continue;
 
 		qreg q = qclone(q);
 
@@ -110,31 +110,31 @@ def int main()
 		int mTrial = 0;
 		int measured;
 
-		while (mTrial < 10)
+		while mTrial < 10:
 		{
             mTrial ++;
 			measured = q ?' nbit;
-			if (measured != 0)
+			if measured != 0:
 			{
 				int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
                 int size;
-				for (size in len(cfrac):0)
+				for size in [len(cfrac):0] :
 				{
 					int p = num(to_fraction(cfrac, size));
 					int P = p;
 
-					while (P < 128 and P < M)
+					while P < 128 and P < M :
 					{
-						if (P mod 2 == 0
-							and exp_mod(b, P, M) == 1)
+						if P mod 2 == 0
+							and exp_mod(b, P, M) == 1 :
 						{
 							int check = exp_mod(b, P / 2, M);
-							if (check != 1 and check != M - 1)
+							if check != 1 and check != M - 1 :
 							{
 								int b_P_1 = long_pow(b, P / 2) - 1;
 								int prime = gcd(M, b_P_1);
 
-								if (prime != 1 and prime != -1)
+								if prime != 1 and prime != -1 :
 								{
 									print("Found period r = ", P);
 									print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
@@ -143,7 +143,7 @@ def int main()
 									print("gcd(", M, ", ", b_P_1, ") = ", prime);
 									print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
 									int other_prime;
-									if (prime2 == 1)
+									if prime2 == 1 :
 										other_prime = M / prime;
 									else
 										other_prime = prime2;

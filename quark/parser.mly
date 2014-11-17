@@ -150,13 +150,13 @@ decl:
   | datatype ident SEMICOLON                            { PrimitiveDecl($1, $2) }
 
 statement:
-  | IF LPAREN expr RPAREN statement ELSE statement
-      { IfStatement($3, $5, $7) }
-  | IF LPAREN expr RPAREN statement %prec IFX
-      { IfStatement($3, $5, EmptyStatement) }
+  | IF expr COLON statement ELSE statement
+      { IfStatement($2, $4, $6) }
+  | IF expr COLON statement %prec IFX
+      { IfStatement($2, $4, EmptyStatement) }
 
-  | WHILE LPAREN expr RPAREN statement { WhileStatement($3, $5) }
-  | FOR LPAREN iterator_list RPAREN statement { ForStatement($3, $5) }
+  | WHILE expr COLON statement { WhileStatement($2, $4) }
+  | FOR iterator_list COLON statement { ForStatement($2, $4) }
 
   | LCURLY statement_seq RCURLY { CompoundStatement($2) }
 
@@ -181,10 +181,10 @@ iterator:
   | ident IN expr { ArrayIterator($1, $3) }
 
 range:
-  | expr COLON expr COLON expr { Range($1, $3, $5) }
-  | expr COLON expr { Range($1, $3, IntLit("1")) }
-  | COLON expr COLON expr { Range(IntLit("0"), $2, $4) }
-  | COLON expr { Range(IntLit("0"), $2, IntLit("1")) }
+  | LSQUARE expr COLON expr COLON expr RSQUARE { Range($2, $4, $6) }
+  | LSQUARE expr COLON expr RSQUARE { Range($2, $4, IntLit("1")) }
+  | LSQUARE COLON expr COLON expr RSQUARE { Range(IntLit("0"), $3, $5) }
+  | LSQUARE COLON expr RSQUARE { Range(IntLit("0"), $3, IntLit("1")) }
 
 top_level_statement:
   | DEF datatype ident LPAREN param_list RPAREN LCURLY statement_seq RCURLY
