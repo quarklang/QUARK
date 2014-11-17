@@ -1,0 +1,40 @@
+int nbit = 7;
+int key = 73; % secret key
+
+def int grover_oracle : int x
+{
+	return x == key;
+}
+
+def int main:
+{
+	qreg q = <| nbit+1, 1 |>;
+
+	int N = 1 << nbit;
+	int sqrtN = floor(sqrt(N));
+
+	hadamard(q);
+
+	int ans = 0;
+	float[] probAtKey;
+
+    int iter;
+	for iter in [:sqrtN * 2] :
+	{
+		apply_oracle(q, "grover_oracle", nbit);
+
+		hadamard_top(q, nbit);
+		grover_diffuse(q);
+		hadamard_top(q, nbit);
+
+		if iter == sqrtN:
+			while grover_oracle(ans) == 0:
+				ans = q ?' nbit;
+
+		probAtKey += [prefix_prob(q, nbit, key)];
+	}
+
+	print("Found key: ", ans);
+	print("Probability = ", probAtKey);
+}
+
