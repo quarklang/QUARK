@@ -69,6 +69,7 @@ and expr =
   | FloatLit of string
   | StringLit of string
   | ArrayLit of expr list
+  | MatrixLit of expr list list
   | ComplexLit of expr * expr
   | Lval of lvalue
   | Membership of expr * expr

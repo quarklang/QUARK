@@ -88,12 +88,19 @@ let rec gen_expr = function
     x
   | StringLit(s) -> 
     "\"" ^ s ^ "\""
+
   | ArrayLit(exlist) -> 
     "[" ^ gen_expr_list exlist ^ "]"
+
+  | MatrixLit(exlistlist) -> 
+    "Matrix<>(" ^ gen_matrix_list exlistlist ^ ")"
+
   | FractionLit(exNum, exDenom) -> 
     "Frac(" ^ gen_expr exNum ^ ", " ^ gen_expr exDenom ^ ")"
+
   | QRegLit(ex1, ex2) -> 
     "Qureg::create<true>(" ^ gen_expr ex1 ^ ", " ^ gen_expr ex2 ^ ")"
+
   | ComplexLit(exReal, exImag) -> 
     "complex<float>(" ^ gen_expr exReal ^ ", " ^ gen_expr exImag ^ ")"
   
@@ -153,6 +160,16 @@ and gen_lvalue = function
     gen_id id
   | ArrayElem(id, exlist) -> 
     gen_id id ^ "[" ^ gen_expr_list exlist ^ "]"
+
+and gen_matrix_list exlistlist =
+  let exlistlistStr = 
+    List.fold_left 
+      (fun s exlist -> s ^ gen_expr_list exlist ^ "; ") "" exlistlist
+  in
+  (* get rid of the last 2 chars ', ' *)
+  if exlistlistStr = "" then ""
+  else
+    String.sub exlistlistStr 0 ((String.length exlistlistStr) - 2)
   
 
 let rec gen_param = function 

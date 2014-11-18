@@ -27,6 +27,7 @@ rule token = parse
   | "?'" { QUERY_UNREAL } 
   | "i(" { COMPLEX_SYM }
   | "<|" { LQREG }  | "|>" { RQREG }
+  | "[|" { LMATRIX }  | "|]" { RMATRIX }
   | "def" { DEF }
 
 

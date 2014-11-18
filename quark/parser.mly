@@ -1,7 +1,7 @@
 %{ open Ast;; %}
 
 %token LPAREN RPAREN LCURLY RCURLY LSQUARE RSQUARE
-%token LQREG RQREG
+%token LQREG RQREG LMATRIX RMATRIX
 %token COMMA SEMICOLON COLON
 %token ASSIGN
 %token QUERY QUERY_UNREAL
@@ -131,14 +131,15 @@ expr:
   | expr IN expr    { Membership($1, $3) }
 
   /* literals */
-  | INT_LITERAL                                     { IntLit($1) }
-  | FLOAT_LITERAL                                   { FloatLit($1) }
-  | BOOLEAN_LITERAL                                 { BoolLit($1) }
-  | expr DOLLAR expr                                { FractionLit($1, $3) }
-  | STRING_LITERAL                                  { StringLit($1) }
-  | LSQUARE expr_list RSQUARE                       { ArrayLit($2) }
-  | COMPLEX_SYM expr COMMA expr RPAREN              { ComplexLit($2, $4) }
-  | LQREG expr COMMA expr RQREG       { QRegLit($2, $4) }
+  | INT_LITERAL                                 { IntLit($1) }
+  | FLOAT_LITERAL                               { FloatLit($1) }
+  | BOOLEAN_LITERAL                             { BoolLit($1) }
+  | expr DOLLAR expr                            { FractionLit($1, $3) }
+  | STRING_LITERAL                              { StringLit($1) }
+  | LSQUARE expr_list RSQUARE                   { ArrayLit($2) }
+  | LMATRIX matrix_row_list RMATRIX             { MatrixLit($2) }
+  | COMPLEX_SYM expr COMMA expr RPAREN          { ComplexLit($2, $4) }
+  | LQREG expr COMMA expr RQREG                 { QRegLit($2, $4) }
 
   /* function call */
   | ident LPAREN RPAREN             { FunctionCall($1, []) }
@@ -147,6 +148,11 @@ expr:
 expr_list:
   | expr COMMA expr_list { $1 :: $3 }
   | expr                 { [$1] }
+
+/* [| r00, r01; r10, r11; r20, r21 |] */
+matrix_row_list:
+  | expr_list SEMICOLON matrix_row_list { $1 :: $3 }
+  | expr_list            { [$1] }
 
 decl:
   | datatype ident ASSIGN expr SEMICOLON                { AssigningDecl($1, $2, $4) }
