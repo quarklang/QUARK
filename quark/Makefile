@@ -32,11 +32,13 @@ scanner.ml : scanner.mll
 parser.ml parser.mli : parser.mly
 	ocamlyacc parser.mly
 
+DISABLE_WARN = -4-39-11
+
 %.cmo : %.ml
-	ocamlc -w +a-4-39 -c $<
+	ocamlc -w +a$(DISABLE_WARN) -c $<
 
 %.cmi : %.mli
-	ocamlc -w +a-4-39 -c $<
+	ocamlc -w +a$(DISABLE_WARN) -c $<
 
 .PHONY : clean
 clean :
