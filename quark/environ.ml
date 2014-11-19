@@ -20,12 +20,8 @@ exception Not_implemented
 exception Symbol_not_found of string
 
 type 'a env = {
-  kernel_invocation_functions: kernel_invocation_function list;
-  kernel_functions: kernel_function list;
-  func_type_map: (bool * datatype * datatype list) FuncMap.t;
+  func_type_map: (datatype * datatype list) FuncMap.t;
   scope_stack: datatype VarMap.t list;
-  pfor_kernels: pfor_kernel list;
-  on_gpu: bool;
 }
 
 type 'a sourcecomponent =
@@ -34,35 +30,26 @@ type 'a sourcecomponent =
   | NewScopeGenerator of ('a -> (string * 'a))
 
 let create =
-  {
-    kernel_invocation_functions = [];
-    kernel_functions = [];
-    func_type_map = FuncMap.empty;
-    scope_stack = VarMap.empty ::[];
-    pfor_kernels = [];
-    on_gpu = false;
-  }
+{
+  func_type_map = FuncMap.empty;
+  scope_stack = VarMap.empty ::[];
+}
 
-let update_env kernel_invocation_functions kernel_functions
-  func_type_map var_map_list pfor_kernels on_gpu =
-    {
-      kernel_invocation_functions = kernel_invocation_functions;
-      kernel_functions = kernel_functions;
-      func_type_map = func_type_map;
-      scope_stack = var_map_list;
-      pfor_kernels = pfor_kernels;
-      on_gpu = on_gpu;
-    }
+let update_env func_type_map var_map_list =
+{
+  func_type_map = func_type_map;
+  scope_stack = var_map_list;
+}
 
 let var_in_scope ident env =
-    let rec check_scope scopes =
-        match scopes with
-          | [] -> false
-          | scope :: tail ->
-                if VarMap.mem ident scope then
-                    true
-                else check_scope tail
-    in check_scope env.scope_stack
+  let rec check_scope scopes =
+    match scopes with
+      | [] -> false
+      | scope :: tail ->
+        if VarMap.mem ident scope then
+            true
+        else check_scope tail
+  in check_scope env.scope_stack
 
 let get_var_type ident env =
   let rec check_scope scopes =
@@ -86,8 +73,7 @@ let set_var_type ident datatype env =
                 | scope :: tail -> scope, tail
                 | [] -> raise Invalid_environment) in
   let new_scope = VarMap.add ident datatype scope in
-  update_env env.kernel_invocation_functions env.kernel_functions
-    env.func_type_map (new_scope :: tail) env.pfor_kernels env.on_gpu
+  update_env env.func_type_map (new_scope :: tail)
 
 let update_scope ident datatype (str, env) =
   if is_var_declared ident env then
@@ -96,15 +82,13 @@ let update_scope ident datatype (str, env) =
     (str, set_var_type ident datatype env)
 
 let push_scope env =
-  update_env env.kernel_invocation_functions env.kernel_functions
-     env.func_type_map
-    (VarMap.empty :: env.scope_stack) env.pfor_kernels env.on_gpu
+  update_env env.func_type_map 
+    (VarMap.empty :: env.scope_stack)
 
 let pop_scope env =
   match env.scope_stack with
    | local_scope :: tail ->
-      update_env env.kernel_invocation_functions env.kernel_functions
-         env.func_type_map tail env.pfor_kernels env.on_gpu
+      update_env env.func_type_map tail
    | [] -> raise Invalid_environment
 
 let get_func_info ident env =
@@ -113,54 +97,16 @@ let get_func_info ident env =
 let is_func_declared ident env =
   FuncMap.mem ident env.func_type_map
 
-let update_global_funcs function_type kernel_invoke_sym function_name
-    hof kernel_sym (str, env) =
-  let new_kernel_funcs = {
-    kernel_invoke_sym = kernel_invoke_sym;
-    higher_order_func = hof; 
-    kernel_sym = kernel_sym;
-    func_type = function_type;
-  } :: env.kernel_invocation_functions in
-
-  let new_global_funcs = {
-    function_name = function_name;
-    hof = hof;
-    kernel_symbol = kernel_sym;
-    function_type = function_type;
-  } :: env.kernel_functions in
-
-  (str, update_env new_kernel_funcs new_global_funcs env.func_type_map 
-      env.scope_stack env.pfor_kernels env.on_gpu)
-
-let update_pfor_kernels kernel_name iterators arguments statement (str, env) =
-    let new_pfor_kernels = {
-        pfor_kernel_name = kernel_name;
-        pfor_iterators = iterators;
-        pfor_arguments = arguments;
-        pfor_statement = statement;
-    } :: env.pfor_kernels in
-    (str, update_env env.kernel_invocation_functions env.kernel_functions
-            env.func_type_map env.scope_stack new_pfor_kernels env.on_gpu)
-
-let set_on_gpu env =
-    update_env env.kernel_invocation_functions env.kernel_functions
-        env.func_type_map env.scope_stack env.pfor_kernels true
-
-let clear_on_gpu env =
-    update_env env.kernel_invocation_functions env.kernel_functions
-        env.func_type_map env.scope_stack env.pfor_kernels false
-
-let set_func_type ident device returntype arg_list env =
+let set_func_type ident returntype arg_list env =
   let new_func_type_map =
-      FuncMap.add ident (device, returntype, arg_list) env.func_type_map in
-  update_env env.kernel_invocation_functions env.kernel_functions
-    new_func_type_map env.scope_stack env.pfor_kernels env.on_gpu
+      FuncMap.add ident (returntype, arg_list) env.func_type_map in
+  update_env new_func_type_map env.scope_stack
 
-let update_functions ident device returntype arg_list (str, env) =
+let update_functions ident returntype arg_list (str, env) =
   if is_func_declared ident env then
     raise Already_declared
   else
-    (str, set_func_type ident device returntype arg_list env)
+    (str, set_func_type ident returntype arg_list env)
 
 let combine initial_env components =
     let f (str, env) component =
