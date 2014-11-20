@@ -23,9 +23,11 @@ rule token = parse
   | '=' { ASSIGN }
   | ''' { PRIME }
   | '?' { QUERY }
-  | 'i' { COMPLEX }
-  | "<#" { LQREG }
-  | "#>" { RQREG }
+  (* unrealistic query that doesn't disrupt quantum state *)
+  | "?'" { QUERY_UNREAL } 
+  | "i(" { COMPLEX_SYM }
+  | "<|" { LQREG }  | "|>" { RQREG }
+  | "[|" { LMATRIX }  | "|]" { RMATRIX }
   | "def" { DEF }
 
 
@@ -45,7 +47,7 @@ rule token = parse
   | "!="    { NOT_EQUALS }
   | "and"   { AND }
   | "or"    { OR }
-  | '!'     { NOT }
+  | "not"     { NOT }
   | "**"    { POWER }
 
   (* unary *)
@@ -60,29 +62,33 @@ rule token = parse
   | "+=" { PLUS_EQUALS }
   | "-=" { MINUS_EQUALS }
   | "*=" { TIMES_EQUALS }
-  | "/-" { DIVIDE_EQUALS }
+  | "/=" { DIVIDE_EQUALS }
+  | "&=" { BITAND_EQUALS }
   | "++" { INCREMENT }
   | "--" { DECREMENT }
 
-  (* literals *) 
-  | sign? digit+ as lit { INT(int_of_string lit) } 
-  | floating as lit { FLOAT(float_of_string lit) }
-  | "true" as lit { BOOL(bool_of_string lit) }
-  | "false" as lit { BOOL(bool_of_string lit) }
-  | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING(str) }
+  | "bool"      { BOOLEAN }
+  | "string"    { STRING }
+  | "int"       { INT }
+  | "float"     { FLOAT }
+  | "void"      { VOID }
+  | "complex"   { COMPLEX }
+  | "fraction"  { FRACTION }
+  | "qreg"      { QREG }
 
-  (* datatypes *)
-  | "bool" 
-  | "int" 
-  | "float" 
-  | "complex" 
-  | "void" 
-  | "string" 
-  | "array"
-      as primitive { TYPE(primitive) }
+  (* literals *) 
+  | digit+ as lit { INT_LITERAL(lit) } 
+  | floating as lit { FLOAT_LITERAL(lit) }
+  | "true" as lit { BOOLEAN_LITERAL(lit) }
+  | "false" as lit { BOOLEAN_LITERAL(lit) }
+  | '"' (('\\' _ | [^ '"'])* as str) '"' { STRING_LITERAL(str) }
+  | "PI" { FLOAT_LITERAL("3.141592653589793") }
+  | "E" { FLOAT_LITERAL("2.718281828459045") }
 
   (* keywords *)
   | "return" { RETURN }
+  | "break" { BREAK } 
+  | "continue" { CONTINUE }
   | "if" { IF }
   | "else" { ELSE }
   | "for" { FOR }
