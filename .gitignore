@@ -19,6 +19,7 @@
 scanner.ml
 parser.mli
 parser.ml
+quarkc
 
 # Vagrant
 .vagrant
