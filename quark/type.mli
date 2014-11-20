@@ -1,4 +1,4 @@
-type var_type =
+type vartype =
   | Int
   | Float
   | Bool

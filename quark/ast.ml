@@ -38,7 +38,7 @@ type postop =
   | Inc
 
 type datatype = 
-  | DataType of var_type
+  | DataType of vartype
   | ArrayType of datatype
   | MatrixType of datatype
 
