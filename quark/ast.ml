@@ -1,12 +1,4 @@
-type vartype =
-  | Int
-  | Float
-  | Bool
-  | Fraction
-  | Complex
-  | QReg
-  | String
-  | Void
+open Type
 
 type binop =
   | Add 
@@ -45,7 +37,7 @@ type postop =
   | Dec 
   | Inc
 
-type datatype =
+type datatype = 
   | DataType of vartype
   | ArrayType of datatype
   | MatrixType of datatype

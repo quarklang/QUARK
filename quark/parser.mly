@@ -1,4 +1,5 @@
-%{ open Ast;; %}
+%{ open Ast %}
+%{ open Type %}
 
 %token LPAREN RPAREN LCURLY RCURLY LSQUARE RSQUARE
 %token LQREG RQREG LMATRIX RMATRIX
@@ -68,10 +69,9 @@ datatype:
   | datatype LSQUARE RSQUARE { ArrayType($1) }
   | datatype LSQUARE LSQUARE RSQUARE RSQUARE { MatrixType($1) }
 
-
 /* Variables that can be assigned a value */
 lvalue:
-  | ident { Variable($1) }
+  | ident                           { Variable($1) }
   | ident LSQUARE expr_list RSQUARE { ArrayElem($1, $3) }
 
 expr:
