@@ -288,7 +288,3 @@ let rec eval stmts =
       | _ -> failwith "nothing for eval()"
     end;
     eval rest
-
-let _ =
-	let lexbuf = Lexing.from_channel stdin in
-	eval @@ Parser.top_level Scanner.token lexbuf
