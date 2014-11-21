@@ -25,7 +25,7 @@ and expr =
   | ComplexLit of float * float * datatype
   | StringLit of string * datatype
   | ArrayLit of expr list * datatype
-  | Cast of datatype * expr
+  | Cast of datatype * expr * datatype
   | FunctionCall of ident * expr list
   | Lval of lvalue
 
