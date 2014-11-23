@@ -17,12 +17,12 @@ and expr =
   | Unop of unop * expr * datatype
   | PostOp of lvalue * postop * datatype
   | Assign of lvalue * expr * datatype
-  | IntLit of int * datatype
-  | BoolLit of bool * datatype
+  | IntLit of string * datatype
+  | BoolLit of string * datatype
   | FractionLit of expr * expr * datatype
-  | QRegLit of int * int * datatype
-  | FloatLit of float * datatype
-  | ComplexLit of float * float * datatype
+  | QRegLit of string * string * datatype
+  | FloatLit of string * datatype
+  | ComplexLit of string * string * datatype
   | StringLit of string * datatype
   | ArrayLit of expr list * datatype
   | Cast of datatype * expr * datatype
@@ -49,7 +49,7 @@ type statement =
   | WhileStatement of expr * statement
   | ForStatement of iterator list * statement
   | PforStatement of iterator list * statement
-  | FunctionDecl of bool * datatype * ident * decl list * statement list
-  | ForwardDecl of bool * datatype * ident * decl list
+  | FunctionDecl of string * datatype * ident * decl list * statement list
+  | ForwardDecl of string * datatype * ident * decl list
   | ReturnStatement of expr
   | VoidReturnStatement
