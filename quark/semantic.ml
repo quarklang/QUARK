@@ -1,6 +1,6 @@
-open Ast
-open Sast
-open Type
+module A = Ast
+module S = Sast
+module T = Type
 
 exception Error of string
 
@@ -333,115 +333,120 @@ let initialize_globals (globals, env) decl =
 					raise (Error("Multiple declarations")) in ret
 
 let find_local_variable env name = 
-	try List.find (fun (s,_,_) -> s=name) env.var_scope.variables
-	with Not_found -> raise Not_found
+    try List.find (fun (s,_,_) -> s = name) env.var_scope.variables
+    with Not_found -> raise Not_found
 
 (*Semantic checking on a stmt*)
 let rec check_stmt env stmt = match stmt with
-	| Block(stmt_list) ->
-		let new_env=env in
-		let getter(env,acc) s =
-			let (st, ne) = check_stmt env s in
-			(ne, st::acc) in
-		let (ls,st) = List.fold_left(fun e s -> getter e s) (new_env,[]) stmt_list in
-		let revst = List.rev st in
-		(SBlock(revst),ls)
-	| Expr(e) -> 
-		let _ = check_expr env e in
-		(SSExpr(get_sexpr env e),env)
-	| Return(e) ->
-		let type1=check_expr env e in
-		(if not((type1=env.return_type)) then
-			raise (Error("Incompatible Return Type")));
-		let new_env = {env with return_seen=true} in
-		(SReturn(get_sexpr env e),new_env)
-	| If(e,s1,s2)->
-		let t=get_type_from_datatype(check_expr env e) in
-		(if not (t=Boolean) then
-			raise (Error("If predicate must be a boolean")));
-		let (st1,new_env1)=check_stmt env s1
-		and (st2, new_env2)=check_stmt env s2 in
-		let ret_seen=(new_env1.return_seen&&new_env2.return_seen) in
-		let new_env = {env with return_seen=ret_seen} in
-		(SIf((get_sexpr env e),st1,st2),new_env)
-	| For(e1,e2,e3,s) ->
-		let t1=get_type_from_datatype(check_expr env e1)
-		and t2= get_type_from_datatype(check_expr env e2)
-		and t3=get_type_from_datatype(check_expr env e3) in
-		(if not (t1=Int && t3=Int && t2=Boolean) then
-			raise (Error("Improper For loop format")));
-		let(st,new_env)=check_stmt env s in
-		(SFor((get_sexpr env e1),(get_sexpr env e2), (get_sexpr env e3), st),new_env)
-	| While(e,s) ->
-		let t=get_type_from_datatype(check_expr env e) in
-		(if not(t=Boolean) then
-			raise (Error("Improper While loop format")));
-		let (st, new_env)=check_stmt env s in
-		(SWhile((get_sexpr env e), st),new_env)
-	| Ast.Declaration(decl) -> 
-		(* If variable is found, multiple decls error
-			If variable is not found and var is assigndecl, check for type compat *)
-		let (name, ty) = get_name_type_from_decl decl in
-		let ((_,dt,_),found) = try (fun f -> ((f env name),true)) find_local_variable with 
-			Not_found ->
-				((name,ty,None),false) in
-		let ret = if(found=false) then
-			match decl with
-				VarDecl(_,_) ->
-					let (sdecl,_) = get_sdecl env decl in
-					let (n, t, v) = get_name_type_val_from_decl decl in
-					let new_env = add_to_var_table env n t v in
-					(SDeclaration(sdecl), new_env)
-				| VarAssignDecl(dt, id, value) ->
-					let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(get_datatype_from_val env value) in
-					if(t1=t2) then
-						let (sdecl,_) = get_sdecl env decl in
-						let (n, t, v) = get_name_type_val_from_decl decl in
-						let new_env = add_to_var_table env n t v in
-						(SDeclaration(sdecl), new_env)
-					else raise (Error("Type mismatch"))
-				else
-					raise (Error("Multiple declarations")) in ret
-	| Ast.Assign(ident, expr) ->
-		(* make sure 1) variable exists, 2) variable and expr have same types *)
-		let (_, dt, _) = try find_variable env ident with Not_found -> raise (Error("Uninitialized variable")) in
-		let t1 = get_type_from_datatype dt 
-		and t2 = get_type_from_datatype(check_expr env expr) in
-		if( not(t1=t2) ) then 
-			raise (Error("Mismatched type assignments"));
-		let sexpr = get_sexpr env expr in
-		let new_env = update_variable env (ident,dt,Some((ExprVal(expr)))) in
-		(SAssign(SIdent(ident, get_var_scope env ident), sexpr), new_env)
-	| Ast.ArrAssign(ident, expr_list) ->
-		(* make sure 1) array exists and 2) all types in expr list are equal *)
-		let (n,dt,v) = try find_variable env ident with Not_found -> raise (Error("Undeclared array")) in
-		let sexpr_list = List.map (fun expr2 -> 
-							let expr1 = List.hd expr_list in
-							let t1 = get_type_from_datatype(check_expr env expr1) and t2 = get_type_from_datatype(check_expr env expr2) in
-							if(t1=t2) then 
-								let sexpr2 = get_sexpr env expr2 in sexpr2
-								else raise (Error("Array has inconsistent types"))) expr_list in
-		let _ = 
-			let t1=get_type_from_datatype(check_expr env (List.hd expr_list)) and t2=get_type_from_datatype(dt) in
-			if(t1!=t2) then raise (Error("Type Mismatch")) in
-		let new_env = update_variable env (n,dt,(Some(ArrVal(expr_list)))) in
-		(SArrAssign(SIdent(ident,get_var_scope env ident), sexpr_list), new_env)
-	| Ast.ArrElemAssign(ident, expr1, expr2) ->
-		(* Make sure
-			1) array exists (if it exists, then it was already declared and semantically checked)
-			2) expr matches type of array 
-			3) index is not out of bounds *)
-		let (id, dt, v) = try find_variable env ident with Not_found -> raise (Error("Undeclared array")) in
-		let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(check_expr env expr2) in
-		let _ = if(t1=t2) then true else raise (Error("Type Mismatch")) in
-		let _ = (match v with
-				Some(ArrVal(el)) -> (* get_sexpr_list env  *)el
-				| None -> raise (Error("No expression on right hand side"))
-				| _ -> raise (Error("???"))) in
+
+    | A.Block(statements) ->
+        let new_env = env in
+        (* semantically check each statement in the block *)
+        let (new_env', statements) = List.fold_left
+            (fun statement updated_env  -> 
+                let (statement', updated_env') = check_stmt(updated_env statement) in
+                (checked_statment :: acc, updated_env))
+            ([], new_env) statements in
+
+        let statements = List.rev statements in
+        (S.Block(statements), new_env')
+
+    | Expr(e) -> 
+        let _ = check_expr env e in
+        (SSExpr(get_sexpr env e),env)
+    | Return(e) ->
+        let type1=check_expr env e in
+        (if not((type1=env.return_type)) then
+            raise (Error("Incompatible Return Type")));
+        let new_env = {env with return_seen=true} in
+        (SReturn(get_sexpr env e),new_env)
+    | If(e,s1,s2)->
+        let t=get_type_from_datatype(check_expr env e) in
+        (if not (t=Boolean) then
+            raise (Error("If predicate must be a boolean")));
+        let (st1,new_env1)=check_stmt env s1
+        and (st2, new_env2)=check_stmt env s2 in
+        let ret_seen=(new_env1.return_seen&&new_env2.return_seen) in
+        let new_env = {env with return_seen=ret_seen} in
+        (SIf((get_sexpr env e),st1,st2),new_env)
+    | For(e1,e2,e3,s) ->
+        let t1=get_type_from_datatype(check_expr env e1)
+        and t2= get_type_from_datatype(check_expr env e2)
+        and t3=get_type_from_datatype(check_expr env e3) in
+        (if not (t1=Int && t3=Int && t2=Boolean) then
+            raise (Error("Improper For loop format")));
+        let(st,new_env)=check_stmt env s in
+        (SFor((get_sexpr env e1),(get_sexpr env e2), (get_sexpr env e3), st),new_env)
+    | While(e,s) ->
+        let t=get_type_from_datatype(check_expr env e) in
+        (if not(t=Boolean) then
+            raise (Error("Improper While loop format")));
+        let (st, new_env)=check_stmt env s in
+        (SWhile((get_sexpr env e), st),new_env)
+    | A.Declaration(decl) -> 
+        (* If variable is found, multiple decls error
+            If variable is not found and var is assigndecl, check for type compat *)
+        let (name, ty) = get_name_type_from_decl decl in
+        let ((_,dt,_),found) = try (fun f -> ((f env name),true)) find_local_variable with 
+            Not_found ->
+                ((name,ty,None),false) in
+        let ret = if(found=false) then
+            match decl with
+                VarDecl(_,_) ->
+                    let (sdecl,_) = get_sdecl env decl in
+                    let (n, t, v) = get_name_type_val_from_decl decl in
+                    let new_env = add_to_var_table env n t v in
+                    (SDeclaration(sdecl), new_env)
+                | VarAssignDecl(dt, id, value) ->
+                    let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(get_datatype_from_val env value) in
+                    if(t1=t2) then
+                        let (sdecl,_) = get_sdecl env decl in
+                        let (n, t, v) = get_name_type_val_from_decl decl in
+                        let new_env = add_to_var_table env n t v in
+                        (SDeclaration(sdecl), new_env)
+                    else raise (Error("Type mismatch"))
+                else
+                    raise (Error("Multiple declarations")) in ret
+    | A.Assign(ident, expr) ->
+        (* make sure 1) variable exists, 2) variable and expr have same types *)
+        let (_, dt, _) = try find_variable env ident with Not_found -> raise (Error("Uninitialized variable")) in
+        let t1 = get_type_from_datatype dt 
+        and t2 = get_type_from_datatype(check_expr env expr) in
+        if( not(t1=t2) ) then 
+            raise (Error("Mismatched type assignments"));
+        let sexpr = get_sexpr env expr in
+        let new_env = update_variable env (ident,dt,Some((ExprVal(expr)))) in
+        (SAssign(SIdent(ident, get_var_scope env ident), sexpr), new_env)
+    | A.ArrAssign(ident, expr_list) ->
+        (* make sure 1) array exists and 2) all types in expr list are equal *)
+        let (n,dt,v) = try find_variable env ident with Not_found -> raise (Error("Undeclared array")) in
+        let sexpr_list = List.map (fun expr2 -> 
+                            let expr1 = List.hd expr_list in
+                            let t1 = get_type_from_datatype(check_expr env expr1) and t2 = get_type_from_datatype(check_expr env expr2) in
+                            if(t1=t2) then 
+                                let sexpr2 = get_sexpr env expr2 in sexpr2
+                                else raise (Error("Array has inconsistent types"))) expr_list in
+        let _ = 
+            let t1=get_type_from_datatype(check_expr env (List.hd expr_list)) and t2=get_type_from_datatype(dt) in
+            if(t1!=t2) then raise (Error("Type Mismatch")) in
+        let new_env = update_variable env (n,dt,(Some(ArrVal(expr_list)))) in
+        (SArrAssign(SIdent(ident,get_var_scope env ident), sexpr_list), new_env)
+    | A.ArrElemAssign(ident, expr1, expr2) ->
+        (* Make sure
+            1) array exists (if it exists, then it was already declared and semantically checked)
+            2) expr matches type of array 
+            3) index is not out of bounds *)
+        let (id, dt, v) = try find_variable env ident with Not_found -> raise (Error("Undeclared array")) in
+        let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(check_expr env expr2) in
+        let _ = if(t1=t2) then true else raise (Error("Type Mismatch")) in
+        let _ = (match v with
+                Some(ArrVal(el)) -> (* get_sexpr_list env  *)el
+                | None -> raise (Error("No expression on right hand side"))
+                | _ -> raise (Error("???"))) in
         let t = get_type_from_datatype(check_expr env expr1) in
         let _ = if not(t=Int) then raise(Error("Array index must be an integer")) in
-		(SArrElemAssign(SIdent(ident,get_var_scope env ident), get_sexpr env expr1, get_sexpr env expr2), env)
-	| Terminate -> (STerminate, env)
+        (SArrElemAssign(SIdent(ident,get_var_scope env ident), get_sexpr env expr1, get_sexpr env expr2), env)
+    | Terminate -> (STerminate, env)
 
 let get_sstmt_list env stmt_list = 
     List.fold_left
