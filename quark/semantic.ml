@@ -444,52 +444,72 @@ let rec check_stmt env stmt = match stmt with
 	| Terminate -> (STerminate, env)
 
 let get_sstmt_list env stmt_list = 
-	 List.fold_left (fun (sstmt_list,env) stmt -> 
-	 	let (sstmt, new_env) = check_stmt env stmt in 
-		(sstmt::sstmt_list, new_env)) ([],env) stmt_list
+    List.fold_left
+        (fun (sstmt_list,env) stmt ->
+            let (sstmt, new_env) = check_stmt env stmt in 
+            (sstmt::sstmt_list, new_env))
+    ([],env) stmt_list
 
-(* add a function to the environment*)
-let add_function env sfunc_decl =
-	let f_table = env.fun_scope in
-	let old_functions = f_table.functions in
-	match sfunc_decl with
-		SFunc_Decl(sfuncstr, datatype) ->
-			let func_name = sfuncstr.sfname in
-			let func_type = get_type_from_datatype sfuncstr.sreturn in
-			let func_formals = sfuncstr.sformals in
-			let func_body = sfuncstr.sbody in
-			let new_functions = (func_name, func_type, func_formals, func_body)::old_functions in
-			let new_fun_scope = {functions = new_functions} in
-			let final_env = {env with fun_scope = new_fun_scope} in
-			final_env
+    (* add a function to the environment*)
+    let add_function env sfunc_decl =
+    let f_table = env.fun_scope in
+    let old_functions = f_table.functions in
+    match sfunc_decl with
+        SFunc_Decl(sfuncstr, datatype) ->
+            let func_name = sfuncstr.sfname in
+            let func_type = get_type_from_datatype sfuncstr.sreturn in
+            let func_formals = sfuncstr.sformals in
+            let func_body = sfuncstr.sbody in
+            let new_functions = (func_name, func_type, func_formals, func_body)::old_functions in
+            let new_fun_scope = {functions = new_functions} in
+            let final_env = {env with fun_scope = new_fun_scope} in
+            final_env
 
 (* Semantic checking on a function*)
 let check_func env func_declaration =
-	let new_locals = List.fold_left(fun a vs -> (get_name_type_from_formal env vs)::a)[] func_declaration.formals in
-	let new_var_scope = {parent=Some(env.var_scope); variables = new_locals;} in
-	let new_env = {return_type = func_declaration.return; return_seen=false; location="in_func"; global_scope = env.global_scope; var_scope = new_var_scope; fun_scope = env.fun_scope} in
-	(* let final_env  =List.fold_left(fun env stmt -> snd (check_stmt env stmt)) new_env func_declaration.body in *)
-	let (typed_statements, final_env) = get_sstmt_list new_env func_declaration.body in
-	let _=check_final_env final_env in
-	let sfuncdecl = ({sreturn = func_declaration.return; sfname =
-        func_declaration.fname; sformals = func_declaration.formals; sbody =
-            typed_statements}) in
-	(SFunc_Decl(sfuncdecl,func_declaration.return), env) 
+    let new_locals = List.fold_left
+        (fun a vs -> (get_name_type_from_formal env vs)::a)
+    [] func_declaration.formals in
+
+    let new_var_scope = {
+        parent=Some(env.var_scope);
+        variables = new_locals;
+    } in
+    let new_env = {
+        return_type = func_declaration.return;
+        return_seen=false;
+        location="in_func";
+        global_scope = env.global_scope;
+        var_scope = new_var_scope;
+        fun_scope = env.fun_scope
+    } in
+    let (typed_statements, final_env) = get_sstmt_list new_env func_declaration.body in
+    let _ = check_final_env final_env in
+    let sfuncdecl = ({
+        sreturn = func_declaration.return;
+        sfname = func_declaration.fname;
+        sformals = func_declaration.formals;
+        sbody = typed_statements
+    }) in
+    (SFunc_Decl(sfuncdecl,func_declaration.return), env) 
 
 let initialize_functions env function_list = 
-	let (typed_functions,last_env) = List.fold_left
-		(fun (sfuncdecl_list,env) func-> 	let (sfuncdecl, _) = check_func env func in	
-											let final_env = add_function env sfuncdecl in										
-											(sfuncdecl::sfuncdecl_list, final_env)) ([],env) function_list in
-		(typed_functions,last_env)
+    let (typed_functions, last_env) = List.fold_left
+        (fun (sfuncdecl_list, env) func ->
+            let (sfuncdecl, _) = check_func env func in
+            let final_env = add_function env sfuncdecl in
+            (sfuncdecl::sfuncdecl_list, final_env))
+        ([],env) function_list in
+        (typed_functions, last_env)
 
 (*Semantic checking on a program*)
 let check_program program =
-	let (functions,(globals,threads)) = program in
-	let env = empty_environment in
-	let (typed_functions, new_env) = initialize_functions env functions in
-	let (typed_globals, new_env2) = List.fold_left(fun (new_globals,env)
-             globals -> initialize_globals (new_globals, env) globals) ([], new_env) globals in
-
-	Prog(typed_functions, (typed_globals, typed_threads))
+    let (functions,(globals, threads)) = program in
+    let env = empty_environment in
+    let (typed_functions, new_env) = initialize_functions env functions in
+    let (typed_globals, new_env2) = List.fold_left(
+        fun (new_globals, env) globals -> 
+            initialize_globals (new_globals, env) globals) 
+        ([], new_env) globals in
+    Prog(typed_functions, (typed_globals, typed_threads))
              
