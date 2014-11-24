@@ -48,7 +48,6 @@ type statement =
   | IfStatement of expr * statement * statement
   | WhileStatement of expr * statement
   | ForStatement of iterator list * statement
-  | PforStatement of iterator list * statement
   | FunctionDecl of string * datatype * ident * decl list * statement list
   | ForwardDecl of string * datatype * ident * decl list
   | ReturnStatement of expr

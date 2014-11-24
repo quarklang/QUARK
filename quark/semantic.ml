@@ -131,7 +131,7 @@ let get_int_from_var env v =
 
 (*Semantic checking on expressions*)
 let rec check_expr env e = match e with
-    IntLit(i) ->Datatype(Int)
+    | IntLit(i) ->Datatype(Int)
     | BoolLit(b) -> Datatype(Boolean)
     | FloatLit(f) -> Datatype(Float)
     | StringLit(s) -> Datatype(String)
@@ -338,8 +338,7 @@ let find_local_variable env name =
 
 (*Semantic checking on a stmt*)
 let rec check_stmt env stmt = match stmt with
-
-    | A.Block(statements) ->
+    | A.CompoundStatement(statements) ->
         let new_env = env in
         (* semantically check each statement in the block *)
         let (new_env', statements) = List.fold_left
@@ -349,18 +348,20 @@ let rec check_stmt env stmt = match stmt with
             ([], new_env) statements in
 
         let statements = List.rev statements in
-        (S.Block(statements), new_env')
+        (S.CompoundStatement(statements), new_env')
 
-    | Expr(e) -> 
-        let _ = check_expr env e in
-        (SSExpr(get_sexpr env e),env)
-    | Return(e) ->
-        let type1=check_expr env e in
+    | A.Expression(expression) ->
+        let _ = check_expr env expression in
+        (S.Expression(get_sexpr env expression),env)
+
+    | A.ReturnStatement(expression) ->
+        let type1 = check_expr env expression in
         (if not((type1=env.return_type)) then
             raise (Error("Incompatible Return Type")));
         let new_env = {env with return_seen=true} in
-        (SReturn(get_sexpr env e),new_env)
-    | If(e,s1,s2)->
+        (S.ReturnStatement(get_sexpr env e),new_env)
+
+    | A.IfStatement(e,s1,s2)->
         let t=get_type_from_datatype(check_expr env e) in
         (if not (t=Boolean) then
             raise (Error("If predicate must be a boolean")));
@@ -368,24 +369,27 @@ let rec check_stmt env stmt = match stmt with
         and (st2, new_env2)=check_stmt env s2 in
         let ret_seen=(new_env1.return_seen&&new_env2.return_seen) in
         let new_env = {env with return_seen=ret_seen} in
-        (SIf((get_sexpr env e),st1,st2),new_env)
-    | For(e1,e2,e3,s) ->
+        (S.IfStatement((get_sexpr env e),st1,st2),new_env)
+
+    | A.ForStatement(e1,e2,e3,s) ->
         let t1=get_type_from_datatype(check_expr env e1)
         and t2= get_type_from_datatype(check_expr env e2)
         and t3=get_type_from_datatype(check_expr env e3) in
         (if not (t1=Int && t3=Int && t2=Boolean) then
             raise (Error("Improper For loop format")));
         let(st,new_env)=check_stmt env s in
-        (SFor((get_sexpr env e1),(get_sexpr env e2), (get_sexpr env e3), st),new_env)
-    | While(e,s) ->
+        (S.ForStatement((get_sexpr env e1),(get_sexpr env e2), (get_sexpr env e3), st),new_env)
+
+    | A.WhileStatement(e,s) ->
         let t=get_type_from_datatype(check_expr env e) in
         (if not(t=Boolean) then
             raise (Error("Improper While loop format")));
         let (st, new_env)=check_stmt env s in
-        (SWhile((get_sexpr env e), st),new_env)
+        (S.WhileStatement((get_sexpr env e), st),new_env)
+
     | A.Declaration(decl) -> 
         (* If variable is found, multiple decls error
-            If variable is not found and var is assigndecl, check for type compat *)
+         * If variable is not found and var is assigndecl, check for type compat *)
         let (name, ty) = get_name_type_from_decl decl in
         let ((_,dt,_),found) = try (fun f -> ((f env name),true)) find_local_variable with 
             Not_found ->
@@ -415,8 +419,9 @@ let rec check_stmt env stmt = match stmt with
         if( not(t1=t2) ) then 
             raise (Error("Mismatched type assignments"));
         let sexpr = get_sexpr env expr in
-        let new_env = update_variable env (ident,dt,Some((ExprVal(expr)))) in
-        (SAssign(SIdent(ident, get_var_scope env ident), sexpr), new_env)
+        let new_env = update_variable env (ident,dt, Some((Expression(expr)))) in
+        (S.Assign(S.Ident(ident, get_var_scope env ident), sexpr), new_env)
+
     | A.ArrAssign(ident, expr_list) ->
         (* make sure 1) array exists and 2) all types in expr list are equal *)
         let (n,dt,v) = try find_variable env ident with Not_found -> raise (Error("Undeclared array")) in
@@ -429,8 +434,9 @@ let rec check_stmt env stmt = match stmt with
         let _ = 
             let t1=get_type_from_datatype(check_expr env (List.hd expr_list)) and t2=get_type_from_datatype(dt) in
             if(t1!=t2) then raise (Error("Type Mismatch")) in
-        let new_env = update_variable env (n,dt,(Some(ArrVal(expr_list)))) in
-        (SArrAssign(SIdent(ident,get_var_scope env ident), sexpr_list), new_env)
+        let new_env = update_variable env (n,dt,(Some(A.ArrayLit(expr_list)))) in
+        (S.ArrAssign(SIdent(ident,get_var_scope env ident), sexpr_list), new_env)
+
     | A.ArrElemAssign(ident, expr1, expr2) ->
         (* Make sure
             1) array exists (if it exists, then it was already declared and semantically checked)
@@ -445,7 +451,8 @@ let rec check_stmt env stmt = match stmt with
                 | _ -> raise (Error("???"))) in
         let t = get_type_from_datatype(check_expr env expr1) in
         let _ = if not(t=Int) then raise(Error("Array index must be an integer")) in
-        (SArrElemAssign(SIdent(ident,get_var_scope env ident), get_sexpr env expr1, get_sexpr env expr2), env)
+        (S.ArrElemAssign(SIdent(ident,get_var_scope env ident), get_sexpr env expr1, get_sexpr env expr2), env)
+
     | Terminate -> (STerminate, env)
 
 let get_sstmt_list env stmt_list = 
