@@ -4,33 +4,28 @@ module T = Type
 
 exception Error of string
 
-(*a symbol table consisting of the parent as the variables*)
+(* TODO need a valid variable_decl type! may have one already *);
+type variable_decl = {
+    todo: string
+}
+
 type symbol_table = {
-	parent: symbol_table option;
-	(* Added value so that we can check "out of bounds" error on arrays *)
-	variables: (ident * datatype * value option) list;
-	(* Arrays are expliclty added here with their*)
-	(* arrays: (ident * datatype * sexpr list) list *)
+    parent: symbol_table option;
+    variables: variable_decl list; (* TODO need actual type. see above *)
 }
 
-(*a function table containing function definitions*)
-type function_table = {
-	functions: (ident * var_type * formal list * sstmt list) list
-}
-
-(*our environment*)
 type translation_environment = {
-	return_type: datatype;	(*function's return type*)
-	return_seen: bool;		(*does the function have a return statement*)
-	location: string;		(*init, always, main, or function name, used for global or local checking*)
-	global_scope: symbol_table;	(*symbol table for global vairables*)
-	var_scope: symbol_table; 	(*symbol table for local variables*)
-	fun_scope: function_table;	(*symbol table for functions*)
+    scope: symbol_table;        (* symbol table for vars (includes funcs) *)
+    return_type: Type.vartype;  (* function's return type *)
 }
 
-(* search for a function in our function table*)
-let rec find_function (fun_scope: function_table) name = 
-	List.find (fun (s,_,_,_) -> s=name) fun_scope.functions
+let rec find_variable (scope : symbol_table) name =
+    try
+      List.find (fun (s, _, _, _) -> s = name) scope.variables
+    with Not_found ->
+      match scope.parent with
+          Some(parent) -> find_variable parent name
+        | _ -> raise Not_found
 
 let basic_math t1 t2 = match (t1, t2) with
 	(Float, Int) -> (Float, true)
@@ -116,12 +111,6 @@ let update_list expr_list index expr =
 	let _ = Array.set xarr index expr in
 	let xlist = Array.to_list xarr in
 	xlist
-
-(*search for variable in global and local symbol tables*)
-let find_variable env name =
-	try List.find (fun (s,_,_) -> s=name) env.var_scope.variables
-	with Not_found -> try List.find(fun (s,_,_) -> s=name) env.global_scope.variables
-	with Not_found -> raise Not_found
 
 let get_int_from_var env v = 
     let (_,ty,value) = try find_variable env v with Not_found -> raise(Error("Cannot
@@ -303,13 +292,21 @@ let check_final_env env =
 	true
 
 (* Default Table and Environment Initializations *)
-let empty_table_initialization = {parent=None; variables =[];}
-let empty_function_table_initialization = {functions=[(Ident("print_string"), Void, [Formal(Datatype(String), Ident("s"))],[]);(Ident("print_int"),Void,[Formal(Datatype(Int),Ident("s"))],[])]}
-let empty_environment = {return_type = Datatype(Void); return_seen = false; location="main"; global_scope = empty_table_initialization; var_scope = empty_table_initialization; fun_scope = empty_function_table_initialization}
-
-let find_global_variable env name = 
-	try List.find (fun (s,_,_) -> s=name) env.global_scope.variables
-	with Not_found -> raise Not_found
+let empty_table_initialization = {
+    parent=None;
+    variables=[];
+}
+let empty_function_table_initialization = {
+    functions=[(Ident("print_string"), Void, [Formal(Datatype(String), Ident("s"))],[]);(Ident("print_int"),Void,[Formal(Datatype(Int),Ident("s"))],[])]
+}
+let empty_environment = {
+    return_type = Datatype(Void);
+    return_seen = false;
+    location="main";
+    global_scope = empty_table_initialization;
+    var_scope = empty_table_initialization;
+    fun_scope = empty_function_table_initialization
+}
 
 let initialize_globals (globals, env) decl = 
 	let (name, ty) = get_name_type_from_decl decl in
@@ -331,10 +328,6 @@ let initialize_globals (globals, env) decl =
 					else raise (Error("Type mismatch"))
 				else
 					raise (Error("Multiple declarations")) in ret
-
-let find_local_variable env name = 
-    try List.find (fun (s,_,_) -> s = name) env.var_scope.variables
-    with Not_found -> raise Not_found
 
 (*Semantic checking on a stmt*)
 let rec check_stmt env stmt = match stmt with
