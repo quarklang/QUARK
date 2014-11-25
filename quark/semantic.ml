@@ -347,14 +347,14 @@ let rec stmt env = function
 
     | A.Expression(expression) ->
         let _ = check_expr env expression in
-        (S.Expression(get_sexpr env expression),env)
+        S.Expression(get_sexpr env expression)
 
     | A.ReturnStatement(expression) ->
         let type1 = check_expr env expression in
         (if not((type1=env.return_type)) then
             raise (Error("Incompatible Return Type")));
         let new_env = {env with return_seen=true} in
-        (S.ReturnStatement(get_sexpr env e),new_env)
+        S.ReturnStatement(get_sexpr env e)
 
     | A.IfStatement(e,s1,s2)->
         let t=get_type_from_datatype(check_expr env e) in
@@ -364,7 +364,7 @@ let rec stmt env = function
         and (st2, new_env2)=check_stmt env s2 in
         let ret_seen=(new_env1.return_seen&&new_env2.return_seen) in
         let new_env = {env with return_seen=ret_seen} in
-        (S.IfStatement((get_sexpr env e),st1,st2),new_env)
+        S.IfStatement((get_sexpr env e),st1,st2)
 
     | A.ForStatement(e1,e2,e3,s) ->
         let t1=get_type_from_datatype(check_expr env e1)
@@ -373,14 +373,14 @@ let rec stmt env = function
         (if not (t1=Int && t3=Int && t2=Boolean) then
             raise (Error("Improper For loop format")));
         let(st,new_env)=check_stmt env s in
-        (S.ForStatement((get_sexpr env e1),(get_sexpr env e2), (get_sexpr env e3), st),new_env)
+        S.ForStatement((get_sexpr env e1),(get_sexpr env e2), (get_sexpr env e3), st)
 
     | A.WhileStatement(e,s) ->
         let t=get_type_from_datatype(check_expr env e) in
         (if not(t=Boolean) then
             raise (Error("Improper While loop format")));
         let (st, new_env)=check_stmt env s in
-        (S.WhileStatement((get_sexpr env e), st),new_env)
+        S.WhileStatement((get_sexpr env e), st)
 
     | A.Declaration(decl) -> 
         (* If variable is found, multiple decls error
@@ -415,7 +415,7 @@ let rec stmt env = function
             raise (Error("Mismatched type assignments"));
         let sexpr = get_sexpr env expr in
         let new_env = update_variable env (ident,dt, Some((Expression(expr)))) in
-        (S.Assign(S.Ident(ident, get_var_scope env ident), sexpr), new_env)
+        S.Assign(S.Ident(ident, get_var_scope env ident), sexpr)
 
     | A.ArrAssign(ident, expr_list) ->
         (* make sure 1) array exists and 2) all types in expr list are equal *)
@@ -430,7 +430,7 @@ let rec stmt env = function
             let t1=get_type_from_datatype(check_expr env (List.hd expr_list)) and t2=get_type_from_datatype(dt) in
             if(t1!=t2) then raise (Error("Type Mismatch")) in
         let new_env = update_variable env (n,dt,(Some(A.ArrayLit(expr_list)))) in
-        (S.ArrAssign(SIdent(ident,get_var_scope env ident), sexpr_list), new_env)
+        S.ArrAssign(SIdent(ident,get_var_scope env ident), sexpr_list)
 
     | A.ArrElemAssign(ident, expr1, expr2) ->
         (* Make sure
@@ -446,7 +446,7 @@ let rec stmt env = function
                 | _ -> raise (Error("???"))) in
         let t = get_type_from_datatype(check_expr env expr1) in
         let _ = if not(t=Int) then raise(Error("Array index must be an integer")) in
-        (S.ArrElemAssign(SIdent(ident,get_var_scope env ident), get_sexpr env expr1, get_sexpr env expr2), env)
+        S.ArrElemAssign(SIdent(ident,get_var_scope env ident), get_sexpr env expr1, get_sexpr env expr2)
 
     | Terminate -> (STerminate, env)
 
