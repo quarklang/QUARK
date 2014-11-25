@@ -330,18 +330,20 @@ let initialize_globals (globals, env) decl =
 					raise (Error("Multiple declarations")) in ret
 
 (*Semantic checking on a stmt*)
-let rec check_stmt env stmt = match stmt with
+let rec stmt env = function
     | A.CompoundStatement(statements) ->
-        let new_env = env in
-        (* semantically check each statement in the block *)
-        let (new_env', statements) = List.fold_left
-            (fun statement updated_env  -> 
-                let (statement', updated_env') = check_stmt(updated_env statement) in
-                (checked_statment :: acc, updated_env))
-            ([], new_env) statements in
+        (* new scope: parent is the existing scope, start out empty *)
+        let scope' = { parent = Some(env.scope); variables = [] } in
 
-        let statements = List.rev statements in
-        (S.CompoundStatement(statements), new_env')
+        (* new env: same, but with a fresh symbol table *)
+        let env = { env with scope = scope'; } in
+
+        (* semantically check each statement in the block *)
+        let statements = List.map (fun s -> stmt env s) statements in
+        (* TODO microc does this. not sure if we need scope'.variables <- List.rev scope'.variables; (* side-effect *) *)
+
+        (* success: return block with current scope *)
+        S.CompoundStatement(statements, scope')
 
     | A.Expression(expression) ->
         let _ = check_expr env expression in
