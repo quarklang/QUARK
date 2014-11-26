@@ -1,4 +1,4 @@
-open Type
+module T = Type
 
 type binop =
   | Add 
@@ -38,7 +38,7 @@ type postop =
   | Inc
 
 type datatype = 
-  | DataType of vartype
+  | DataType of T.vartype
   | ArrayType of datatype
   | MatrixType of datatype
 

@@ -1,21 +1,17 @@
-open Ast
-open Type
+module A = Ast
 
-type postop = 
-  | Dec 
-  | Inc
-
-type ident = Ident of Ast.ident
+type ident = Ident of A.ident
 
 type lvalue =
   | Variable of ident * datatype
-  | ArrayElem of ident * expr list
-  (* | ComplexAccess of expr * ident *)
+  | ArrayElem of ident * expr list * datatype
+(* TODO? add MatrixElem of ident * expr * datatype *)
+
 and expr =
   | Binop of expr * binop * expr * datatype
   | AssignOp of lvalue * binop * expr * datatype
   | Unop of unop * expr * datatype
-  | PostOp of lvalue * postop * datatype
+  | PostOp of lvalue * A.postop * datatype
   | Assign of lvalue * expr * datatype
   | IntLit of string * datatype
   | BoolLit of string * datatype
@@ -30,7 +26,7 @@ and expr =
   | Lval of lvalue
 
 type decl =
-  | AssigningDecl of ident * expr
+  | AssigningDecl of datatype * ident * expr
   | PrimitiveDecl of datatype * ident
   | ArrayDecl of datatype * ident * expr list
 
@@ -48,7 +44,7 @@ type statement =
   | IfStatement of expr * statement * statement
   | WhileStatement of expr * statement
   | ForStatement of iterator list * statement
-  | FunctionDecl of string * datatype * ident * decl list * statement list
-  | ForwardDecl of string * datatype * ident * decl list
+  | FunctionDecl of datatype * ident * decl list * statement list
+  | ForwardDecl of datatype * ident * decl list
   | ReturnStatement of expr
   | VoidReturnStatement
