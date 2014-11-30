@@ -4,7 +4,7 @@ module T = Type
 
 exception Error of string
 
-(* TODO need a valid variable_decl type! may have one already *);
+(* TODO need a valid variable_decl type! may have one already *)
 type variable_decl = {
     todo: string
 }
@@ -27,56 +27,10 @@ let rec find_variable (scope : symbol_table) name =
           Some(parent) -> find_variable parent name
         | _ -> raise Not_found
 
-let basic_math t1 t2 = match (t1, t2) with
-	(Float, Int) -> (Float, true)
-	| (Int, Float) -> (Float, true)
-	| (Int, Int) -> (Int, true)
-	| (Float, Float) -> (Int, true)
-	| (_,_) -> (Int, false)
-
-let relational_logic t1 t2 = match (t1, t2) with
-    (Int,Int) -> (Boolean,true)
-    | (Float,Float) -> (Boolean,true)
-    | (Int,Float) -> (Boolean,true)
-    | (Float,Int) -> (Boolean,true)
-	| (_,_) -> (Boolean, false) 
-
-let basic_logic t1 t2 = match(t1,t2) with
-    (Boolean,Boolean) -> (Boolean,true)
-    | (_,_) -> (Int,false)
-
-let equal_logic t1 t2 = match(t1,t2) with
-    (Boolean,Boolean) -> (Boolean,true)
-    | (Int,Int) -> (Boolean,true)
-    | (Float,Float) -> (Boolean,true)
-    | (Int,Float) -> (Boolean,true)
-    | (Float,Int) -> (Boolean,true)
-    | (String,String) -> (Boolean,true)
-    | (_,_) -> (Int,false) 
-
 (*extracts the type from a datatype declaration*)
 let rec get_type_from_datatype = function
 	Datatype(t)->t
 	| Arraytype(ty) -> get_type_from_datatype ty
-
-let get_binop_return_value op typ1 typ2 = 
-	let t1 = get_type_from_datatype typ1 and t2 = get_type_from_datatype typ2 in
-	let (t, valid) = 
-		match op with 
-			Add -> basic_math t1 t2
-			| Sub -> basic_math t1 t2
-			| Mult -> basic_math t1 t2
-			| Div -> basic_math t1 t2
-			| Mod -> basic_math t1 t2
-			| Equal -> equal_logic t1 t2 
-			| Neq -> equal_logic t1 t2
-			| Less -> relational_logic t1 t2 
-			| Leq -> relational_logic t1 t2
-			| Greater -> relational_logic t1 t2
-			| Geq -> relational_logic t1 t2
-			| And -> basic_logic t1 t2
-			| Or -> basic_logic t1 t2
-		in (Datatype(t), valid) 
 
 (*extracts the type and name from a Formal declaration*)
 let get_name_type_from_formal env = function
@@ -120,10 +74,89 @@ let get_int_from_var env v =
 
 (*Semantic checking on expressions*)
 let rec expr env e = match e with
-    | IntLit(i) ->Datatype(Int)
-    | BoolLit(b) -> Datatype(Boolean)
-    | FloatLit(f) -> Datatype(Float)
-    | StringLit(s) -> Datatype(String)
+    | A.IntLit(i)           -> S.Datatype(T.Int),       T.Int
+    | A.BoolLit(b)          -> S.Datatype(T.Bool),      T.Bool
+    | A.FloatLit(f)         -> S.Datatype(T.Float),     T.Float
+    | A.StringLit(s)        -> S.Datatype(T.String),    T.String
+    | A.FractionLit(n,d)    -> S.Datatype(T.Fraction),  T.Fraction
+    | A.QRegLit(q1,q2)      -> S.Datatype(T.QReg),      T.QReg
+    | A.ComplexLit(r,i)     -> S.Datatype(T.Complex),   T.Complex
+
+    | A.Binop(expr1, operation, expr2) -> 
+
+        let logic_relational type1 type2 = match type1, type2 with
+            | T.Int,   T.Int 
+            | T.Float, T.Float 
+            | T.Int,   T.Float 
+            | T.Float, T.Int -> T.Bool
+            | _ -> raise Error("Incompatible types for relational logic.") in
+
+        let math type1 type2 = match type1, type2 with
+            | T.Float, T.Int
+            | T.Int,   T.Float 
+            | T.Float, T.Float  -> T.Float
+            | T.Int,   T.Int    -> T.Int
+            | _ -> raise Error("Incompatible types for math.") in
+
+        let logic_basic type1 type2 = match type1, type2 with
+            | T.Bool, T.Bool -> T.Bool
+            | _ -> raise Error("Incompatible types for basic logic (ie. 'and', 'or').") in
+
+        let logic_equal type1 type2 = match type1, type2 with
+            | type1', type2' when type1' == type2' -> T.Bool
+            | _ -> raise Error("Incompatible types for equal logic.") in
+
+        (* check left and right children *)
+        let expr1, type1 = expr env expr1
+        and expr2, type2 = expr env expr2 in
+
+        let result_type = match operation with 
+            | A.Add         -> math type1 type2
+            | A.Sub         -> math type1 type2
+            | A.Mul         -> math type1 type2
+            | A.Div         -> math type1 type2
+            | A.Mod         -> math type1 type2
+            | A.Pow         -> math type1 type2
+            | A.Eq          -> logic_equal type1 type2 
+            | A.NotEq       -> logic_equal type1 type2
+            | A.Less        -> logic_relational type1 type2 
+            | A.LessEq      -> logic_relational type1 type2
+            | A.Greater     -> logic_relational type1 type2
+            | A.GreaterEq   -> logic_relational type1 type2
+            | A.And         -> logic_basic type1 type2
+            | A.Or          -> logic_basic type1 type2
+            (* TODO
+            | BitAnd
+            | BitOr
+            | BitXor
+            | Lshift
+            | Rshift
+            | AddEq
+            | SubEq
+            | MulEq
+            | DivEq
+            | AndEq
+            | Query
+            | QueryUnreal
+            *)
+            in
+
+        S.Datatype(result_type), result_type
+
+    | A.AssignOp(lvalue, binop, expr) ->
+    | A.Assign(lvalue, expr) ->
+    | A.Unop(unop, expr) ->
+        (* TODO
+         * is lvalue variable in table
+         * is lvalue of type int?
+         *)
+    | A.PostOp(lvalue, postop) ->
+        (* TODO
+         * is lvalue variable in table
+         * is lvalue of type int?
+         *)
+        S.Datatype(T.Int), T.Int
+
     | Variable(v) -> 
     	let (_,s_type,_) = try find_variable env v with 
     		Not_found ->
@@ -135,12 +168,6 @@ let rec expr env e = match e with
         	| _ -> if t = Datatype(Int) then t else if t = Datatype(Float) then t 
         				else
             				raise (Error("Cannot perform operation on " )))
-    | Binop(e1, b, e2) -> 
-    	let t1 = check_expr env e1 and t2 = check_expr env e2 in 
-    	let (t, valid) = get_binop_return_value b t1 t2 in
-    	if valid then t else raise(Error("Incompatible types with binary
-        operator"));
-
     | ArrElem(id, expr) -> 
     	(* return SArrElem(id, expr, datatype) where:
     		id is name of array variable
