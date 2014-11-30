@@ -73,136 +73,191 @@ let get_int_from_var env v =
         | _ -> raise(Error("Non-integer variable value"))
 
 (*Semantic checking on expressions*)
-let rec expr env e = match e with
-    | A.IntLit(i)           -> S.Datatype(T.Int),       T.Int
-    | A.BoolLit(b)          -> S.Datatype(T.Bool),      T.Bool
-    | A.FloatLit(f)         -> S.Datatype(T.Float),     T.Float
-    | A.StringLit(s)        -> S.Datatype(T.String),    T.String
-    | A.FractionLit(n,d)    -> S.Datatype(T.Fraction),  T.Fraction
-    | A.QRegLit(q1,q2)      -> S.Datatype(T.QReg),      T.QReg
-    | A.ComplexLit(r,i)     -> S.Datatype(T.Complex),   T.Complex
+let rec expr env e =
 
-    | A.Binop(expr1, operation, expr2) -> 
+    (* Define expr() helper functions *)
 
-        let logic_relational type1 type2 = match type1, type2 with
-            | T.Int,   T.Int 
-            | T.Float, T.Float 
-            | T.Int,   T.Float 
-            | T.Float, T.Int -> T.Bool
-            | _ -> raise Error("Incompatible types for relational logic.") in
+    let eval_expr_list expr_list = 
+        (* returns tuple: list, vartype of list. empty lists have type None. *)
+        let expr_list', expr_list_type = List.fold_left
+            (fun (array_acc, arr_type_option) elem ->
+                (* evaluate each expression in the list *)
+                let elem_val, elem_type = expr(env elem) in
+                (* ensure element has the same type as the previous elements *)
+                match arr_type_option with
+                    | None -> 
+                        (* type None means this is the 1st elem, set array type *)
+                        (elem_val :: array_acc), Some(elem_type)
+                    | Some(arr_type) ->
+                        (* ensures all elems in list are same type *)
+                        if arr_type <> elem_type
+                        then raise Error("All elements in an array must be the same type"))
+            ([], None) expr_list in
+        List.rev(expr_list'), expr_list_type 
+    in
 
-        let math type1 type2 = match type1, type2 with
-            | T.Float, T.Int
-            | T.Int,   T.Float 
-            | T.Float, T.Float  -> T.Float
-            | T.Int,   T.Int    -> T.Int
-            | _ -> raise Error("Incompatible types for math.") in
+    match e with
+        | A.IntLit(i)           -> S.IntLit(i),         T.Int
+        | A.BoolLit(b)          -> S.BoolLit(b),        T.Bool
+        | A.FloatLit(f)         -> S.FloatLit(f),       T.Float
+        | A.StringLit(s)        -> S.StringLit(s),      T.String
+        | A.FractionLit(n,d)    -> S.FractionLit(n,d),  T.Fraction
+        | A.QRegLit(q1,q2)      -> S.QRegLit(q1,q2),    T.QReg
+        | A.ComplexLit(r,i)     -> S.ComplexLit(r,i),   T.Complex
 
-        let logic_basic type1 type2 = match type1, type2 with
-            | T.Bool, T.Bool -> T.Bool
-            | _ -> raise Error("Incompatible types for basic logic (ie. 'and', 'or').") in
+        | A.ArrayLit(expr_list) ->
+            (* TODO how to return array of type None when array literal is empty? *)
+            (* TODO what should be returned as the second elem ?
+             * hmm .. maybe we should just write a bloody type getter func after all *)
+            let arr, arr_type = eval_expr_list(expr_list) in
+            S.ArrayLit(arr), arr_type
 
-        let logic_equal type1 type2 = match type1, type2 with
-            | type1', type2' when type1' == type2' -> T.Bool
-            | _ -> raise Error("Incompatible types for equal logic.") in
+        | A.MatrixLit(expr_list_list) ->
+            (* each expression list must be the same length 
+             * each expression list must be a valid expression list *)
+            let matrix, matrix_type, _ = List.fold_left
+                (fun (row_acc, row_type_opt, row_length_opt) expr_list -> 
+                    let expr_list_length = List.length expr_list in
 
-        (* check left and right children *)
-        let expr1, type1 = expr env expr1
-        and expr2, type2 = expr env expr2 in
+                    (* verify each row is the same length *)
+                    let _ = match row_length_opt with Some(row_length) ->
+                        if row_length <> expr_list_length
+                        then raise Error("Each matrix row must be the same length") in
 
-        let result_type = match operation with 
-            | A.Add         -> math type1 type2
-            | A.Sub         -> math type1 type2
-            | A.Mul         -> math type1 type2
-            | A.Div         -> math type1 type2
-            | A.Mod         -> math type1 type2
-            | A.Pow         -> math type1 type2
-            | A.Eq          -> logic_equal type1 type2 
-            | A.NotEq       -> logic_equal type1 type2
-            | A.Less        -> logic_relational type1 type2 
-            | A.LessEq      -> logic_relational type1 type2
-            | A.Greater     -> logic_relational type1 type2
-            | A.GreaterEq   -> logic_relational type1 type2
-            | A.And         -> logic_basic type1 type2
-            | A.Or          -> logic_basic type1 type2
+                    (* evaluate each row where each row is an expr list *)
+                    let expr_list_val, expr_list_type = eval_expr_list(expr_list) in
+                    match row_type_opt with
+                        | None -> 
+                            (* None means this is the first elem which means we now know the matrix type *)
+                            (expr_list_val :: row_acc), Some(expr_list_type), Some(expr_list_length)
+                        | Some(row_type) ->
+                            (* validate the current expr list is the same type *)
+                            if row_type <> expr_list_type
+                            then raise Error("All elements in a matrix must be the same type"))
+                ([], None, None) expr_list_list in
+            S.MatrixLit(List.rev matrix), matrix_type
+
+        | A.Binop(expr1, operation, expr2) -> 
+
+            let logic_relational type1 type2 = match type1, type2 with
+                | T.Int,   T.Int 
+                | T.Float, T.Float 
+                | T.Int,   T.Float 
+                | T.Float, T.Int -> T.Bool
+                | _ -> raise Error("Incompatible types for relational logic.") in
+
+            let math type1 type2 = match type1, type2 with
+                | T.Float, T.Int
+                | T.Int,   T.Float 
+                | T.Float, T.Float  -> T.Float
+                | T.Int,   T.Int    -> T.Int
+                | _ -> raise Error("Incompatible types for math.") in
+
+            let logic_basic type1 type2 = match type1, type2 with
+                | T.Bool, T.Bool -> T.Bool
+                | _ -> raise Error("Incompatible types for basic logic (ie. 'and', 'or').") in
+
+            let logic_equal type1 type2 = match type1, type2 with
+                | type1', type2' when type1' == type2' -> T.Bool
+                | _ -> raise Error("Incompatible types for equal logic.") in
+
+            (* check left and right children *)
+            let expr1, type1 = expr env expr1
+            and expr2, type2 = expr env expr2 in
+
+            let result_type = match operation with 
+                | A.Add         -> math type1 type2
+                | A.Sub         -> math type1 type2
+                | A.Mul         -> math type1 type2
+                | A.Div         -> math type1 type2
+                | A.Mod         -> math type1 type2
+                | A.Pow         -> math type1 type2
+                | A.Eq          -> logic_equal type1 type2 
+                | A.NotEq       -> logic_equal type1 type2
+                | A.Less        -> logic_relational type1 type2 
+                | A.LessEq      -> logic_relational type1 type2
+                | A.Greater     -> logic_relational type1 type2
+                | A.GreaterEq   -> logic_relational type1 type2
+                | A.And         -> logic_basic type1 type2
+                | A.Or          -> logic_basic type1 type2
+                (* TODO
+                | BitAnd
+                | BitOr
+                | BitXor
+                | Lshift
+                | Rshift
+                | AddEq
+                | SubEq
+                | MulEq
+                | DivEq
+                | AndEq
+                | Query
+                | QueryUnreal
+                *)
+                in
+
+            S.Datatype(result_type), result_type
+
+        | A.AssignOp(lvalue, binop, expr) ->
+        | A.Assign(lvalue, expr) ->
+        | A.Unop(unop, expr) ->
             (* TODO
-            | BitAnd
-            | BitOr
-            | BitXor
-            | Lshift
-            | Rshift
-            | AddEq
-            | SubEq
-            | MulEq
-            | DivEq
-            | AndEq
-            | Query
-            | QueryUnreal
-            *)
-            in
+             * is lvalue variable in table
+             * is lvalue of type int?
+             *)
+        | A.PostOp(lvalue, postop) ->
+            (* TODO
+             * is lvalue variable in table
+             * is lvalue of type int?
+             *)
+            S.Datatype(T.Int), T.Int
 
-        S.Datatype(result_type), result_type
-
-    | A.AssignOp(lvalue, binop, expr) ->
-    | A.Assign(lvalue, expr) ->
-    | A.Unop(unop, expr) ->
-        (* TODO
-         * is lvalue variable in table
-         * is lvalue of type int?
-         *)
-    | A.PostOp(lvalue, postop) ->
-        (* TODO
-         * is lvalue variable in table
-         * is lvalue of type int?
-         *)
-        S.Datatype(T.Int), T.Int
-
-    | Variable(v) -> 
-    	let (_,s_type,_) = try find_variable env v with 
-    		Not_found ->
-            	raise (Error("Undeclared Identifier " )) in s_type
-    | Unop(u, e) -> 
-    	let t = check_expr env e in 
-        (match u with
-        	Not -> if t = Datatype(Boolean) then t else raise (Error("Cannot negate a non-boolean value"))
-        	| _ -> if t = Datatype(Int) then t else if t = Datatype(Float) then t 
-        				else
-            				raise (Error("Cannot perform operation on " )))
-    | ArrElem(id, expr) -> 
-    	(* return SArrElem(id, expr, datatype) where:
-    		id is name of array variable
-    		expr has datatype Int
-    		datatype is type of array *)
-		let (_, ty, v) = try find_variable env id with
-			Not_found -> raise(Error("Uninitialized array")) in
-		let el_type = (match ty with 
-			Arraytype(Datatype(x)) -> Datatype(x)
-            | _ -> raise(Error("Cannot index a non-array expression"))) in
-		let expr_type = check_expr env expr in 
-		let sty = match expr_type with
-			Datatype(ty) -> Some(ty) 
-			| Arraytype(dt) -> None in
-		let ty = match sty with
-			Some(ty) -> ty
-			| None -> raise(Error("Can't invoke array element as index")) in
-		let _ = if not(ty=Int) then raise(Error("index must be an integer")) in
-		(el_type)
-    | ExprAssign(id, e) -> let (_,t1,_) = (find_variable env id) and t2 =
-        check_expr env e 
-        in (if not (t1 = t2) then (raise (Error("Mismatch in types for assignment")))); check_expr env e
-    | Cast(ty, e) -> ty
-	| Call(Ident("print"),e) -> let _ = List.map(fun exp -> check_expr env exp) e in
-				Datatype(Void)
-	| Call(Ident("print_time"),e) -> let _ = List.map(fun exp -> check_expr env exp) e in
-				Datatype(Void)
-    | Call(id, e) -> try (let (fname, fret, fargs, fbody)  = find_function env.fun_scope id in
-                let el_tys = List.map (fun exp -> check_expr env exp) e in
-                let fn_tys = List.map (fun farg-> let (_,ty,_) = get_name_type_from_formal env farg in ty) fargs in
-                if not (el_tys = fn_tys) then
-                    raise (Error("Mismatching types in function call")) else
-                    Datatype(fret))
-            with Not_found ->
-                raise (Error("Undeclared Function "))
+        | Variable(v) -> 
+            let (_,s_type,_) = try find_variable env v with 
+                Not_found ->
+                    raise (Error("Undeclared Identifier " )) in s_type
+        | Unop(u, e) -> 
+            let t = check_expr env e in 
+            (match u with
+                Not -> if t = Datatype(Boolean) then t else raise (Error("Cannot negate a non-boolean value"))
+                | _ -> if t = Datatype(Int) then t else if t = Datatype(Float) then t 
+                            else
+                                raise (Error("Cannot perform operation on " )))
+        | ArrElem(id, expr) -> 
+            (* return SArrElem(id, expr, datatype) where:
+                id is name of array variable
+                expr has datatype Int
+                datatype is type of array *)
+            let (_, ty, v) = try find_variable env id with
+                Not_found -> raise(Error("Uninitialized array")) in
+            let el_type = (match ty with 
+                Arraytype(Datatype(x)) -> Datatype(x)
+                | _ -> raise(Error("Cannot index a non-array expression"))) in
+            let expr_type = check_expr env expr in 
+            let sty = match expr_type with
+                Datatype(ty) -> Some(ty) 
+                | Arraytype(dt) -> None in
+            let ty = match sty with
+                Some(ty) -> ty
+                | None -> raise(Error("Can't invoke array element as index")) in
+            let _ = if not(ty=Int) then raise(Error("index must be an integer")) in
+            (el_type)
+        | ExprAssign(id, e) -> let (_,t1,_) = (find_variable env id) and t2 =
+            check_expr env e 
+            in (if not (t1 = t2) then (raise (Error("Mismatch in types for assignment")))); check_expr env e
+        | Cast(ty, e) -> ty
+        | Call(Ident("print"),e) -> let _ = List.map(fun exp -> check_expr env exp) e in
+                    Datatype(Void)
+        | Call(Ident("print_time"),e) -> let _ = List.map(fun exp -> check_expr env exp) e in
+                    Datatype(Void)
+        | Call(id, e) -> try (let (fname, fret, fargs, fbody)  = find_function env.fun_scope id in
+                    let el_tys = List.map (fun exp -> check_expr env exp) e in
+                    let fn_tys = List.map (fun farg-> let (_,ty,_) = get_name_type_from_formal env farg in ty) fargs in
+                    if not (el_tys = fn_tys) then
+                        raise (Error("Mismatching types in function call")) else
+                        Datatype(fret))
+                with Not_found ->
+                    raise (Error("Undeclared Function "))
 
 let get_val_type env = function
     ExprVal(expr) -> check_expr env expr
