@@ -197,6 +197,7 @@ let rec expr env e =
                 in
             S.Binop(expr1, operation, expr2), result_type
 
+        (*
         | A.AssignOp(lvalue, binop, expr) ->
         | A.Assign(lvalue, expr) ->
         | A.Unop(unop, expr) ->
@@ -257,6 +258,7 @@ let rec expr env e =
                         Datatype(fret))
                 with Not_found ->
                     raise (Error("Undeclared Function "))
+    *)
 
 let get_val_type env = function
     ExprVal(expr) -> check_expr env expr
@@ -428,11 +430,9 @@ let rec stmt env = function
         S.CompoundStatement(statements, scope')
 
     | A.Expression(e) -> S.Expression(expr env e)
-        (* TODO remove 
-        let _ = check_expr env expression in
-        S.Expression(get_sexpr env expression)
-        *)
 
+    (* CHUNK 0
+     * I (Jamis) was already working on this so I'll continue
     | A.ReturnStatement(expression) ->
         let expr', typ = expr env expression in
         (* TODO extract type from expr() call above *)
@@ -444,8 +444,9 @@ let rec stmt env = function
             raise (Error("Incompatible Return Type")));
         (* let new_env = {env with return_seen=true} in *);
         S.ReturnStatement(get_sexpr env e)
+     *)
 
-    (* CHUNK 1 easy. see microc.semantic.ml! *)
+    (* CHUNK 1 easy. see microc.semantic.ml!
     | A.IfStatement(e,s1,s2)->
         let t=get_type_from_datatype(check_expr env e) in
         (if not (t=Boolean) then
@@ -455,6 +456,7 @@ let rec stmt env = function
         let ret_seen=(new_env1.return_seen&&new_env2.return_seen) in
         let new_env = {env with return_seen=ret_seen} in
         S.IfStatement((get_sexpr env e),st1,st2)
+    *)
 
     (* CHUNK 2 medium. 
         INTERFACE
@@ -469,7 +471,6 @@ let rec stmt env = function
           expr because there might be side effects
         - return S.WhileStatement(stmt env statement) which will recursively
           validate statement
-    *)
     | A.ForStatement(e1,e2,e3,s) ->
         let t1=get_type_from_datatype(check_expr env e1)
         and t2= get_type_from_datatype(check_expr env e2)
@@ -478,18 +479,19 @@ let rec stmt env = function
             raise (Error("Improper For loop format")));
         let(st,new_env)=check_stmt env s in
         S.ForStatement((get_sexpr env e1),(get_sexpr env e2), (get_sexpr env e3), st)
+    *)
 
     (* CHUNK 3 easy *)
     (* INTERFACE
         - verify expression is valid by running expr(env expression)
         - pass statement back into stmt() function. 
-    *)
     | A.WhileStatement(e,s) ->
         let t=get_type_from_datatype(check_expr env e) in
         (if not(t=Boolean) then
             raise (Error("Improper While loop format")));
         let (st, new_env)=check_stmt env s in
         S.WhileStatement((get_sexpr env e), st)
+    *)
 
     (* CHUNK 4 hard *)
     (* INTERFACE 
@@ -503,7 +505,6 @@ let rec stmt env = function
           name exists, if it does change scope, else add new var to scope
         - call expr to evaluate right side of decl
         - ensure datatype and expr match
-    *)
     | A.Declaration(decl) -> 
 
         (* If variable is found, multiple decls error
@@ -529,6 +530,7 @@ let rec stmt env = function
                     else raise (Error("Type mismatch"))
                 else
                     raise (Error("Multiple declarations")) in ret
+    *)
 
     (* CHUNK 5 hard
     | A.FunctionDecl case
@@ -554,7 +556,6 @@ let rec stmt env = function
           add it if necessary and handle that case as well.
         - for each case, store/modify env.scope
         - ensure types don't conflict (probably by recursively calling expr()
-    *)
     | A.Assign(ident, expr) ->
         (* make sure 1) variable exists, 2) variable and expr have same types *)
         let (_, dt, _) = try find_variable env ident with Not_found -> raise (Error("Uninitialized variable")) in
@@ -566,7 +567,6 @@ let rec stmt env = function
         let new_env = update_variable env (ident,dt, Some((Expression(expr)))) in
         S.Assign(S.Ident(ident, get_var_scope env ident), sexpr)
 
-    (* this is encapsulated in CHUNK 6 above *)
     | A.ArrAssign(ident, expr_list) ->
         (* make sure 1) array exists and 2) all types in expr list are equal *)
         let (n,dt,v) = try find_variable env ident with Not_found -> raise (Error("Undeclared array")) in
@@ -582,7 +582,6 @@ let rec stmt env = function
         let new_env = update_variable env (n,dt,(Some(A.ArrayLit(expr_list)))) in
         S.ArrAssign(SIdent(ident,get_var_scope env ident), sexpr_list)
 
-    (* this is encapsulated in CHUNK 6 above *)
     | A.ArrElemAssign(ident, expr1, expr2) ->
         (* Make sure
             1) array exists (if it exists, then it was already declared and semantically checked)
@@ -598,14 +597,16 @@ let rec stmt env = function
         let t = get_type_from_datatype(check_expr env expr1) in
         let _ = if not(t=Int) then raise(Error("Array index must be an integer")) in
         S.ArrElemAssign(SIdent(ident,get_var_scope env ident), get_sexpr env expr1, get_sexpr env expr2)
+    *)
 
     (* CHUNK 7 easy? 
     | A.VoidReturnStatement
     - might just be `| A.VoidReturnStatement() -> S.VoidReturnStatement()`
     *)
 
-    (* CHUNK 8 easy. do we need? probably not *)
+    (* CHUNK 8 easy. do we need? probably not 
     | Terminate -> (STerminate, env)
+     * *)
 
 let get_sstmt_list env stmt_list = 
     List.fold_left
