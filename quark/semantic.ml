@@ -195,8 +195,7 @@ let rec expr env e =
                 | QueryUnreal
                 *)
                 in
-
-            S.Datatype(result_type), result_type
+            S.Binop(expr1, operation, expr2), result_type
 
         | A.AssignOp(lvalue, binop, expr) ->
         | A.Assign(lvalue, expr) ->
