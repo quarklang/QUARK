@@ -165,7 +165,7 @@ statement:
       { IfStatement($2, $4, EmptyStatement) }
 
   | WHILE expr COLON statement { WhileStatement($2, $4) }
-  | FOR iterator_list COLON statement { ForStatement($2, $4) }
+  | FOR iterator COLON statement { ForStatement($2, $4) }
 
   | LCURLY statement_seq RCURLY { CompoundStatement($2) }
 
@@ -181,9 +181,9 @@ statement:
   | CONTINUE { ContinueStatement }
 
 
-iterator_list:
+/* iterator_list:
   | iterator COMMA iterator_list { $1 :: $3 }
-  | iterator { [$1] }
+  | iterator { [$1] } */
 
 iterator:
   | ident IN LSQUARE range RSQUARE { RangeIterator($1, $4) }

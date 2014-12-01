@@ -84,7 +84,7 @@ type statement =
   | EmptyStatement
   | IfStatement of expr * statement * statement
   | WhileStatement of expr * statement
-  | ForStatement of iterator list * statement
+  | ForStatement of iterator * statement
   | FunctionDecl of datatype * ident * decl list * statement list
   | ForwardDecl of datatype * ident * decl list
   | ReturnStatement of expr
