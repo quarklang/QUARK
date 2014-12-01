@@ -471,25 +471,43 @@ let rec stmt env = function
           expr because there might be side effects
         - return S.WhileStatement(stmt env statement) which will recursively
           validate statement
-    | A.ForStatement(e1,e2,e3,s) ->
-        let t1=get_type_from_datatype(check_expr env e1)
-        and t2= get_type_from_datatype(check_expr env e2)
-        and t3=get_type_from_datatype(check_expr env e3) in
-        (if not (t1=Int && t3=Int && t2=Boolean) then
-            raise (Error("Improper For loop format")));
-        let(st,new_env)=check_stmt env s in
-        S.ForStatement((get_sexpr env e1),(get_sexpr env e2), (get_sexpr env e3), st)
+
+        - Need to check if iter is A.RangeIterator or A.ArrayIterator
+        - if RangeIterator, need to check RangeIterator(ident, range)
+            - need to make sure ident is defined, and that range is a valid
+            - range(e1, e2, e3) -> validate all three expressions; 
+            - make sure e1, e2, and e3 are all IntLits and e1 < e2
+        - if ArrayIterator, need to check ArrayIterator(ident, expr)
+            - ident is 'x' in 'x in arr'; need to put ident into environment
+              make sure expr is a valid ArrayElem
+
+        - need to write check_range function
+        - need to write get_siterator function
+        - need to write get_srange function
+
+    | A.ForStatement(iter, s) ->
+        match iter with
+            | A.ArrayIterator(ident, expr) -> 
+                let (se1, t1) = (expr env expr) in 
+                (if not (t1 = ArrayLit) then
+                    raise (Error("Improper Array Iterator for statement")));  
+                let(st, new_env) = check_stmt env s in   
+                S.ForStatement((S.ArrayIterator(ident, se1)), st)         
+            | A.RangeIterator(ident, range) ->
+                let srangeiterator = (check_range env range) in
+                let(st, new_env) = check_stmt env s in  
+                S.ForStatement(S.RangeIterator(ident, srange), st) 
     *)
 
     (* CHUNK 3 easy *)
     (* INTERFACE
         - verify expression is valid by running expr(env expression)
         - pass statement back into stmt() function. 
-    | A.WhileStatement(e,s) ->
-        let t=get_type_from_datatype(check_expr env e) in
-        (if not(t=Boolean) then
+    | A.WhileStatement(e, s) ->
+        let t = get_type_from_datatype(check_expr env e) in
+        (if not(t = Boolean) then
             raise (Error("Improper While loop format")));
-        let (st, new_env)=check_stmt env s in
+        let (st, new_env) = check_stmt env s in
         S.WhileStatement((get_sexpr env e), st)
     *)
 
@@ -607,6 +625,18 @@ let rec stmt env = function
     (* CHUNK 8 easy. do we need? probably not 
     | Terminate -> (STerminate, env)
      * *)
+
+(* Takes a range and checks if expressions return Ints 
+   Returns semantically checked expressions 1, 2, 3 and a Boolean *)
+let rec check_range env range =
+    match range with
+    Range(e1, e2, e3) ->
+        let (se1, t1) = expr env e1 in
+        let (se2, t2) = expr env e2 in 
+        let (se3, t3) = expr env e3 in 
+        if not (t1 = T.Int && t2 = T.Int && t3 = T.Int) then 
+        raise (Error("Range only accepts integer values for start, stop, and step")) in 
+        S.Range(se1, se2, se3)
 
 let get_sstmt_list env stmt_list = 
     List.fold_left

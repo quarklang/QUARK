@@ -41,7 +41,7 @@ type statement =
   | EmptyStatement
   | IfStatement of expr * statement * statement
   | WhileStatement of expr * statement
-  | ForStatement of iterator list * statement
+  | ForStatement of iterator * statement
   | FunctionDecl of A.datatype * A.ident * decl list * statement list
   | ForwardDecl of A.datatype * A.ident * decl list
   | ReturnStatement of expr

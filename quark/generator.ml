@@ -254,11 +254,12 @@ let rec eval stmts =
           print_endline "} // end while";
         end
             
-      | ForStatement(iterList, stmt) -> 
+      | ForStatement(iter, stmt) -> 
         begin
           (* for (a in 1:5, b in 7:3:-1) *)
-          List.iter (fun iter -> 
-            print_endline @@ "for " ^ gen_iterator iter) iterList;
+          (* List.iter (fun iter -> 
+            print_endline @@ "for " ^ gen_iterator iter) iterList; *)
+          print_endline @@ "for " ^ gen_iterator iter;
           print_endline "{ // start for";
           eval [stmt];
           print_endline "} // end for";
