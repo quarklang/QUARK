@@ -487,15 +487,15 @@ let rec stmt env = function
 
     | A.ForStatement(iter, s) ->
         match iter with
-            | A.ArrayIterator(ident, expr) -> 
-                let (se1, t1) = (expr env expr) in 
+            | A.ArrayIterator(ident, _expr) -> 
+                let (se1, t1) = (expr env _expr) in 
                 (if not (t1 = ArrayLit) then
                     raise (Error("Improper Array Iterator for statement")));  
-                let(st, new_env) = check_stmt env s in   
+                let(st, new_env) = stmt env s in   
                 S.ForStatement((S.ArrayIterator(ident, se1)), st)         
             | A.RangeIterator(ident, range) ->
                 let srangeiterator = (check_range env range) in
-                let(st, new_env) = check_stmt env s in  
+                let(st, new_env) = stmt env s in  
                 S.ForStatement(S.RangeIterator(ident, srange), st) 
     *)
 
