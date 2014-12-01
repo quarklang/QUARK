@@ -447,15 +447,17 @@ let rec stmt env = function
      *)
 
     (* CHUNK 1 easy. see microc.semantic.ml!
-    | A.IfStatement(e,s1,s2)->
-        let t=get_type_from_datatype(check_expr env e) in
-        (if not (t=Boolean) then
-            raise (Error("If predicate must be a boolean")));
-        let (st1,new_env1)=check_stmt env s1
-        and (st2, new_env2)=check_stmt env s2 in
-        let ret_seen=(new_env1.return_seen&&new_env2.return_seen) in
-        let new_env = {env with return_seen=ret_seen} in
-        S.IfStatement((get_sexpr env e),st1,st2)
+    | A.IfStatement(e, s1, s2) ->
+        (* check if predicate is boolean, else *)
+        let e = get_type_from_datatype(check_expr env e) in
+          if not e = Boolean then
+            raise Error("Predicate of an if statement must be boolean"));
+        
+        let (st1, env1) =check_stmt env s1
+          and (st2, env2) = check_stmt env s2 in
+            let this_return_seen = (env1.return_seen && env2.return_seen) in
+              let env = { env with return_seen = this_return_seen } in
+                (S.IfStatement((get_sexpr env e), s1, s2), env)
     *)
 
     (* CHUNK 2 medium. 
