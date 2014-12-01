@@ -319,24 +319,24 @@ let get_datatype_from_val env = function
 (* if variable is not found, then add it to table and return SVarDecl *)
 (* if variable is found, throw an error: multiple declarations *)
 let get_sdecl env decl = match decl with
-	(* if ident is in env, return typed sdecl *)
-    VarDecl(datatype, ident) -> (SVarDecl(datatype, SIdent(ident, Local)), env)
-	| VarAssignDecl(datatype, ident, value) -> 
-		let sv = get_sval env value in
-	(SVarAssignDecl(datatype, SIdent(ident, Local), sv), env)
+(* if ident is in env, return typed sdecl *)
+  A.PrimitiveDecl(datatype, ident) -> S.PrimitiveDecl(datatype, S.Ident(ident))
+| A.AssigningDecl(datatype, ident, expression) ->
+    let expr_val = get_sval env expression in
+    (S.AssigningDecl(datatype, S.Ident(ident), expr_val), env)
 
 let get_name_type_from_decl decl = match decl with
-	VarDecl(datatype, ident) -> (ident, datatype)
-    | VarAssignDecl(datatype,ident,value) -> (ident,datatype)
+  A.PrimitiveDecl(datatype, ident) -> (ident, datatype)
+| A.AssigningDecl(datatype,ident,value) -> (ident, datatype)
 
 let get_name_type_val_from_decl decl = match decl with
-	VarDecl(datatype, ident) -> (ident, datatype, None)
-	| VarAssignDecl(datatype, ident, value) -> (ident, datatype, Some(value))
+  A.PrimitiveDecl(datatype, ident) -> (ident, datatype, None)
+| A.AssigningDecl(datatype, ident, value) -> (ident, datatype, Some(value))
 
 (* returns tuple (left hand id, left hand id type, right hand value type) *)
 let get_name_type_from_var env = function
-    VarDecl(datatype,ident) -> (ident,datatype,None)
-    | VarAssignDecl(datatype,ident,value) -> (ident,datatype,Some(value))
+  A.PrimitiveDecl(datatype,ident) -> (ident,datatype,None)
+| A.AssigningDecl(datatype,ident,value) -> (ident,datatype,Some(value))
 
 (*function that adds variables to environment's var_scope for use in functions*)
 let add_to_var_table env name t v = 
@@ -509,20 +509,20 @@ let rec stmt env = function
         - ensure datatype and expr match
     | A.Declaration(decl) -> 
 
-        (* If variable is found, multiple decls error
-         * If variable is not found and var is assigndecl, check for type compat *)
-        let (name, ty) = get_name_type_from_decl decl in
-        let ((_,dt,_),found) = try (fun f -> ((f env name),true)) find_local_variable with 
-            Not_found ->
-                ((name,ty,None),false) in
-        let ret = if(found=false) then
-            match decl with
-                VarDecl(_,_) ->
+        (* If variable is found, throw multiple declarations error and if
+         * variable not found and var is AssignDecl, make sure types are compatible *)
+        let (name, datatype) = get_name_type_from_decl decl in
+          try
+            let (_,datatype,_) = find_variable env name in (ident, datatype, true)
+          with Not_found -> ((name,ty,None),false) in
+            let ret = if(found=false) then
+              match decl with
+                  PrimitiveDecl(_,_) ->
                     let (sdecl,_) = get_sdecl env decl in
                     let (n, t, v) = get_name_type_val_from_decl decl in
                     let new_env = add_to_var_table env n t v in
                     (SDeclaration(sdecl), new_env)
-                | VarAssignDecl(dt, id, value) ->
+                | AssigningDecl(datatype, ident, expression) ->
                     let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(get_datatype_from_val env value) in
                     if(t1=t2) then
                         let (sdecl,_) = get_sdecl env decl in

@@ -68,8 +68,8 @@ and expr =
   | FunctionCall of ident * expr list
 
 type decl =
-  | AssigningDecl of datatype * ident * expr
   | PrimitiveDecl of datatype * ident
+  | AssigningDecl of datatype * ident * expr
 
 type range = Range of expr * expr * expr
 
