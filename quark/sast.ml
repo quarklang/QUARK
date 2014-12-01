@@ -19,6 +19,7 @@ and expr =
   | ComplexLit of string * string * A.datatype
   | StringLit of string * A.datatype
   | ArrayLit of expr list * A.datatype
+  | MatrixLit of expr list list * A.datatype
   | Cast of A.datatype * expr * A.datatype
   | FunctionCall of A.ident * expr list
   | Lval of lvalue
