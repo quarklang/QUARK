@@ -75,67 +75,76 @@ let get_int_from_var env v =
 (*Semantic checking on expressions*)
 let rec check_expr expr env =
 
-    (* Define check_expr() helper functions *)
+    (* check_expr() helper functions *)
 
-    let eval_expr_list expr_list = 
+    let check_exprs exprs env = 
         (* returns tuple: list, vartype of list. empty lists have type None. *)
-        let expr_list', expr_list_type = List.fold_left
-            (fun (array_acc, arr_type_option) elem ->
+        let checked_exprs, exprs_type, env = List.fold_left
+            (fun (checked_exprs_acc, exprs_type_opt, env) unchecked_expr ->
                 (* evaluate each expression in the list *)
-                let elem_val, elem_type = check_expr(elem env) in
+                let checked_expr, expr_type, env = check_expr(unchecked_expr env) in
                 (* ensure element has the same type as the previous elements *)
-                match arr_type_option with
+                match exprs_type_opt with
                     | None -> 
                         (* type None means this is the 1st elem, set array type *)
-                        (elem_val :: array_acc), Some(elem_type)
-                    | Some(arr_type) ->
+                        checked_expr :: checked_exprs_acc, Some(expr_type), env
+                    | Some(exprs_type) ->
                         (* ensures all elems in list are same type *)
-                        if arr_type <> elem_type
-                        then raise Error("All elements in an array must be the same type"))
-            ([], None) expr_list in
-        List.rev(expr_list'), expr_list_type 
+                        if exprs_type <> expr_type
+                        then raise(Error "All elements in an array must be the same type");
+                        checked_expr :: checked_exprs_acc, Some(exprs_type), env
+            )
+        ([], None, env) exprs in
+        List.rev(checked_exprs), exprs_type, env
     in
 
-    match e with
-        | A.IntLit(i)           -> S.IntLit(i),         T.Int
-        | A.BoolLit(b)          -> S.BoolLit(b),        T.Bool
-        | A.FloatLit(f)         -> S.FloatLit(f),       T.Float
-        | A.StringLit(s)        -> S.StringLit(s),      T.String
-        | A.FractionLit(n,d)    -> S.FractionLit(n,d),  T.Fraction
-        | A.QRegLit(q1,q2)      -> S.QRegLit(q1,q2),    T.QReg
-        | A.ComplexLit(r,i)     -> S.ComplexLit(r,i),   T.Complex
+    match expr with
+        | A.IntLit(i)           -> S.IntLit(i),         T.Int, env
+        | A.BoolLit(b)          -> S.BoolLit(b),        T.Bool, env
+        | A.FloatLit(f)         -> S.FloatLit(f),       T.Float, env
+        | A.StringLit(s)        -> S.StringLit(s),      T.String, env
+        | A.FractionLit(n,d)    -> S.FractionLit(n,d),  T.Fraction, env
+        | A.QRegLit(q1,q2)      -> S.QRegLit(q1,q2),    T.QReg, env
+        | A.ComplexLit(r,i)     -> S.ComplexLit(r,i),   T.Complex, env
 
-        | A.ArrayLit(expr_list) ->
+        | A.ArrayLit(exprs) ->
             (* TODO how to return array of type None when array literal is empty? *)
             (* TODO what should be returned as the second elem ?
              * hmm .. maybe we should just write a bloody type getter func after all *)
-            let arr, arr_type = eval_expr_list(expr_list) in
-            S.ArrayLit(arr), arr_type
+            let arr, arr_type, env = check_exprs(exprs env) in
+            S.ArrayLit(arr), arr_type, env
 
-        | A.MatrixLit(expr_list_list) ->
+        | A.MatrixLit(exprs_list_list) ->
             (* each expression list must be the same length 
              * each expression list must be a valid expression list *)
             let matrix, matrix_type, _ = List.fold_left
-                (fun (row_acc, row_type_opt, row_length_opt) expr_list -> 
-                    let expr_list_length = List.length expr_list in
+                (fun (rows, row_type_opt, row_length_opt) exprs -> 
+                    let exprs_length = List.length exprs in
 
                     (* verify each row is the same length *)
                     let _ = match row_length_opt with Some(row_length) ->
-                        if row_length <> expr_list_length
-                        then raise Error("Each matrix row must be the same length") in
+                        if row_length <> exprs_length
+                        then raise(Error "Each matrix row must be the same length") in
 
                     (* evaluate each row where each row is an expr list *)
-                    let expr_list_val, expr_list_type = eval_expr_list(expr_list) in
-                    match row_type_opt with
-                        | None -> 
+                    let exprs, exprs_type, env = check_exprs(exprs env) in
+                    match row_type_opt, row_length_opt with
+                        | None, None -> 
                             (* None means this is the first elem which means we now know the matrix type *)
-                            (expr_list_val :: row_acc), Some(expr_list_type), Some(expr_list_length)
-                        | Some(row_type) ->
-                            (* validate the current expr list is the same type *)
-                            if row_type <> expr_list_type
-                            then raise Error("All elements in a matrix must be the same type"))
-                ([], None, None) expr_list_list in
-            S.MatrixLit(List.rev matrix), matrix_type
+                            (exprs :: rows), Some(exprs_type), Some(exprs_length), env
+
+                        | Some(row_type), Some(row_length) ->
+                            (* ensure matrix rows have the same type ... *)
+                            if row_type <> exprs_type
+                            then raise(Error "All elements in a matrix must be the same type");
+                            (* ... and are the same length*)
+                            if row_length <> exprs_length
+                            then raise(Error "All rows in a matrix must be the same length");
+                            (exprs :: rows), Some(row_type), Some(row_length), env
+                        | _ -> raise(Error "exhaustive case shouldn't happen")
+                )
+                ([], None, None, env) exprs_list_list in
+            S.MatrixLit(List.rev matrix), matrix_type, env
 
         | A.Binop(expr1, operation, expr2) -> 
 
