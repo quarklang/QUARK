@@ -73,16 +73,16 @@ let get_int_from_var env v =
         | _ -> raise(Error("Non-integer variable value"))
 
 (*Semantic checking on expressions*)
-let rec expr env e =
+let rec check_expr expr env =
 
-    (* Define expr() helper functions *)
+    (* Define check_expr() helper functions *)
 
     let eval_expr_list expr_list = 
         (* returns tuple: list, vartype of list. empty lists have type None. *)
         let expr_list', expr_list_type = List.fold_left
             (fun (array_acc, arr_type_option) elem ->
                 (* evaluate each expression in the list *)
-                let elem_val, elem_type = expr(env elem) in
+                let elem_val, elem_type = check_expr(elem env) in
                 (* ensure element has the same type as the previous elements *)
                 match arr_type_option with
                     | None -> 
@@ -162,8 +162,8 @@ let rec expr env e =
                 | _ -> raise Error("Incompatible types for equal logic.") in
 
             (* check left and right children *)
-            let expr1, type1 = expr env expr1
-            and expr2, type2 = expr env expr2 in
+            let expr1, type1 = check_expr expr1 env
+            and expr2, type2 = check_expr expr2 env in
 
             let result_type = match operation with 
                 | A.Add         -> math type1 type2
@@ -217,7 +217,7 @@ let rec expr env e =
                 Not_found ->
                     raise (Error("Undeclared Identifier " )) in s_type
         | Unop(u, e) -> 
-            let t = check_expr env e in 
+            let t = check_expr e env in 
             (match u with
                 Not -> if t = Datatype(Boolean) then t else raise (Error("Cannot negate a non-boolean value"))
                 | _ -> if t = Datatype(Int) then t else if t = Datatype(Float) then t 
@@ -233,7 +233,7 @@ let rec expr env e =
             let el_type = (match ty with 
                 Arraytype(Datatype(x)) -> Datatype(x)
                 | _ -> raise(Error("Cannot index a non-array expression"))) in
-            let expr_type = check_expr env expr in 
+            let expr_type = check_expr expr env in 
             let sty = match expr_type with
                 Datatype(ty) -> Some(ty) 
                 | Arraytype(dt) -> None in
@@ -243,15 +243,15 @@ let rec expr env e =
             let _ = if not(ty=Int) then raise(Error("index must be an integer")) in
             (el_type)
         | ExprAssign(id, e) -> let (_,t1,_) = (find_variable env id) and t2 =
-            check_expr env e 
-            in (if not (t1 = t2) then (raise (Error("Mismatch in types for assignment")))); check_expr env e
+            check_expr e env
+            in (if not (t1 = t2) then (raise (Error("Mismatch in types for assignment")))); check_expr e env
         | Cast(ty, e) -> ty
-        | Call(Ident("print"),e) -> let _ = List.map(fun exp -> check_expr env exp) e in
+        | Call(Ident("print"),e) -> let _ = List.map(fun exp -> check_expr exp env) e in
                     Datatype(Void)
-        | Call(Ident("print_time"),e) -> let _ = List.map(fun exp -> check_expr env exp) e in
+        | Call(Ident("print_time"),e) -> let _ = List.map(fun exp -> check_expr exp env) e in
                     Datatype(Void)
         | Call(id, e) -> try (let (fname, fret, fargs, fbody)  = find_function env.fun_scope id in
-                    let el_tys = List.map (fun exp -> check_expr env exp) e in
+                    let el_tys = List.map (fun exp -> check_expr exp env) e in
                     let fn_tys = List.map (fun farg-> let (_,ty,_) = get_name_type_from_formal env farg in ty) fargs in
                     if not (el_tys = fn_tys) then
                         raise (Error("Mismatching types in function call")) else
@@ -261,8 +261,8 @@ let rec expr env e =
     *)
 
 let get_val_type env = function
-    ExprVal(expr) -> check_expr env expr
-    | ArrVal(expr_list) -> check_expr env (List.hd expr_list)
+    ExprVal(expr) -> check_expr expr env
+    | ArrVal(expr_list) -> check_expr (List.hd expr_list) env
 
 
 let get_var_scope env name =  
@@ -276,26 +276,26 @@ let rec get_sexpr env e = match e with
       | BoolLit(b) -> SBoolLit(b,Datatype(Boolean))
       | FloatLit(f) -> SFloatLit(f,Datatype(Float))
       | StringLit(s) -> SStringLit(s,Datatype(String))
-      | Variable(id) -> SVariable(SIdent(id, get_var_scope env id), check_expr env e)
-      | Unop(u,ex) -> SUnop(u, get_sexpr env ex, check_expr env e)
-      | Binop(e1,b,e2) -> SBinop(get_sexpr env e1,b, get_sexpr env e2,check_expr env e)
+      | Variable(id) -> SVariable(SIdent(id, get_var_scope env id), check_expr e env)
+      | Unop(u,ex) -> SUnop(u, get_sexpr env ex, check_expr e env)
+      | Binop(e1,b,e2) -> SBinop(get_sexpr env e1,b, get_sexpr env e2,check_expr e env)
       | ArrElem(id, expr) -> SArrElem(SIdent(id, get_var_scope env id), get_sexpr env expr, check_expr env expr)
       | ExprAssign(id,ex) -> SExprAssign(SIdent(id, get_var_scope env id),
-      get_sexpr env ex,check_expr env e) 
+      get_sexpr env ex,check_expr e env) 
       | Cast(ty,ex) -> SCast(ty,get_sexpr env ex,ty)
 	  | Call(Ident("print"),ex_list) -> let s_ex_list = List.map(fun exp -> get_sexpr env exp) ex_list 
-	  in SCall(SIdent(Ident("print"),Global),s_ex_list,check_expr env e)
+	  in SCall(SIdent(Ident("print"),Global),s_ex_list,check_expr e env)
 	  | Call(Ident("print_time"),ex_list) -> let s_ex_list = List.map(fun exp -> get_sexpr env exp) ex_list
-	  in SCall(SIdent(Ident("print_time"),Global), s_ex_list, check_expr env e)
+	  in SCall(SIdent(Ident("print_time"),Global), s_ex_list, check_expr e env)
       | Call(id, ex_list) -> let s_ex_list = List.map(fun exp -> get_sexpr env
-      exp) ex_list in SCall(SIdent(id,Global),s_ex_list, check_expr env e) 
+      exp) ex_list in SCall(SIdent(id,Global),s_ex_list, check_expr e env) 
 
 (* Make sure a list contains all items of only a single type; returns (sexpr list, type in list) *)
 let get_sexpr_list env expr_list = 
 	let sexpr_list = 
 		List.map (fun expr -> 
-				let t1 = get_type_from_datatype(check_expr env (List.hd expr_list)) 
-				and t2 = get_type_from_datatype (check_expr env expr) in
+				let t1 = get_type_from_datatype(check_expr (List.hd expr_list) env) 
+				and t2 = get_type_from_datatype (check_expr expr env) in
 				if(t1=t2) then get_sexpr env expr 
 					else raise (Error("Type Mismatch"))
 				 ) expr_list in sexpr_list
@@ -308,12 +308,12 @@ let get_sval env = function
 
 let get_datatype_of_list env expr_list = 
 	let ty = List.fold_left (fun dt1 expr2 -> 
-								let dt2 = check_expr env expr2 in
-								if(dt1 = dt2) then dt1 else raise (Error("Inconsistent array types"))) (check_expr env (List.hd expr_list)) expr_list in ty
+								let dt2 = check_expr expr2 env in
+								if(dt1 = dt2) then dt1 else raise (Error("Inconsistent array types"))) (check_expr (List.hd expr_list) env) expr_list in ty
 
 
 let get_datatype_from_val env = function
-	ExprVal(expr) -> check_expr env expr
+	ExprVal(expr) -> check_expr expr env
 	| ArrVal(expr_list) -> get_datatype_of_list env expr_list
 
 (* if variable is not found, then add it to table and return SVarDecl *)
@@ -391,6 +391,7 @@ let empty_environment = {
     fun_scope = empty_function_table_initialization
 }
 
+(* TODO remove. leave now for references
 let initialize_globals (globals, env) decl = 
 	let (name, ty) = get_name_type_from_decl decl in
 		let ((_,dt,_),found) = try (fun f -> ((f env name),true)) find_global_variable with 
@@ -411,35 +412,38 @@ let initialize_globals (globals, env) decl =
 					else raise (Error("Type mismatch"))
 				else
 					raise (Error("Multiple declarations")) in ret
+*)
 
-(*Semantic checking on a stmt*)
-let rec stmt env = function
-    | A.CompoundStatement(statements) ->
-        (* new scope: parent is the existing scope, start out empty *)
+(* semantic checking on a stmt*)
+let rec check_stmt stmt env = match stmt with
+    | A.CompoundStatement(stmts) ->
+        (* creates; new scope: parent is the existing scope, start out empty *)
         let scope' = { parent = Some(env.scope); variables = [] } in
 
-        (* new env: same, but with a fresh symbol table *)
+        (* creates new env: same, but with a fresh symbol table *)
         let env = { env with scope = scope'; } in
 
-        (* semantically check each statement in the block *)
-        let statements = List.map (fun s -> stmt env s) statements in
-        (* TODO microc does this. not sure if we need scope'.variables <- List.rev scope'.variables; (* side-effect *) *)
+        (* recursively check each statement in the block *)
+        let statements, env = check_stmts(stmts env) in
+
+        (* TODO not sure if we need scope'.variables <- List.rev scope'.variables; microc does this. *)
         (* TODO where dafuq do we pop the scope after a block? *)
 
-        (* success: return block with current scope *)
-        S.CompoundStatement(statements, scope')
+        S.CompoundStatement(statements), env
 
-    | A.Expression(e) -> S.Expression(expr env e)
+    | A.Expression(expr) -> 
+        expr, _, env = check_expr(expr env)
+        S.Expression(expr), env
 
     (* CHUNK 0
      * I (Jamis) was already working on this so I'll continue
     | A.ReturnStatement(expression) ->
-        let expr', typ = expr env expression in
-        (* TODO extract type from expr() call above *)
+        let expr', typ = check_expr expression env in
+        (* TODO extract type from check_expr() call above *)
         if t <> env.return_type then raise Error("Incompatible return type");
         S.ReturnStatement(expr')
 
-        let type1 = check_expr env expression in
+        let type1 = check_expr expression env in
         (if not((type1=env.return_type)) then
             raise (Error("Incompatible Return Type")));
         (* let new_env = {env with return_seen=true} in *);
@@ -449,12 +453,12 @@ let rec stmt env = function
     (* CHUNK 1 easy. see microc.semantic.ml!
     | A.IfStatement(e, s1, s2) ->
         (* check if predicate is boolean, else *)
-        let e = get_type_from_datatype(check_expr env e) in
+        let e = get_type_from_datatype(check_expr e env) in
           if not e = Boolean then
             raise Error("Predicate of an if statement must be boolean"));
         
-        let (st1, env1) =check_stmt env s1
-          and (st2, env2) = check_stmt env s2 in
+        let (st1, env1) =check_stmt s1 env
+          and (st2, env2) = check_stmt s2 env in
             let this_return_seen = (env1.return_seen && env2.return_seen) in
               let env = { env with return_seen = this_return_seen } in
                 (S.IfStatement((get_sexpr env e), s1, s2), env)
@@ -470,8 +474,8 @@ let rec stmt env = function
           there are only two types of iterators so just case match on those two
           and throw an error if not successful
         - while checking ArrayIterator you will need to recursively evaluate
-          expr because there might be side effects
-        - return S.WhileStatement(stmt env statement) which will recursively
+          check_expr because there might be side effects
+        - return S.WhileStatement(check_stmt statement env) which will recursively
           validate statement
 
         - Need to check if iter is A.RangeIterator or A.ArrayIterator
@@ -490,26 +494,26 @@ let rec stmt env = function
     | A.ForStatement(iter, s) ->
         match iter with
             | A.ArrayIterator(ident, _expr) -> 
-                let (se1, t1) = (expr env _expr) in 
+                let (se1, t1) = (check_expr _expr env) in 
                 (if not (t1 = ArrayLit) then
                     raise (Error("Improper Array Iterator for statement")));  
-                let(st, new_env) = stmt env s in   
+                let(st, new_env) = check_stmt s env in   
                 S.ForStatement((S.ArrayIterator(ident, se1)), st)         
             | A.RangeIterator(ident, range) ->
                 let srangeiterator = (check_range env range) in
-                let(st, new_env) = stmt env s in  
+                let(st, new_env) = check_stmt s env in  
                 S.ForStatement(S.RangeIterator(ident, srange), st) 
     *)
 
     (* CHUNK 3 easy *)
     (* INTERFACE
-        - verify expression is valid by running expr(env expression)
-        - pass statement back into stmt() function. 
+        - verify expression is valid by running check_expr(expression env)
+        - pass statement back into check_stmt() function. 
     | A.WhileStatement(e, s) ->
-        let t = get_type_from_datatype(check_expr env e) in
+        let t = get_type_from_datatype(check_expr e env) in
         (if not(t = Boolean) then
             raise (Error("Improper While loop format")));
-        let (st, new_env) = check_stmt env s in
+        let (st, new_env) = check_stmt s env in
         S.WhileStatement((get_sexpr env e), st)
     *)
 
@@ -523,8 +527,8 @@ let rec stmt env = function
         here is the gist of what each of these should do:
         - add to *or* modify the scope. check if variable with the same 
           name exists, if it does change scope, else add new var to scope
-        - call expr to evaluate right side of decl
-        - ensure datatype and expr match
+        - call check_expr to evaluate right side of decl
+        - ensure datatype and check_expr match
     | A.Declaration(decl) -> 
 
         (* If variable is found, throw multiple declarations error and if
@@ -560,27 +564,27 @@ let rec stmt env = function
           that done so please make it a decl and ensure no shift reduce errors
         - store new or modify existing function in env.scope
         - recursively validate and store all parameters in 'decl list' by calling
-          something like List.map (fun statement -> stmt env statement) decl_list
+          something like List.map (fun statement -> check_stmt statement env) decl_list
         - validate each statement in statement_list and ensure last type 
           is ReturnType with matching type as the defined return type
           NOTE: I believe this is done by modifying the env.scope.return_type. 
                 you sets the return_type and then that is checked in the 
-                S.ReturnType case in stmt(). What you need to do is make sure that
+                S.ReturnType case in check_stmt(). What you need to do is make sure that
                 the last statement in statement_list is of type ReturnType
     *)
 
     (* CHUNK 6 medium
-        - move this to expr() since we have it defined as an expr
+        - move this to check_expr() since we have it defined as an expr
         - pattern match on lvalue parameter: A.Variable and A.ArrayElem
         - do we need to add MatrixElem to type lvavlue in (S)Ast? Maybe ask to Jim
           add it if necessary and handle that case as well.
         - for each case, store/modify env.scope
-        - ensure types don't conflict (probably by recursively calling expr()
+        - ensure types don't conflict (probably by recursively calling check_expr()
     | A.Assign(ident, expr) ->
         (* make sure 1) variable exists, 2) variable and expr have same types *)
         let (_, dt, _) = try find_variable env ident with Not_found -> raise (Error("Uninitialized variable")) in
         let t1 = get_type_from_datatype dt 
-        and t2 = get_type_from_datatype(check_expr env expr) in
+        and t2 = get_type_from_datatype(check_expr expr env) in
         if( not(t1=t2) ) then 
             raise (Error("Mismatched type assignments"));
         let sexpr = get_sexpr env expr in
@@ -592,12 +596,12 @@ let rec stmt env = function
         let (n,dt,v) = try find_variable env ident with Not_found -> raise (Error("Undeclared array")) in
         let sexpr_list = List.map (fun expr2 -> 
                             let expr1 = List.hd expr_list in
-                            let t1 = get_type_from_datatype(check_expr env expr1) and t2 = get_type_from_datatype(check_expr env expr2) in
+                            let t1 = get_type_from_datatype(check_expr expr1 env) and t2 = get_type_from_datatype(check_expr expr2 env) in
                             if(t1=t2) then 
                                 let sexpr2 = get_sexpr env expr2 in sexpr2
                                 else raise (Error("Array has inconsistent types"))) expr_list in
         let _ = 
-            let t1=get_type_from_datatype(check_expr env (List.hd expr_list)) and t2=get_type_from_datatype(dt) in
+            let t1=get_type_from_datatype(check_expr (List.hd expr_list) env) and t2=get_type_from_datatype(dt) in
             if(t1!=t2) then raise (Error("Type Mismatch")) in
         let new_env = update_variable env (n,dt,(Some(A.ArrayLit(expr_list)))) in
         S.ArrAssign(SIdent(ident,get_var_scope env ident), sexpr_list)
@@ -608,13 +612,13 @@ let rec stmt env = function
             2) expr matches type of array 
             3) index is not out of bounds *)
         let (id, dt, v) = try find_variable env ident with Not_found -> raise (Error("Undeclared array")) in
-        let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(check_expr env expr2) in
+        let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(check_expr expr2 env) in
         let _ = if(t1=t2) then true else raise (Error("Type Mismatch")) in
         let _ = (match v with
                 Some(ArrVal(el)) -> (* get_sexpr_list env  *)el
                 | None -> raise (Error("No expression on right hand side"))
                 | _ -> raise (Error("???"))) in
-        let t = get_type_from_datatype(check_expr env expr1) in
+        let t = get_type_from_datatype(check_expr expr1 env) in
         let _ = if not(t=Int) then raise(Error("Array index must be an integer")) in
         S.ArrElemAssign(SIdent(ident,get_var_scope env ident), get_sexpr env expr1, get_sexpr env expr2)
     *)
@@ -628,14 +632,25 @@ let rec stmt env = function
     | Terminate -> (STerminate, env)
      * *)
 
+(* runs each stmt in a stmt-list through check_stmt() *)
+let check_stmts stmts env =
+    let checked_stmts, env = List.fold_left 
+        (fun (checked_stmt_list, curr_env) unchecked_stmt -> 
+            let checked_stmt, new_env = check_stmt(unchecked_stmt curr_env) in
+            checked_stmt :: checked_stmt_list, new_env)
+    ([], env) stmts in
+    (* rev list because of fold_left *)
+    let checked_stmts = List.rev checked_stmts in
+    (checked_stmt, env)
+
 (* Takes a range and checks if expressions return Ints 
    Returns semantically checked expressions 1, 2, 3 and a Boolean *)
 let rec check_range env range =
     match range with
     Range(e1, e2, e3) ->
-        let (se1, t1) = expr env e1 in
-        let (se2, t2) = expr env e2 in 
-        let (se3, t3) = expr env e3 in 
+        let (se1, t1) = check_expr e1 env in
+        let (se2, t2) = check_expr e2 env in 
+        let (se3, t3) = check_expr e3 env in 
         if not (t1 = T.Int && t2 = T.Int && t3 = T.Int) then 
         raise (Error("Range only accepts integer values for start, stop, and step")) in 
         S.Range(se1, se2, se3)
@@ -643,7 +658,7 @@ let rec check_range env range =
 let get_sstmt_list env stmt_list = 
     List.fold_left
         (fun (sstmt_list,env) stmt ->
-            let (sstmt, new_env) = check_stmt env stmt in 
+            let (sstmt, new_env) = check_stmt stmt env in 
             (sstmt::sstmt_list, new_env))
     ([],env) stmt_list
 
@@ -663,7 +678,7 @@ let get_sstmt_list env stmt_list =
             final_env
 
 (* Semantic checking on a function*)
-(* TODO checking functions should be in either stmt() or expr() *)
+(* TODO remove. checking functions should be in either check_stmt() or check_expr()
 let check_func env func_declaration =
     let new_locals = List.fold_left
         (fun a vs -> (get_name_type_from_formal env vs)::a)
@@ -690,7 +705,9 @@ let check_func env func_declaration =
         sbody = typed_statements
     }) in
     (SFunc_Decl(sfuncdecl,func_declaration.return), env) 
+*)
 
+(* TODO remove below but keep as reference for the moment
 let initialize_functions env function_list = 
     let (typed_functions, last_env) = List.fold_left
         (fun (sfuncdecl_list, env) func ->
@@ -699,10 +716,20 @@ let initialize_functions env function_list =
             (sfuncdecl::sfuncdecl_list, final_env))
         ([],env) function_list in
         (typed_functions, last_env)
+*)
 
-(*Semantic checking on a program*)
-let check_program program =
-    let (functions,(globals, threads)) = program in
+
+(* checks the semantics of a program *)
+let check_program ast =
+    (* creates new scope and env *)
+    let scope' = { parent=None; variables=[]; } in
+    let env = { scope: scope'; return_type: T.Void; } in
+    (* TODO should the toplevel return_type be int or bool? *)
+    (* check all toplevel stmts *)
+    let stmts, env = check_stmts(ast env) in stmts
+
+    (* TODO remove below but keep as reference for the moment
+    let (functions,(globals, threads)) = ast in
     let env = empty_environment in
     let (typed_functions, new_env) = initialize_functions env functions in
     let (typed_globals, new_env2) = List.fold_left(
@@ -710,4 +737,4 @@ let check_program program =
             initialize_globals (new_globals, env) globals) 
         ([], new_env) globals in
     Prog(typed_functions, (typed_globals, typed_threads))
-             
+    *)
