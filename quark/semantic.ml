@@ -72,6 +72,30 @@ let get_int_from_var env v =
         Some(ExprVal(IntLit(x))) -> x
         | _ -> raise(Error("Non-integer variable value"))
 
+
+let get_type = function
+    | S.Binop(_, _, _, t) -> t
+    | S.AssignOp(_, _, _, t) -> t
+    | S.Unop(_, _, t) -> t
+    | S.PostOp(_, _, t) -> t
+    | S.PostOp(_, _, t) -> t
+    | S.Assign(_, _, t) -> t
+    | S.IntLit(_, t) -> t
+    | S.BoolLit(_, t) -> t
+    | S.FractionLit(_, _, t) -> t
+    | S.QRegLit(_, _, t) -> t
+    | S.FloatLit(_, t) -> t
+    | S.ComplexLit(_, _, t) -> t
+    | S.StringLit(_, t) -> t
+    | S.ArrayLit(_, t) -> t
+    | S.MatrixLit(_, t) -> t
+    | S.Cast(_, _, t) -> t
+    | _ -> raise(Error "There is not get_type() implemented for this type");
+    (* TODO why don't these have types in sast?
+    |FunctionCall(_, _, _, t) -> t
+    | Lva(_,
+    *)
+
 (*Semantic checking on expressions*)
 let rec check_expr expr env =
 
@@ -85,8 +109,7 @@ let rec check_expr expr env =
             (* evaluate each expression in the list *)
             (fun (checked_exprs_acc, prev_type, env) unchecked_expr ->
                 let checked_expr, env = check_expr unchecked_expr env in
-                (* TODO get expr type *)
-                let expr_type = T.Int in
+                let expr_type = get_type checked_expr in
                 match prev_type with
                     | T.Void ->
                         (* means we're seeing the 1st expr in the array and now know array type *)
@@ -126,9 +149,6 @@ let rec check_expr expr env =
             S.ComplexLit(real_expr, im_expr, A.DataType(T.Complex)), env
 
         | A.ArrayLit(exprs) ->
-            (* TODO how to return array of type None when array literal is empty? *)
-            (* TODO what should be returned as the second elem ?
-             * hmm .. maybe we should just write a bloody type getter func after all *)
             let arr, typ, env = check_array exprs env in
             S.ArrayLit(arr, A.DataType(typ)), env
 
@@ -162,7 +182,7 @@ let rec check_expr expr env =
             S.MatrixLit(List.rev matrix, A.DataType(matrix_type)), env
 
         | A.Binop(expr1, operation, expr2) -> 
-
+            (* helper functions for Binop case *)
             let logic_relational type1 type2 = match type1, type2 with
                 | T.Int,   T.Int 
                 | T.Float, T.Float 
