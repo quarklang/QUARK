@@ -17,6 +17,7 @@ type symbol_table = {
 type translation_environment = {
     scope: symbol_table;        (* symbol table for vars (includes funcs) *)
     return_type: Type.vartype;  (* function's return type *)
+    return_seen: bool
 }
 
 let rec find_variable (scope : symbol_table) name =
@@ -29,8 +30,8 @@ let rec find_variable (scope : symbol_table) name =
 
 (*extracts the type from a datatype declaration*)
 let rec get_type_from_datatype = function
-	Datatype(t)->t
-	| Arraytype(ty) -> get_type_from_datatype ty
+  A.Datatype(typ) -> typ
+| A.Arraytype(typ) -> get_type_from_datatype typ
 
 (*extracts the type and name from a Formal declaration*)
 let get_name_type_from_formal env = function
@@ -432,37 +433,26 @@ let rec check_stmt stmt env = match stmt with
         S.CompoundStatement(statements), env
 
     | A.Expression(expr) -> 
-        expr, _, env = check_expr(expr env)
+        let expr, typ = check_expr expr env in
         S.Expression(expr), env
 
-    (* CHUNK 0
-     * I (Jamis) was already working on this so I'll continue
-    | A.ReturnStatement(expression) ->
-        let expr', typ = check_expr expression env in
-        (* TODO extract type from check_expr() call above *)
-        if t <> env.return_type then raise Error("Incompatible return type");
-        S.ReturnStatement(expr')
+    | A.ReturnStatement(expr) ->
+        let expr, typ = check_expr expr env in
+        if t <> env.return_type then
+          raise Error("Incorrect return type");
+        let env = { env with return_seen = true } in
+        S.ReturnStatement(expr), env
 
-        let type1 = check_expr expression env in
-        (if not((type1=env.return_type)) then
-            raise (Error("Incompatible Return Type")));
-        (* let new_env = {env with return_seen=true} in *);
-        S.ReturnStatement(get_sexpr env e)
-     *)
-
-    (* CHUNK 1 easy. see microc.semantic.ml!
-    | A.IfStatement(e, s1, s2) ->
-        (* check if predicate is boolean, else *)
-        let e = get_type_from_datatype(check_expr e env) in
-          if not e = Boolean then
-            raise Error("Predicate of an if statement must be boolean"));
+    | A.IfStatement(expr, stmt1, stmt2) ->
+        let expr = get_type_from_datatype(check_expr expr env) in
+        if not expr = T.Boolean then
+          raise Error("Predicate of an if statement must be boolean"));
         
         let (st1, env1) =check_stmt s1 env
-          and (st2, env2) = check_stmt s2 env in
-            let this_return_seen = (env1.return_seen && env2.return_seen) in
-              let env = { env with return_seen = this_return_seen } in
-                (S.IfStatement((get_sexpr env e), s1, s2), env)
-    *)
+        and (st2, env2) = check_stmt s2 env in
+        let this_return_seen = (env1.return_seen && env2.return_seen) in
+        let env = { env with return_seen = this_return_seen } in
+        S.IfStatement((get_sexpr env e), s1, s2), env
 
     (* CHUNK 2 medium. 
         INTERFACE
