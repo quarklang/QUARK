@@ -383,6 +383,18 @@ let get_name_type_from_var env = function
   A.PrimitiveDecl(datatype,ident) -> (ident,datatype,None)
 | A.AssigningDecl(datatype,ident,value) -> (ident,datatype,Some(value))
 
+(* function to check if a range is valid for a range iterator *)
+let check_range range env = function
+  A.Range(expr1, expr2, expr3) ->
+    let expr1, typ1 = check_expr expr1 env in
+    let expr2, typ2 = check_expr expr2 env in
+    let expr3, typ3 = check_expr expr3 env in
+    if not (typ1 = FloatLit || typ1 = IntLit) ||
+       not (typ2 = FloatLit || typ2 = IntLit) ||
+       not (typ3 = FloatLit || typ3 = IntLit) then
+        raise (Error("Improper Array Iterator in For statement"));
+    else S.Range(expr1, expr2, expr3)
+
 (*function that adds variables to environment's var_scope for use in functions*)
 let add_to_var_table env name t v = 
 	let new_vars = (name,t, v)::env.var_scope.variables in
@@ -490,7 +502,7 @@ let rec check_stmt stmt env = match stmt with
     | A.IfStatement(expr, stmt1, stmt2) ->
         let expr = get_type_from_datatype(check_expr expr env) in
         if not expr = T.Boolean then
-          raise Error("Predicate of an if statement must be boolean"));
+          raise Error("Predicate of an if statement must be boolean");
         
         let (st1, env1) =check_stmt s1 env
         and (st2, env2) = check_stmt s2 env in
@@ -523,33 +535,33 @@ let rec check_stmt stmt env = match stmt with
 
         - need to write check_range function
         - need to write get_siterator function
-        - need to write get_srange function
+        - need to write get_srange function*)
 
-    | A.ForStatement(iter, s) ->
+    | A.ForStatement(iter, stmt) ->
         match iter with
             | A.ArrayIterator(ident, _expr) -> 
-                let (se1, t1) = (check_expr _expr env) in 
-                (if not (t1 = ArrayLit) then
-                    raise (Error("Improper Array Iterator for statement")));  
-                let(st, new_env) = check_stmt s env in   
-                S.ForStatement((S.ArrayIterator(ident, se1)), st)         
+                let expr, typ = check_expr _expr env in 
+                if not (typ = ArrayLit) then
+                    raise (Error("Improper Array Iterator in For statement"));  
+                let semantic_stmt, env = check_stmt stmt env in   
+                S.ForStatement(S.ArrayIterator(ident, expr), semantic_stmt), env
             | A.RangeIterator(ident, range) ->
-                let srangeiterator = (check_range env range) in
-                let(st, new_env) = check_stmt s env in  
-                S.ForStatement(S.RangeIterator(ident, srange), st) 
-    *)
+                let semantic_range = check_range range env in
+                if not (typ = ArrayLit) then
+                    raise (Error("Improper Range Iterator in Ffor statement"));                
+                let semantic_stmt, env = check_stmt stmt env in  
+                S.ForStatement(S.RangeIterator(ident, semantic_range), semantic_stmt), env
 
     (* CHUNK 3 easy *)
     (* INTERFACE
         - verify expression is valid by running check_expr expression env
-        - pass statement back into check_stmt() function. 
-    | A.WhileStatement(e, s) ->
-        let t = get_type_from_datatype(check_expr e env) in
-        (if not(t = Boolean) then
-            raise (Error("Improper While loop format")));
-        let (st, new_env) = check_stmt s env in
-        S.WhileStatement((get_sexpr env e), st)
-    *)
+        - pass statement back into check_stmt() function. *)
+    | A.WhileStatement(expr, stmt) ->
+        let expr, typ = get_type_from_datatype(check_expr e env) in
+        if not(typ = Boolean) then
+            raise (Error("Improper While loop format"));
+        let semantic_stmt, env = check_stmt stmt env in
+        S.WhileStatement(S.Expression(expr), semantic_stmt)
 
     (* CHUNK 4 hard *)
     (* INTERFACE 
@@ -563,6 +575,7 @@ let rec check_stmt stmt env = match stmt with
           name exists, if it does change scope, else add new var to scope
         - call check_expr to evaluate right side of decl
         - ensure datatype and check_expr match
+        *)
     | A.Declaration(decl) -> 
 
         (* If variable is found, throw multiple declarations error and if
@@ -588,7 +601,6 @@ let rec check_stmt stmt env = match stmt with
                     else raise (Error("Type mismatch"))
                 else
                     raise (Error("Multiple declarations")) in ret
-    *)
 
     (* CHUNK 5 hard
     | A.FunctionDecl case
