@@ -39,13 +39,10 @@ let get_name_type_from_formal env = function
 
 (* Find the variable. If you find the variable:
 	Create a new list with the updated variable *)
-let update_variable env (name, datatype, value) = 
-	let ((_,_,_), location) = 
-	try (fun var_scope -> ((List.find (fun (s,_,_) -> s=name) var_scope),1)) env.var_scope.variables
-		with Not_found -> try (fun var_scope -> ((List.find (fun (s,_,_) -> s=name) var_scope),2)) env.global_scope.variables
-			with Not_found -> raise Not_found in
-	let new_envf =
-	match location with 
+let update_variable env name, datatype, value = 
+	let _,_,_ = find_variable name
+	let new_env =
+        match location with 
 		1 -> 
 			(* update local vars *)
 			let new_vars = List.map (fun (n, t, v) -> if(n=name) then (name, datatype, value) else (n, t, v)) env.var_scope.variables in
@@ -363,7 +360,7 @@ let get_datatype_from_val env = function
 
 (* if variable is not found, then add it to table and return SVarDecl *)
 (* if variable is found, throw an error: multiple declarations *)
-let get_sdecl env decl = match decl with
+let get_semantic_decl env decl = match decl with
 (* if ident is in env, return typed sdecl *)
   A.PrimitiveDecl(datatype, ident) -> S.PrimitiveDecl(datatype, S.Ident(ident))
 | A.AssigningDecl(datatype, ident, expression) ->
@@ -371,8 +368,8 @@ let get_sdecl env decl = match decl with
     (S.AssigningDecl(datatype, S.Ident(ident), expr_val), env)
 
 let get_name_type_from_decl decl = match decl with
-  A.PrimitiveDecl(datatype, ident) -> (ident, datatype)
-| A.AssigningDecl(datatype,ident,value) -> (ident, datatype)
+  A.PrimitiveDecl(datatype, ident) -> ident, datatype
+| A.AssigningDecl(datatype,ident,value) -> ident, datatype
 
 let get_name_type_val_from_decl decl = match decl with
   A.PrimitiveDecl(datatype, ident) -> (ident, datatype, None)
@@ -395,19 +392,12 @@ let check_range range env = function
         raise (Error("Improper Array Iterator in For statement"));
     else S.Range(expr1, expr2, expr3)
 
-(*function that adds variables to environment's var_scope for use in functions*)
-let add_to_var_table env name t v = 
-	let new_vars = (name,t, v)::env.var_scope.variables in
-	let new_sym_table = {parent = env.var_scope.parent; variables = new_vars;} in
-	let new_env = {env with var_scope = new_sym_table} in
-	new_env
-
-(*function that adds variables to environment's global_scope for use with main*)
-let add_to_global_table env name t v = 
-	let new_vars = (name,t,v)::env.global_scope.variables in
-	let new_sym_table = {parent=env.global_scope.parent; variables = new_vars;} in
-	let new_env = {env with global_scope = new_sym_table} in
-	new_env
+(* function that adds variables to environment's scope *)
+let add_variable env name typ value = 
+  let new_vars = (name, typ, value)::env.scope.variables in
+  let new_symbol_table = { parent = env.scope.parent; variables = new_vars;} in
+  let new_env = { env with scope = new_sym_table } in
+  new_env
 
 (* check both sides of an assignment are compatible*) 
 let check_assignments type1 type2 = match (type1, type2) with
@@ -556,7 +546,7 @@ let rec check_stmt stmt env = match stmt with
     (* INTERFACE
         - verify expression is valid by running check_expr expression env
         - pass statement back into check_stmt() function. *)
-    | A.WhileStatement(expr, stmt) ->
+    | A.WhileStatement(expr,git s stmt) ->
         let expr, typ = get_type_from_datatype(check_expr e env) in
         if not(typ = Boolean) then
             raise (Error("Improper While loop format"));
@@ -577,30 +567,29 @@ let rec check_stmt stmt env = match stmt with
         - ensure datatype and check_expr match
         *)
     | A.Declaration(decl) -> 
-
         (* If variable is found, throw multiple declarations error and if
          * variable not found and var is AssignDecl, make sure types are compatible *)
-        let (name, datatype) = get_name_type_from_decl decl in
-          try
-            let (_,datatype,_) = find_variable env name in (ident, datatype, true)
-          with Not_found -> ((name,ty,None),false) in
-            let ret = if(found=false) then
-              match decl with
-                  PrimitiveDecl(_,_) ->
-                    let (sdecl,_) = get_sdecl env decl in
-                    let (n, t, v) = get_name_type_val_from_decl decl in
-                    let new_env = add_to_var_table env n t v in
-                    (SDeclaration(sdecl), new_env)
-                | AssigningDecl(datatype, ident, expression) ->
-                    let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(get_datatype_from_val env value) in
-                    if(t1=t2) then
-                        let (sdecl,_) = get_sdecl env decl in
-                        let (n, t, v) = get_name_type_val_from_decl decl in
-                        let new_env = add_to_var_table env n t v in
-                        (SDeclaration(sdecl), new_env)
-                    else raise (Error("Type mismatch"))
-                else
-                    raise (Error("Multiple declarations")) in ret
+        let name, typ = get_name_type_from_decl decl in
+        try
+          let _, stored_type, _ = find_variable env name in ident, stored_type, true
+        with Not_found -> name, typ, false in
+        if found = false then
+          match decl with
+            PrimitiveDecl(_,_) ->
+              let semantic_decl, _ = get_semantic_decl env decl in
+              let name, typ, value = get_name_type_val_from_decl decl in
+              let env = add_variable env n t v in
+              S.Declaration(semantic_decl), env
+          | AssigningDecl(datatype, ident, expression) ->
+                  let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(get_datatype_from_val env value) in
+                  if t1 = t2 then
+                      let (sdecl,_) = get_sdecl env decl in
+                      let (n, t, v) = get_name_type_val_from_decl decl in
+                      let new_env = add_variable env n t v in
+                      (SDeclaration(sdecl), new_env)
+                  else raise (Error("Type mismatch"))
+              else
+                  raise (Error("Multiple declarations")) in ret
 
     (* CHUNK 5 hard
     | A.FunctionDecl case
