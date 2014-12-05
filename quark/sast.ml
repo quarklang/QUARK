@@ -14,9 +14,9 @@ and expr =
   | IntLit of string * A.datatype
   | BoolLit of string * A.datatype
   | FractionLit of expr * expr * A.datatype
-  | QRegLit of string * string * A.datatype
+  | QRegLit of expr * expr * A.datatype
   | FloatLit of string * A.datatype
-  | ComplexLit of string * string * A.datatype
+  | ComplexLit of expr * expr * A.datatype
   | StringLit of string * A.datatype
   | ArrayLit of expr list * A.datatype
   | MatrixLit of expr list list * A.datatype
