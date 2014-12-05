@@ -77,74 +77,89 @@ let rec check_expr expr env =
 
     (* check_expr() helper functions *)
 
-    let check_exprs exprs env = 
-        (* returns tuple: list, vartype of list. empty lists have type None. *)
-        let checked_exprs, exprs_type, env = List.fold_left
-            (fun (checked_exprs_acc, exprs_type_opt, env) unchecked_expr ->
-                (* evaluate each expression in the list *)
-                let checked_expr, expr_type, env = check_expr(unchecked_expr env) in
-                (* ensure element has the same type as the previous elements *)
-                match exprs_type_opt with
-                    | None -> 
-                        (* type None means this is the 1st elem, set array type *)
-                        checked_expr :: checked_exprs_acc, Some(expr_type), env
-                    | Some(exprs_type) ->
-                        (* ensures all elems in list are same type *)
-                        if exprs_type <> expr_type
+    let check_array exprs env = 
+        (* evaluates each expr in an arr and ensures all exprs are the same type.
+         * returns: array of checked exprs * T.vartype of array * env. *)
+        let checked_array, array_type, env = List.fold_left
+
+            (* evaluate each expression in the list *)
+            (fun (checked_exprs_acc, prev_type, env) unchecked_expr ->
+                let checked_expr, env = check_expr unchecked_expr env in
+                (* TODO get expr type *)
+                let expr_type = T.Int in
+                match prev_type with
+                    | T.Void ->
+                        (* means we're seeing the 1st expr in the array and now know array type *)
+                        checked_expr :: checked_exprs_acc, expr_type, env
+                    | array_type ->
+                        (* ensure all elems in array are the same type *)
+                        if array_type <> expr_type
                         then raise(Error "All elements in an array must be the same type");
-                        checked_expr :: checked_exprs_acc, Some(exprs_type), env
-            )
-        ([], None, env) exprs in
-        List.rev(checked_exprs), exprs_type, env
+                        checked_expr :: checked_exprs_acc, array_type, env)
+
+        ([], T.Void, env) exprs in
+        List.rev(checked_array), array_type, env
     in
 
     match expr with
-        | A.IntLit(i)           -> S.IntLit(i),         T.Int, env
-        | A.BoolLit(b)          -> S.BoolLit(b),        T.Bool, env
-        | A.FloatLit(f)         -> S.FloatLit(f),       T.Float, env
-        | A.StringLit(s)        -> S.StringLit(s),      T.String, env
-        | A.FractionLit(n,d)    -> S.FractionLit(n,d),  T.Fraction, env
-        | A.QRegLit(q1,q2)      -> S.QRegLit(q1,q2),    T.QReg, env
-        | A.ComplexLit(r,i)     -> S.ComplexLit(r,i),   T.Complex, env
+        | A.IntLit(i) -> S.IntLit(i, A.DataType(T.Int)), env
+        | A.BoolLit(b) -> S.BoolLit(b, A.DataType(T.Bool)), env
+        | A.FloatLit(f) -> S.FloatLit(f, A.DataType(T.Float)), env
+        | A.StringLit(s) -> S.StringLit(s, A.DataType(T.String)), env
+
+        | A.FractionLit(num_expr, denom_expr) -> 
+            (* checks fraction expressions first *)
+            let num_expr, env   = check_expr num_expr env in
+            let denom_expr, env = check_expr denom_expr env in
+            S.FractionLit(num_expr, denom_expr, A.DataType(T.Fraction)), env
+
+        | A.QRegLit(expr1, expr2) -> 
+            (* checks expressions first *)
+            let expr1, env   = check_expr expr1 env in
+            let expr2, env = check_expr expr2 env in
+            S.QRegLit(expr1, expr2, A.DataType(T.QReg)), env
+
+        | A.ComplexLit(real_expr, im_expr) -> 
+            (* checks expressions first *)
+            let real_expr, env   = check_expr real_expr env in
+            let im_expr, env = check_expr im_expr env in
+            S.ComplexLit(real_expr, im_expr, A.DataType(T.Complex)), env
 
         | A.ArrayLit(exprs) ->
             (* TODO how to return array of type None when array literal is empty? *)
             (* TODO what should be returned as the second elem ?
              * hmm .. maybe we should just write a bloody type getter func after all *)
-            let arr, arr_type, env = check_exprs(exprs env) in
-            S.ArrayLit(arr), arr_type, env
+            let arr, typ, env = check_array exprs env in
+            S.ArrayLit(arr, A.DataType(typ)), env
 
         | A.MatrixLit(exprs_list_list) ->
-            (* each expression list must be the same length 
-             * each expression list must be a valid expression list *)
-            let matrix, matrix_type, _ = List.fold_left
-                (fun (rows, row_type_opt, row_length_opt) exprs -> 
+            (* each expression list (aka row) must be the same length.
+             * each expression list must be a valid expression list. *)
+            let matrix, matrix_type, _, env = List.fold_left
+
+                (fun (rows, curr_type, row_length, env) exprs -> 
+                    (* evaluate each row where each row is an expr list *)
+                    let exprs, row_type, env = check_array exprs env in
                     let exprs_length = List.length exprs in
 
-                    (* verify each row is the same length *)
-                    let _ = match row_length_opt with Some(row_length) ->
-                        if row_length <> exprs_length
-                        then raise(Error "Each matrix row must be the same length") in
+                    match curr_type with
+                        | T.Void -> 
+                            (* means this is the 1st row which means we now know the matrix type *)
+                            (exprs :: rows), row_type, exprs_length, env
 
-                    (* evaluate each row where each row is an expr list *)
-                    let exprs, exprs_type, env = check_exprs(exprs env) in
-                    match row_type_opt, row_length_opt with
-                        | None, None -> 
-                            (* None means this is the first elem which means we now know the matrix type *)
-                            (exprs :: rows), Some(exprs_type), Some(exprs_length), env
-
-                        | Some(row_type), Some(row_length) ->
-                            (* ensure matrix rows have the same type ... *)
-                            if row_type <> exprs_type
+                        | matrix_type ->
+                            (* ensure all rows have the same type ... *)
+                            if matrix_type <> row_type
                             then raise(Error "All elements in a matrix must be the same type");
+
                             (* ... and are the same length*)
                             if row_length <> exprs_length
                             then raise(Error "All rows in a matrix must be the same length");
-                            (exprs :: rows), Some(row_type), Some(row_length), env
-                        | _ -> raise(Error "exhaustive case shouldn't happen")
-                )
-                ([], None, None, env) exprs_list_list in
-            S.MatrixLit(List.rev matrix), matrix_type, env
+
+                            (exprs :: rows), row_type, row_length, env)
+
+                ([], T.Void, 0, env) exprs_list_list in
+            S.MatrixLit(List.rev matrix, A.DataType(matrix_type)), env
 
         | A.Binop(expr1, operation, expr2) -> 
 
@@ -153,22 +168,22 @@ let rec check_expr expr env =
                 | T.Float, T.Float 
                 | T.Int,   T.Float 
                 | T.Float, T.Int -> T.Bool
-                | _ -> raise Error("Incompatible types for relational logic.") in
+                | _ -> raise(Error "Incompatible types for relational logic.") in
 
             let math type1 type2 = match type1, type2 with
                 | T.Float, T.Int
                 | T.Int,   T.Float 
                 | T.Float, T.Float  -> T.Float
                 | T.Int,   T.Int    -> T.Int
-                | _ -> raise Error("Incompatible types for math.") in
+                | _ -> raise(Error "Incompatible types for math.") in
 
             let logic_basic type1 type2 = match type1, type2 with
                 | T.Bool, T.Bool -> T.Bool
-                | _ -> raise Error("Incompatible types for basic logic (ie. 'and', 'or').") in
+                | _ -> raise(Error "Incompatible types for basic logic (ie. 'and', 'or').") in
 
             let logic_equal type1 type2 = match type1, type2 with
                 | type1', type2' when type1' == type2' -> T.Bool
-                | _ -> raise Error("Incompatible types for equal logic.") in
+                | _ -> raise(Error "Incompatible types for equal logic.") in
 
             (* check left and right children *)
             let expr1, type1 = check_expr expr1 env
@@ -204,7 +219,7 @@ let rec check_expr expr env =
                 | QueryUnreal
                 *)
                 in
-            S.Binop(expr1, operation, expr2), result_type
+            S.Binop(expr1, operation, expr2, A.DataType(result_type)), env
 
         (*
         | A.AssignOp(lvalue, binop, expr) ->
@@ -433,7 +448,7 @@ let rec check_stmt stmt env = match stmt with
         let env = { env with scope = scope'; } in
 
         (* recursively check each statement in the block *)
-        let statements, env = check_stmts(stmts env) in
+        let statements, env = check_stmts stmts env in
 
         (* TODO not sure if we need scope'.variables <- List.rev scope'.variables; microc does this. *)
         (* TODO where dafuq do we pop the scope after a block? *)
@@ -441,7 +456,7 @@ let rec check_stmt stmt env = match stmt with
         S.CompoundStatement(statements), env
 
     | A.Expression(expr) -> 
-        expr, _, env = check_expr(expr env)
+        expr, env = check_expr expr env
         S.Expression(expr), env
 
     (* CHUNK 0
@@ -516,7 +531,7 @@ let rec check_stmt stmt env = match stmt with
 
     (* CHUNK 3 easy *)
     (* INTERFACE
-        - verify expression is valid by running check_expr(expression env)
+        - verify expression is valid by running check_expr expression env
         - pass statement back into check_stmt() function. 
     | A.WhileStatement(e, s) ->
         let t = get_type_from_datatype(check_expr e env) in
@@ -650,7 +665,7 @@ let check_stmts stmts env =
     ([], env) stmts in
     (* rev list because of fold_left *)
     let checked_stmts = List.rev checked_stmts in
-    (checked_stmt, env)
+    checked_stmts, env
 
 (* Takes a range and checks if expressions return Ints 
    Returns semantically checked expressions 1, 2, 3 and a Boolean *)
@@ -735,7 +750,7 @@ let check_program ast =
     let env = { scope: scope'; return_type: T.Void; } in
     (* TODO should the toplevel return_type be int or bool? *)
     (* check all toplevel stmts *)
-    let stmts, env = check_stmts(ast env) in stmts
+    let stmts, env = check_stmts ast env in stmts
 
     (* TODO remove below but keep as reference for the moment
     let (functions,(globals, threads)) = ast in
