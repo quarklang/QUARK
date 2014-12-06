@@ -14,7 +14,7 @@ let trd_3 = function _, _, x -> x;;
 
 let get_id (A.Ident name) = name
 
-(* Environment definition and manipulation *)
+(**** Environment definition and manipulation ****)
 type func_info = {
   f_args: S.decl list;
   f_return: A.datatype;
@@ -29,19 +29,26 @@ type environment = {
     func_current: string; 
 }
 
-let add_env_var env var_typ var_id =
+let update_env_var env var_typ var_id =
   {
     var_table = StrMap.add (get_id var_id) var_typ env.var_table;
     func_table = env.func_table;
     func_current = env.func_current;
   }
 
+(* if doesn't exist, return InvalidType *)
+let get_env_var env var_id =
+  try
+    StrMap.find (get_id var_id) env.var_table
+  with Not_found -> A.InvalidType
+
 (************** DEBUG ONLY **************)
 (* print out the func decl param list *)
 let debug_s_decl_list f_args =
   let paramStr = 
     List.fold_left 
-      (fun s param -> s ^ ((function 
+      (fun s param -> s ^ (
+        (function 
         | S.PrimitiveDecl(typ, id) -> 
 		    (Gen.gen_datatype typ) ^ " " ^ (get_id id)
         | _ -> "FATAL") param) ^ ", ") "" f_args
@@ -324,17 +331,26 @@ let gen_s_param = function
     S.PrimitiveDecl(typ, id)
   | _ -> failwith "Function parameter list declaration error"
 
+(* Used in A.FunctionDecl *)
 let gen_s_param_list param_list =
   List.map 
     (fun param -> gen_s_param param) param_list
-  
+
+(* Used in A.FunctionDecl *)
+let update_env_s_param_list var_table s_param_list =
+  List.fold_left 
+    (fun var_table -> function
+    | S.PrimitiveDecl(typ, id) -> StrMap.add (get_id id) typ var_table
+    | _ -> failwith "Function parameter list declaration error") 
+    var_table s_param_list
+    
   
 let rec gen_s_decl env = function
   | A.AssigningDecl(typ, id, ex) -> 
-    let env' = add_env_var env typ id in
+    let env' = update_env_var env typ id in
     (env', S.AssigningDecl(typ, id, S.BoolLit("TODO"))) (* TODO gen_s_expr *)
   | A.PrimitiveDecl(typ, id) -> 
-    let env' = add_env_var env typ id in
+    let env' = update_env_var env typ id in
     (env', S.PrimitiveDecl(typ, id))
 
 
@@ -354,10 +370,9 @@ let rec gen_sast env = function
           f_args = s_param_list; 
           f_return = return_type;
         } in
-        let func_table' = StrMap.add (get_id func_id) func_entry env.func_table in
         let env' = { 
-          var_table = env.var_table; 
-          func_table = func_table';
+          var_table = update_env_s_param_list env.var_table s_param_list; 
+          func_table = StrMap.add (get_id func_id) func_entry env.func_table;
           func_current = func_name
         } in
         let _ = debug_env env' "after FunctionDecl" in
@@ -365,7 +380,7 @@ let rec gen_sast env = function
         let function_decl = S.FunctionDecl(return_type, func_id, s_param_list, 
           snd_2 @@ gen_sast env' stmt_list) in
         let env'' = { 
-          var_table = env'.var_table; 
+          var_table = env.var_table; 
           func_table = env'.func_table;
           func_current = ""
         } in

@@ -3,5 +3,5 @@
 float a = 6;
 def int f1: int a, int[] b, string[][][] c
 {
-    int a = 3;
+    complex a = 3;
 }
