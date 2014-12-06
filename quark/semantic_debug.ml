@@ -36,11 +36,11 @@ let update_env_var env var_typ var_id =
     func_current = env.func_current;
   }
 
-(* if doesn't exist, return InvalidType *)
+(* if doesn't exist, return NoneType *)
 let get_env_var env var_id =
   try
     StrMap.find (get_id var_id) env.var_table
-  with Not_found -> A.InvalidType
+  with Not_found -> A.NoneType
 
 (************** DEBUG ONLY **************)
 (* print out the func decl param list *)
@@ -350,7 +350,7 @@ let rec gen_s_decl env = function
   | A.AssigningDecl(typ, id, ex) -> 
     (* should not redeclare! *)
     (match get_env_var env id with
-    | A.InvalidType -> 
+    | A.NoneType -> 
       let env' = update_env_var env typ id in
       (env', S.AssigningDecl(typ, id, S.BoolLit("TODO"))) (* TODO gen_s_expr *)
     | _ -> failwith @@ "Variable assigning redeclaration: " ^ Gen.gen_datatype typ ^ " " ^ get_id id
@@ -358,7 +358,7 @@ let rec gen_s_decl env = function
   | A.PrimitiveDecl(typ, id) -> 
     (* should not redeclare! *)
     (match get_env_var env id with
-    | A.InvalidType -> 
+    | A.NoneType -> 
       let env' = update_env_var env typ id in
       (env', S.PrimitiveDecl(typ, id))
     | _ -> failwith @@ "Variable primitive redeclaration: " ^ Gen.gen_datatype typ ^ " " ^ get_id id

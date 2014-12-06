@@ -41,7 +41,7 @@ type datatype =
   | DataType of T.vartype
   | ArrayType of datatype
   | MatrixType of datatype
-  | InvalidType (* if a symbol doesn't exist *)
+  | NoneType (* if a symbol doesn't exist *)
 
 type ident = Ident of string
 
