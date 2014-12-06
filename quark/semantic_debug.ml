@@ -222,14 +222,17 @@ let rec gen_decl = function
     gen_datatype typ ^ " " ^ gen_id id
 
 
-let rec gen_sast stmts =
+(* Main entry point: take stmts (AST) and convert to SAST *)
+let rec gen_sast env stmts =
   match stmts with
   | [] -> []
   | stmt :: rest ->
-    begin
+    let s_stmt =
       match stmt with
 			(* top level statements *)
       | A.FunctionDecl(returnTyp, funcId, paramList, stmtList) ->
+        S.EmptyStatement
+        (*
         let funcId = gen_id funcId in
           begin
             print_endline @@ gen_datatype returnTyp ^ " " ^ 
@@ -237,34 +240,37 @@ let rec gen_sast stmts =
             print_endline @@ "{ // start " ^ funcId;
             gen_sast stmtList;
             print_endline @@ "} // end " ^ funcId ^ "\n";
-          end
+          end *)
       
-      (* TODO: get rid of forward decl *)
       | A.ForwardDecl(returnTyp, funcId, paramList) -> 
-          print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
-            (gen_id funcId) ^ surr( gen_param_list paramList ) ^";\n";
+        S.EmptyStatement
+          (* print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
+            (gen_id funcId) ^ surr( gen_param_list paramList ) ^";\n"; *)
 
       (* statements *)
       | A.IfStatement(ex, stmtIf, stmtElse) -> 
-        begin
+        S.EmptyStatement
+        (* begin
           print_endline @@ "if " ^ surr(gen_expr ex);
           print_endline "{ // start if";
           gen_sast [stmtIf];
           print_endline "else";
           gen_sast [stmtElse];
           print_endline "} // end if";
-        end
+        end *)
 				
       | A.WhileStatement(ex, stmt) -> 
-        begin
+        S.EmptyStatement
+        (* begin
           print_endline @@ "while " ^ surr(gen_expr ex);
           print_endline "{ // start while";
           gen_sast [stmt];
           print_endline "} // end while";
-        end
+        end *)
             
       | A.ForStatement(iter, stmt) -> 
-        begin
+        S.EmptyStatement
+        (* begin
           (* for (a in 1:5, b in 7:3:-1) *)
           (* List.iter (fun iter -> 
             print_endline @@ "for " ^ gen_iterator iter) iterList; *)
@@ -272,29 +278,37 @@ let rec gen_sast stmts =
           print_endline "{ // start for";
           gen_sast [stmt];
           print_endline "} // end for";
-        end
+        end *)
             
       | A.CompoundStatement(stmtList) -> 
-        begin
+        S.EmptyStatement
+        (* begin
           print_endline "{ // start compound";
           gen_sast stmtList;
           print_endline "} // end compound";
-        end
+        end *)
 
       | A.Declaration(dec) -> 
-        print_endline @@ gen_decl dec ^ ";"
+        S.EmptyStatement
+        (* print_endline @@ gen_decl dec ^ ";" *)
       | A.Expression(ex) -> 
-        print_endline @@ gen_expr ex ^ ";"
+        S.EmptyStatement
+        (* print_endline @@ gen_expr ex ^ ";" *)
       | A.ReturnStatement(ex) -> 
-        print_endline @@ "return " ^ gen_expr ex ^ ";"
+        S.EmptyStatement
+        (* print_endline @@ "return " ^ gen_expr ex ^ ";" *)
       | A.EmptyStatement -> 
-        print_endline ";"
+        S.EmptyStatement
+        (* print_endline ";" *)
       | A.VoidReturnStatement -> 
-        print_endline "return; // void"
+        S.EmptyStatement
+        (* print_endline "return; // void" *)
       | A.BreakStatement -> 
-        print_endline "break; // control"
+        S.EmptyStatement
+        (* print_endline "break; // control" *)
       | A.ContinueStatement -> 
-        print_endline "continue; // control"
+        S.EmptyStatement
+        (* print_endline "continue; // control" *)
       | _ -> failwith "nothing for eval()"
-    end;
-    gen_sast rest
+    in 
+    s_stmt :: gen_sast env rest
