@@ -121,74 +121,149 @@ let rec gen_datatype = function
     | _ -> 
       failwith "Bad matrix type")
 
+(* return env', S.expr, type *)
+let rec gen_s_expr env = function
+  (* simple literals *)
+  | A.IntLit(i) -> env, S.IntLit(i), T.Int
+  | A.BoolLit(b) -> env, S.BoolLit(b), T.Bool
+  | A.FloatLit(f) -> env, S.FloatLit(f), T.Float
+  | A.StringLit(s) -> env, S.StringLit(s), T.String
 
-let rec gen_expr = function
-  (* literals *)
-  | A.IntLit(x) | A.FloatLit(x) | A.BoolLit(x) -> 
-    x
-  | A.StringLit(s) -> 
-    "\"" ^ s ^ "\""
+  | A.FractionLit(num_expr, denom_expr) -> 
+    env, S.IntLit("TODO"), T.Int
+      (*
+      let env, num_expr = gen_s_expr env num_expr in
+      let env, denom_expr = gen_s_expr env denom_expr in
+      env, S.FractionLit(num_expr, denom_expr), Ty.Fraction
+      *)
 
-  | A.ArrayLit(exlist) -> 
-    "[" ^ gen_expr_list exlist ^ "]"
+  | A.QRegLit(expr1, expr2) -> 
+    env, S.IntLit("TODO"), T.Int
+      (* checks expressions first *)
+      (*
+      let env, expr1 = gen_s_expr env expr1 in
+      let env, expr2 = gen_s_expr env expr2 in
+      S.QRegLit(expr1, expr2, A.DataType(T.QReg)), env
+      *)
 
-  | A.MatrixLit(exlistlist) -> 
-    "Matrix<>(" ^ gen_matrix_list exlistlist ^ ")"
+  | A.ComplexLit(real_expr, im_expr) -> 
+    env, S.IntLit("TODO"), T.Int
+      (* checks expressions first *)
+      (*
+      let real_expr, env   = gen_s_expr real_expr env in
+      let im_expr, env = gen_s_expr im_expr env in
+      S.ComplexLit(real_expr, im_expr, A.DataType(T.Complex)), env
+      *)
 
-  | A.FractionLit(exNum, exDenom) -> 
-    "Frac(" ^ gen_expr exNum ^ ", " ^ gen_expr exDenom ^ ")"
+  | A.ArrayLit(exprs) ->
+    env, S.IntLit("TODO"), T.Int
+      (*
+      let arr, typ, env = check_array exprs env in
+      S.ArrayLit(arr, A.DataType(typ)), env
+      *)
 
-  | A.QRegLit(ex1, ex2) -> 
-    "Qureg::create<true>(" ^ gen_expr ex1 ^ ", " ^ gen_expr ex2 ^ ")"
+  | A.MatrixLit(exprs_list_list) ->
+    env, S.IntLit("TODO"), T.Int
+      (*
+      (* each expression list (aka row) must be the same length.
+       * each expression list must be a valid expression list. *)
+      let matrix, matrix_type, _, env = List.fold_left
 
-  | A.ComplexLit(exReal, exImag) -> 
-    "complex<float>(" ^ gen_expr exReal ^ ", " ^ gen_expr exImag ^ ")"
+          (fun (rows, curr_type, row_length, env) exprs -> 
+              (* evaluate each row where each row is an expr list *)
+              let exprs, row_type, env = check_array exprs env in
+              let exprs_length = List.length exprs in
+
+              match curr_type with
+                  | T.Void -> 
+                      (* means this is the 1st row which means we now know the matrix type *)
+                      (exprs :: rows), row_type, exprs_length, env
+
+                  | matrix_type ->
+                      (* ensure all rows have the same type ... *)
+                      if matrix_type <> row_type
+                      then raise(Error "All elements in a matrix must be the same type");
+
+                      (* ... and are the same length*)
+                      if row_length <> exprs_length
+                      then raise(Error "All rows in a matrix must be the same length");
+
+                      (exprs :: rows), row_type, row_length, env)
+
+          ([], T.Void, 0, env) exprs_list_list in
+      S.MatrixLit(List.rev matrix, A.DataType(matrix_type)), env
+      *)
   
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)
   | A.Binop(ex1, op, ex2) -> 
-    let ex1 = gen_expr ex1 in
-    let ex2 = gen_expr ex2 in
+    env, S.IntLit("TODO"), T.Int
+      (*
+    let ex1 = gen_s_expr ex1 in
+    let ex2 = gen_s_expr ex2 in
      (match op with
       | A.Query -> "measure_top(" ^ex1^ ", " ^ex2^ ", true)"
       | A.QueryUnreal -> "measure_top(" ^ex1^ ", " ^ex2^ ", false)"
       | _ -> ex1 ^" "^ gen_binop op ^" "^ ex2)
+      *)
   
   (* Unary ops *)
   | A.Unop(op, ex) -> 
-    gen_unop op ^ gen_expr ex
+    env, S.IntLit("TODO"), T.Int
+      (*
+    gen_unop op ^ gen_s_expr ex
+      *)
   
   (* Assignment *)
   | A.Assign(lval, ex) -> 
-    gen_lvalue lval ^ " = " ^ gen_expr ex
+    env, S.IntLit("TODO"), T.Int
+      (*
+    gen_lvalue lval ^ " = " ^ gen_s_expr ex
+      *)
   | A.Lval(lval) -> 
+    env, S.IntLit("TODO"), T.Int
+      (*
     gen_lvalue lval
+      *)
   
   (* Special assignment *)
   | A.AssignOp(lval, op, ex) -> 
-    gen_lvalue lval ^" "^ gen_binop op ^" "^ gen_expr ex
+    env, S.IntLit("TODO"), T.Int
+      (*
+    gen_lvalue lval ^" "^ gen_binop op ^" "^ gen_s_expr ex
+      *)
   | A.PostOp(lval, op) -> 
+    env, S.IntLit("TODO"), T.Int
+      (*
     gen_lvalue lval ^" "^ gen_postop op
+      *)
     
   (* Membership testing with keyword 'in' *)
   | A.Membership(exElem, exArray) -> 
+    env, S.IntLit("TODO"), T.Int
+      (*
     (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
     (* Shouldn't change over calls!!! *)
-    let exElem = gen_expr exElem in
-    let exArray = gen_expr exArray in
+    let exElem = gen_s_expr exElem in
+    let exArray = gen_s_expr exArray in
       "std::find(" ^surr exArray^ ".begin(), " ^surr exArray^ ".end(), " ^
       exElem^ ") != " ^surr exArray^ ".end()"
+      *)
     
   (* Function calls *)
   | A.FunctionCall(funcId, exlist) -> 
+    env, S.IntLit("TODO"), T.Int
+      (*
     get_id funcId ^ surr( gen_expr_list exlist )
+      *)
   
   | _ -> failwith "some expr not parsed"
 
+(*
 and gen_expr_list exlist =
   let exlistStr = 
     List.fold_left 
-      (fun s ex -> s ^ gen_expr ex ^ ", ") "" exlist
+      (fun s ex -> s ^ gen_s_expr ex ^ ", ") "" exlist
   in
   (* get rid of the last 2 chars ', ' *)
   if exlistStr = "" then ""
@@ -212,21 +287,12 @@ and gen_matrix_list exlistlist =
     String.sub exlistlistStr 0 ((String.length exlistlistStr) - 2)
   
 
-let gen_s_param = function 
-  | A.PrimitiveDecl(typ, id) -> 
-    S.PrimitiveDecl(typ, id)
-  | _ -> failwith "Function parameter list declaration error"
-
-let gen_s_param_list param_list =
-  List.map 
-    (fun param -> gen_s_param param) param_list
-  
 	
 let rec gen_range id = function
 	| A.Range(exStart, exEnd, exStep) -> 
-    let exStart = gen_expr exStart in
-    let exEnd = gen_expr exEnd in
-    let exStep = gen_expr exStep in
+    let exStart = gen_s_expr exStart in
+    let exEnd = gen_s_expr exEnd in
+    let exStep = gen_s_expr exStep in
     (* !!!! Needs to assign exStart, exEnd and exStep to compiled temp vars *)
     (* Shouldn't change over iteration!!! *)
     let exCmp = surr exEnd ^">"^ surr exStart ^" ? " in
@@ -240,18 +306,28 @@ let rec gen_iterator = function
   | A.RangeIterator(id, rng) -> 
     gen_range id rng
   | A.ArrayIterator(id, ex) -> 
-    get_id id ^ " in " ^ gen_expr ex
+    get_id id ^ " in " ^ gen_s_expr ex
+*)
 	
+let gen_s_param = function 
+  | A.PrimitiveDecl(typ, id) -> 
+    S.PrimitiveDecl(typ, id)
+  | _ -> failwith "Function parameter list declaration error"
+
+let gen_s_param_list param_list =
+  List.map 
+    (fun param -> gen_s_param param) param_list
+  
+  
 let rec gen_s_decl = function
   | A.AssigningDecl(typ, id, ex) -> 
-    S.AssigningDecl(typ, id, S.BoolLit("DUMMY", A.DataType(T.Bool))) (* TODO gen_s_expr *)
+    S.AssigningDecl(typ, id, S.BoolLit("TODO")) (* TODO gen_s_expr *)
   | A.PrimitiveDecl(typ, id) -> 
     S.PrimitiveDecl(typ, id)
 
 
-(* Main entry point: take stmts (AST) and convert to SAST *)
-let rec gen_sast env stmts =
-  match stmts with
+(* Main entry point: take AST and convert to SAST *)
+let rec gen_sast env = function
   | [] -> []
   | stmt :: rest ->
     let s_stmt =
@@ -292,7 +368,7 @@ let rec gen_sast env stmts =
       | A.IfStatement(ex, stmtIf, stmtElse) -> 
         S.EmptyStatement
         (* begin
-          print_endline @@ "if " ^ surr(gen_expr ex);
+          print_endline @@ "if " ^ surr(gen_s_expr ex);
           print_endline "{ // start if";
           gen_sast [stmtIf];
           print_endline "else";
@@ -303,7 +379,7 @@ let rec gen_sast env stmts =
       | A.WhileStatement(ex, stmt) -> 
         S.EmptyStatement
         (* begin
-          print_endline @@ "while " ^ surr(gen_expr ex);
+          print_endline @@ "while " ^ surr(gen_s_expr ex);
           print_endline "{ // start while";
           gen_sast [stmt];
           print_endline "} // end while";
@@ -333,10 +409,10 @@ let rec gen_sast env stmts =
         S.Declaration(gen_s_decl dec)
       | A.Expression(ex) -> 
         S.EmptyStatement
-        (* print_endline @@ gen_expr ex ^ ";" *)
+        (* print_endline @@ gen_s_expr ex ^ ";" *)
       | A.ReturnStatement(ex) -> 
         S.EmptyStatement
-        (* print_endline @@ "return " ^ gen_expr ex ^ ";" *)
+        (* print_endline @@ "return " ^ gen_s_expr ex ^ ";" *)
       | A.EmptyStatement -> 
         S.EmptyStatement
         (* print_endline ";" *)
