@@ -1,5 +1,5 @@
 OBJS = type.cmo ast.cmo sast.cmo parser.cmo scanner.cmo \
-	 semantic_debug.cmo compile.cmo generator.cmo
+	  generator.cmo semantic_debug.cmo compile.cmo
 
 TESTS = arith1 arith2 arith3 arith4 \
 	fib \
@@ -15,7 +15,7 @@ TESTS = arith1 arith2 arith3 arith4 \
 	while1
 
 TARFILES = Makefile testall.sh scanner.mll parser.mly \
-	type.ml ast.ml sast.ml semantic_debug.ml compile.ml generator.ml \
+	type.ml ast.ml sast.ml generator.ml semantic_debug.ml compile.ml \
 	$(TESTS:%=tests/test-%.mc) \
 	$(TESTS:%=tests/test-%.out)
 
@@ -32,7 +32,7 @@ scanner.ml : scanner.mll
 parser.ml parser.mli : parser.mly
 	ocamlyacc parser.mly
 
-DISABLE_WARN = -4-39-11
+DISABLE_WARN = -4-39-11-27
 
 %.cmo : %.ml
 	ocamlc -w +a$(DISABLE_WARN) -c $<
