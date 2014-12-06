@@ -426,9 +426,11 @@ let empty_table_initialization = {
     parent=None;
     variables=[];
 }
+
 let empty_function_table_initialization = {
     functions=[(Ident("print_string"), Void, [Formal(Datatype(String), Ident("s"))],[]);(Ident("print_int"),Void,[Formal(Datatype(Int),Ident("s"))],[])]
 }
+
 let empty_environment = {
     return_type = Datatype(Void);
     return_seen = false;
@@ -532,13 +534,13 @@ let rec check_stmt stmt env = match stmt with
             | A.ArrayIterator(ident, _expr) -> 
                 let expr, typ = check_expr _expr env in 
                 if not (typ = ArrayLit) then
-                    raise (Error("Improper Array Iterator in For statement"));  
+                    raise Error("Improper Array Iterator in For statement");  
                 let semantic_stmt, env = check_stmt stmt env in   
                 S.ForStatement(S.ArrayIterator(ident, expr), semantic_stmt), env
             | A.RangeIterator(ident, range) ->
                 let semantic_range = check_range range env in
                 if not (typ = ArrayLit) then
-                    raise (Error("Improper Range Iterator in Ffor statement"));                
+                    raise Error("Improper Range Iterator in Ffor statement"); 
                 let semantic_stmt, env = check_stmt stmt env in  
                 S.ForStatement(S.RangeIterator(ident, semantic_range), semantic_stmt), env
 
@@ -546,10 +548,10 @@ let rec check_stmt stmt env = match stmt with
     (* INTERFACE
         - verify expression is valid by running check_expr expression env
         - pass statement back into check_stmt() function. *)
-    | A.WhileStatement(expr,git s stmt) ->
-        let expr, typ = get_type_from_datatype(check_expr e env) in
+    | A.WhileStatement(expr, stmt) ->
+        let expr, typ = get_type_from_datatype(check_expr expr env) in
         if not(typ = Boolean) then
-            raise (Error("Improper While loop format"));
+            raise Error("Improper While loop format");
         let semantic_stmt, env = check_stmt stmt env in
         S.WhileStatement(S.Expression(expr), semantic_stmt)
 
@@ -658,14 +660,15 @@ let rec check_stmt stmt env = match stmt with
         S.ArrElemAssign(SIdent(ident,get_var_scope env ident), get_sexpr env expr1, get_sexpr env expr2)
     *)
 
-    (* CHUNK 7 easy? 
-    | A.VoidReturnStatement
-    - might just be `| A.VoidReturnStatement() -> S.VoidReturnStatement()`
-    *)
+    | A.ReturnStatement(expr) ->
+        let expr, typ = check_expr expr env in
+        if not (typ = env.return_type) then
+          raise Error("Incorrect return type") in 
+        S.ReturnStatement(expr), env
 
-    (* CHUNK 8 easy. do we need? probably not 
-    | Terminate -> (STerminate, env)
-     * *)
+    | A.VoidReturnStatement -> S.VoidReturnStatement
+    | A.ContinueStatement -> S.ContinueStatement
+    | A.BreakStatement -> S.BreakStatement
 
 (* runs each stmt in a stmt-list through check_stmt() *)
 let check_stmts stmts env =
@@ -677,18 +680,6 @@ let check_stmts stmts env =
     (* rev list because of fold_left *)
     let checked_stmts = List.rev checked_stmts in
     checked_stmts, env
-
-(* Takes a range and checks if expressions return Ints 
-   Returns semantically checked expressions 1, 2, 3 and a Boolean *)
-let rec check_range env range =
-    match range with
-    Range(e1, e2, e3) ->
-        let (se1, t1) = check_expr e1 env in
-        let (se2, t2) = check_expr e2 env in 
-        let (se3, t3) = check_expr e3 env in 
-        if not (t1 = T.Int && t2 = T.Int && t3 = T.Int) then 
-        raise (Error("Range only accepts integer values for start, stop, and step")) in 
-        S.Range(se1, se2, se3)
 
 let get_sstmt_list env stmt_list = 
     List.fold_left

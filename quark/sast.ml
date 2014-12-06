@@ -47,3 +47,5 @@ type statement =
   | ForwardDecl of A.datatype * A.ident * decl list
   | ReturnStatement of expr
   | VoidReturnStatement
+  | BreakStatement
+  | ContinueStatement
