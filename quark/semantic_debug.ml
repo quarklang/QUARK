@@ -12,16 +12,13 @@ let fst_3 = function x, _, _ -> x;;
 let snd_3 = function _, x, _ -> x;;
 let trd_3 = function _, _, x -> x;;
 
+let get_id (A.Ident name) = name
+
+(* Environment definition and manipulation *)
 type func_info = {
   f_args: S.decl list;
   f_return: A.datatype;
 }
-
-(* 
-let func_example = { 
-  f_ident = A.Ident "shit"; 
-  f_args = [S.PrimitiveDecl(A.DataType T.Int, A.Ident "gugu")]; 
-  f_return = A.DataType T.Float };; *)
 
 (* map string ident name to datatype or function info *)
 type environment = {
@@ -32,10 +29,12 @@ type environment = {
     func_current: string; 
 }
 
-(* surround with parenthesis *)
-let surr str = "(" ^ str ^ ")"
-
-let get_id (A.Ident name) = name
+let add_env_var env var_typ var_id =
+  {
+    var_table = StrMap.add (get_id var_id) var_typ env.var_table;
+    func_table = env.func_table;
+    func_current = env.func_current;
+  }
 
 (************** DEBUG ONLY **************)
 (* print out the func decl param list *)
@@ -330,11 +329,13 @@ let gen_s_param_list param_list =
     (fun param -> gen_s_param param) param_list
   
   
-let rec gen_s_decl = function
+let rec gen_s_decl env = function
   | A.AssigningDecl(typ, id, ex) -> 
-    S.AssigningDecl(typ, id, S.BoolLit("TODO")) (* TODO gen_s_expr *)
+    let env' = add_env_var env typ id in
+    (env', S.AssigningDecl(typ, id, S.BoolLit("TODO"))) (* TODO gen_s_expr *)
   | A.PrimitiveDecl(typ, id) -> 
-    S.PrimitiveDecl(typ, id)
+    let env' = add_env_var env typ id in
+    (env', S.PrimitiveDecl(typ, id))
 
 
 (* Main entry point: take AST and convert to SAST *)
@@ -428,7 +429,9 @@ let rec gen_sast env = function
         end *)
 
       | A.Declaration(dec) -> 
-        (env, S.Declaration(gen_s_decl dec))
+        let env', s_dec = gen_s_decl env dec in
+        let _ = debug_env env' "after decl" in
+        (env', S.Declaration(s_dec))
 
       | A.Expression(ex) -> 
         let env', s_ex, _ = gen_s_expr env ex in
@@ -441,7 +444,6 @@ let rec gen_sast env = function
 
       | A.EmptyStatement -> 
         (env, S.EmptyStatement)
-        (* print_endline ";" *)
 
       | A.VoidReturnStatement -> 
         (env, S.EmptyStatement)
