@@ -1,9 +1,14 @@
 % Test semantic checking
 
 float a = 6;
-def int f1: int a, int[] b, string[][][] c
+def int f1: int a, int b, string[][][] c
 {
-    complex a = 3;
+    int e;
 }
 
-bool a;
+qreg q;
+
+def string f2: int a, int b
+{
+    int e;
+}

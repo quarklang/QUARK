@@ -14,33 +14,26 @@ let trd_3 = function _, _, x -> x;;
 
 let get_id (A.Ident name) = name
 
-(**** Environment definition and manipulation ****)
+(****** Environment definition ******)
 type func_info = {
   f_args: S.decl list;
   f_return: A.datatype;
 }
 
+type var_info = {
+  v_type: A.datatype;
+  v_depth: int; (* how deep in scope *)
+}
+
 (* map string ident name to datatype or function info *)
 type environment = {
-    var_table: A.datatype StrMap.t;
+    var_table: var_info StrMap.t;
     func_table: func_info StrMap.t;
     (* current function name waiting for 'return' *)
     (* if "", we are not inside any function *)
     func_current: string; 
+    depth: int;
 }
-
-let update_env_var env var_typ var_id =
-  {
-    var_table = StrMap.add (get_id var_id) var_typ env.var_table;
-    func_table = env.func_table;
-    func_current = env.func_current;
-  }
-
-(* if doesn't exist, return NoneType *)
-let get_env_var env var_id =
-  try
-    StrMap.find (get_id var_id) env.var_table
-  with Not_found -> A.NoneType
 
 (************** DEBUG ONLY **************)
 (* print out the func decl param list *)
@@ -63,17 +56,82 @@ let debug_env env msg =
     print_endline @@ "ENV " ^ msg ^ "{";
     print_string "Var= ";
     StrMap.iter 
-      (fun key v -> print_string @@ key ^ ": " ^ Gen.gen_datatype v ^ "; ")
+      (fun key vinfo -> print_string @@ 
+      key ^ ": " ^ Gen.gen_datatype vinfo.v_type ^ "(" ^ string_of_int vinfo.v_depth ^ "); ")
       env.var_table;
     print_string "\nFunc= ";
     StrMap.iter 
-      (fun key f_table -> print_endline @@ 
-        key ^ ": " ^ debug_s_decl_list f_table.f_args ^ " => " ^ Gen.gen_datatype f_table.f_return ^ ";")
+      (fun key finfo -> print_endline @@ 
+        key ^ ": " ^ debug_s_decl_list finfo.f_args ^ " => " ^ Gen.gen_datatype finfo.f_return ^ ";")
       env.func_table;
     print_endline @@ "Current= " ^ env.func_current;
     print_endline "}";
   end
-(************** END DEBUG **************)
+
+(****** Environment var_table ******)
+(* return updated var_table field (keep env.depth) *)
+let update_var_table env var_typ var_id =
+  StrMap.add (get_id var_id)
+    {
+      v_type = var_typ;
+      v_depth = env.depth
+    }
+    env.var_table
+  
+(* if doesn't exist, return NoneType *)
+let get_env_var env var_id =
+  try
+    StrMap.find (get_id var_id) env.var_table
+  with Not_found -> { 
+    v_type = A.NoneType; 
+    v_depth = -1
+  }
+
+let update_env_var env var_typ var_id =
+  let vinfo = get_env_var env var_id in
+  match vinfo.v_type with
+  | A.NoneType 
+  | _ when vinfo.v_depth < env.depth ->  (* we can safely add the var if it's in the inner scope *)
+  {
+    var_table = update_var_table env var_typ var_id;
+    func_table = env.func_table;
+    func_current = env.func_current;
+    depth = env.depth;
+  }
+  | _ -> failwith @@ "Variable redeclaration: " ^ Gen.gen_datatype var_typ ^ " " ^ get_id var_id
+
+(* go one scope deeper *)
+let incr_env_depth env = 
+  {
+    var_table = env.var_table;
+    func_table = env.func_table;
+    func_current = env.func_current;
+    depth = env.depth + 1;
+  }
+
+(****** Environment func_table ******)
+(* Used in A.FunctionDecl *)
+(* add all formal params to updated var_table *)
+let update_env_func env return_type func_id s_param_list =
+  let func_entry = { 
+    f_args = s_param_list; 
+    f_return = return_type;
+  } in
+  let env' = { 
+    (*var_table = update_env_s_param_list env s_param_list; *)
+    var_table = env.var_table;
+    func_table = StrMap.add (get_id func_id) func_entry env.func_table;
+    func_current = get_id func_id; 
+    depth = env.depth + 1;
+  } in
+  List.fold_left 
+      (fun env -> function
+      | S.PrimitiveDecl(typ, id) -> 
+        update_env_var env typ id
+      | _ -> failwith "Function parameter list declaration error") 
+      env' s_param_list
+
+
 
 let gen_unop = function
   A.Neg -> "-"
@@ -325,7 +383,7 @@ let rec gen_iterator = function
   | A.ArrayIterator(id, ex) -> 
     get_id id ^ " in " ^ gen_s_expr ex
 *)
-	
+
 let gen_s_param = function 
   | A.PrimitiveDecl(typ, id) -> 
     S.PrimitiveDecl(typ, id)
@@ -335,34 +393,16 @@ let gen_s_param = function
 let gen_s_param_list param_list =
   List.map 
     (fun param -> gen_s_param param) param_list
-
-(* Used in A.FunctionDecl *)
-(* Input: env.var_table. return: add all formal params to updated var_table *)
-let update_env_s_param_list var_table s_param_list =
-  List.fold_left 
-    (fun var_table -> function
-    | S.PrimitiveDecl(typ, id) -> StrMap.add (get_id id) typ var_table
-    | _ -> failwith "Function parameter list declaration error") 
-    var_table s_param_list
     
-    
+(* decl *)
 let rec gen_s_decl env = function
+  (* update_env_var checks redeclaration error *)
   | A.AssigningDecl(typ, id, ex) -> 
-    (* should not redeclare! *)
-    (match get_env_var env id with
-    | A.NoneType -> 
-      let env' = update_env_var env typ id in
-      (env', S.AssigningDecl(typ, id, S.BoolLit("TODO"))) (* TODO gen_s_expr *)
-    | _ -> failwith @@ "Variable assigning redeclaration: " ^ Gen.gen_datatype typ ^ " " ^ get_id id
-    )
+    let env' = update_env_var env typ id in
+    (env', S.AssigningDecl(typ, id, S.BoolLit("TODO"))) (* TODO gen_s_expr *)
   | A.PrimitiveDecl(typ, id) -> 
-    (* should not redeclare! *)
-    (match get_env_var env id with
-    | A.NoneType -> 
-      let env' = update_env_var env typ id in
-      (env', S.PrimitiveDecl(typ, id))
-    | _ -> failwith @@ "Variable primitive redeclaration: " ^ Gen.gen_datatype typ ^ " " ^ get_id id
-    )
+    let env' = update_env_var env typ id in
+    (env', S.PrimitiveDecl(typ, id))
 
 
 (* Main entry point: take AST and convert to SAST *)
@@ -376,16 +416,7 @@ let rec gen_sast env = function
       | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
         let _ = debug_env env "before FunctionDecl" in
         let s_param_list = gen_s_param_list param_list in
-        let func_name = get_id func_id in
-        let func_entry = { 
-          f_args = s_param_list; 
-          f_return = return_type;
-        } in
-        let env' = { 
-          var_table = update_env_s_param_list env.var_table s_param_list; 
-          func_table = StrMap.add (get_id func_id) func_entry env.func_table;
-          func_current = func_name
-        } in
+        let env' = update_env_func env return_type func_id s_param_list in
         let _ = debug_env env' "after FunctionDecl" in
         (* get the function declaration, then close 'func_current' *)
         let function_decl = S.FunctionDecl(return_type, func_id, s_param_list, 
@@ -393,7 +424,8 @@ let rec gen_sast env = function
         let env'' = { 
           var_table = env.var_table; 
           func_table = env'.func_table;
-          func_current = ""
+          func_current = "";
+          depth = env.depth;
         } in
         let _ = debug_env env'' "closed after FuncDecl" in
         (env'', function_decl)

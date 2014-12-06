@@ -6,7 +6,8 @@ let _ =
   let env = { 
     var_table = StrMap.empty; 
     func_table = StrMap.empty;
-    func_current = ""
+    func_current = "";
+    depth = 0
   }
   in
   (*TODO 
