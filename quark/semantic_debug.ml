@@ -110,26 +110,38 @@ let incr_env_depth env =
   }
 
 (****** Environment func_table ******)
+let get_env_func env func_id =
+  try
+    StrMap.find (get_id func_id) env.func_table
+  with Not_found -> { 
+    f_args = []; 
+    f_return = A.NoneType
+  }
+  
 (* Used in A.FunctionDecl *)
 (* add all formal params to updated var_table *)
 let update_env_func env return_type func_id s_param_list =
-  let func_entry = { 
-    f_args = s_param_list; 
-    f_return = return_type;
-  } in
-  let env' = { 
-    (*var_table = update_env_s_param_list env s_param_list; *)
-    var_table = env.var_table;
-    func_table = StrMap.add (get_id func_id) func_entry env.func_table;
-    func_current = get_id func_id; 
-    depth = env.depth + 1;
-  } in
-  List.fold_left 
-      (fun env -> function
-      | S.PrimitiveDecl(typ, id) -> 
-        update_env_var env typ id
-      | _ -> failwith "Function parameter list declaration error") 
-      env' s_param_list
+  match (get_env_func env func_id).f_return with
+  | A.NoneType -> begin
+    let func_entry = { 
+      f_args = s_param_list; 
+      f_return = return_type;
+    } in
+    let env' = { 
+      (*var_table = update_env_s_param_list env s_param_list; *)
+      var_table = env.var_table;
+      func_table = StrMap.add (get_id func_id) func_entry env.func_table;
+      func_current = get_id func_id; 
+      depth = env.depth + 1;
+    } in
+    List.fold_left 
+        (fun env -> function
+        | S.PrimitiveDecl(typ, id) -> 
+          update_env_var env typ id
+        | _ -> failwith "Function parameter list declaration error") 
+        env' s_param_list
+    end
+  | _ -> failwith @@ "Function redefinition: " ^ get_id func_id ^ "()"
 
 
 
