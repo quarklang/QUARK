@@ -1,80 +1,69 @@
-open Ast
-open Type
-
-let print = "print"
-
-let header =
-  "#include \"qureg.h\"\n" ^
-   "#include \"qumat.h\"\n" ^
-   "#include \"qugate.h\"\n" ^
-   "using namespace Qumat;\n" ^
-   "using namespace Qugate;\n"
-
-let top = "\nint main(void) { \n"
-let bottom = "\n}\n"
+module A = Ast
+module S = Sast
+module T = Type
 
 (* surround with parenthesis *)
 let surr str = "(" ^ str ^ ")"
 
-let gen_id (Ident name) = name
+let gen_id (A.Ident name) = name
 
 let gen_unop = function
-  Neg -> "-"
-| Not -> "!"
-| BitNot -> "~"
+  A.Neg -> "-"
+| A.Not -> "!"
+| A.BitNot -> "~"
 
 let gen_postop = function
-  Inc -> "++"
-| Dec -> "--"
+  A.Inc -> "++"
+| A.Dec -> "--"
 
 let gen_binop = function
-  Add -> "+"
-| Sub -> "-"
-| Mul -> "*"
-| Div -> "/"
-| Mod -> "%"
-| Pow -> "**"
-| Lshift -> "<<"
-| Rshift -> ">>"
-| Less -> "<"
-| LessEq -> "<="
-| Greater -> ">"
-| GreaterEq -> ">="
-| Eq -> "=="
-| NotEq -> "!="
-| BitAnd -> "&"
-| BitXor -> "^"
-| BitOr -> "|"
-| And -> "&&"
-| Or -> "||"
-| AddEq -> "+="
-| SubEq -> "-="
-| MulEq -> "*="
-| DivEq -> "/="
-| AndEq -> "&="
+  A.Add -> "+"
+| A.Sub -> "-"
+| A.Mul -> "*"
+| A.Div -> "/"
+| A.Mod -> "%"
+| A.Pow -> "**"
+| A.Lshift -> "<<"
+| A.Rshift -> ">>"
+| A.Less -> "<"
+| A.LessEq -> "<="
+| A.Greater -> ">"
+| A.GreaterEq -> ">="
+| A.Eq -> "=="
+| A.NotEq -> "!="
+| A.BitAnd -> "&"
+| A.BitXor -> "^"
+| A.BitOr -> "|"
+| A.And -> "&&"
+| A.Or -> "||"
+| A.AddEq -> "+="
+| A.SubEq -> "-="
+| A.MulEq -> "*="
+| A.DivEq -> "/="
+| A.AndEq -> "&="
 | _ -> failwith "unhandled binop"
 
 let gen_vartype = function
-  | Int -> "int64_t"
-  | Float -> "float"
-  | Bool -> "bool"
-  | Fraction -> "Frac"
-  | Complex -> "complex<float>"
-  | QReg -> "Qureg"
-  | String -> "string"
-  | Void -> "void"
+  | T.Int -> "int64_t"
+  | T.Float -> "float"
+  | T.Bool -> "bool"
+  | T.Fraction -> "Frac"
+  | T.Complex -> "complex<float>"
+  | T.QReg -> "Qureg"
+  | T.String -> "string"
+  | T.Void -> "void"
 
 let rec gen_datatype = function
-	| DataType(t) -> 
+	| A.DataType(t) -> 
     gen_vartype t
-	| ArrayType(t) -> 
+	| A.ArrayType(t) -> 
 		gen_datatype t ^ "[]"
-	| MatrixType(t) -> 
+	| A.MatrixType(t) -> 
    (match t with
-    | DataType(matType) -> 
+    | A.DataType(matType) -> 
       (match matType with
       (* only support 3 numerical types *)
-      | Int | Float | Complex -> 
+      | T.Int | T.Float | T.Complex -> 
       "Matrix<" ^ gen_vartype matType ^ ", Dynamic, Dynamic>"
       | _ -> failwith "Non-numerical matrix type")
     (* we shouldn't support float[][[]] *)
@@ -84,54 +73,54 @@ let rec gen_datatype = function
 
 let rec gen_expr = function
   (* literals *)
-  | IntLit(x) | FloatLit(x) | BoolLit(x) -> 
+  | A.IntLit(x) | A.FloatLit(x) | A.BoolLit(x) -> 
     x
-  | StringLit(s) -> 
+  | A.StringLit(s) -> 
     "\"" ^ s ^ "\""
 
-  | ArrayLit(exlist) -> 
+  | A.ArrayLit(exlist) -> 
     "[" ^ gen_expr_list exlist ^ "]"
 
-  | MatrixLit(exlistlist) -> 
+  | A.MatrixLit(exlistlist) -> 
     "Matrix<>(" ^ gen_matrix_list exlistlist ^ ")"
 
-  | FractionLit(exNum, exDenom) -> 
+  | A.FractionLit(exNum, exDenom) -> 
     "Frac(" ^ gen_expr exNum ^ ", " ^ gen_expr exDenom ^ ")"
 
-  | QRegLit(ex1, ex2) -> 
+  | A.QRegLit(ex1, ex2) -> 
     "Qureg::create<true>(" ^ gen_expr ex1 ^ ", " ^ gen_expr ex2 ^ ")"
 
-  | ComplexLit(exReal, exImag) -> 
+  | A.ComplexLit(exReal, exImag) -> 
     "complex<float>(" ^ gen_expr exReal ^ ", " ^ gen_expr exImag ^ ")"
   
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)
-  | Binop(ex1, op, ex2) -> 
+  | A.Binop(ex1, op, ex2) -> 
     let ex1 = gen_expr ex1 in
     let ex2 = gen_expr ex2 in
      (match op with
-      | Query -> "measure_top(" ^ex1^ ", " ^ex2^ ", true)"
-      | QueryUnreal -> "measure_top(" ^ex1^ ", " ^ex2^ ", false)"
+      | A.Query -> "measure_top(" ^ex1^ ", " ^ex2^ ", true)"
+      | A.QueryUnreal -> "measure_top(" ^ex1^ ", " ^ex2^ ", false)"
       | _ -> ex1 ^" "^ gen_binop op ^" "^ ex2)
   
   (* Unary ops *)
-  | Unop(op, ex) -> 
+  | A.Unop(op, ex) -> 
     gen_unop op ^ gen_expr ex
   
   (* Assignment *)
-  | Assign(lval, ex) -> 
+  | A.Assign(lval, ex) -> 
     gen_lvalue lval ^ " = " ^ gen_expr ex
-  | Lval(lval) -> 
+  | A.Lval(lval) -> 
     gen_lvalue lval
   
   (* Special assignment *)
-  | AssignOp(lval, op, ex) -> 
+  | A.AssignOp(lval, op, ex) -> 
     gen_lvalue lval ^" "^ gen_binop op ^" "^ gen_expr ex
-  | PostOp(lval, op) -> 
+  | A.PostOp(lval, op) -> 
     gen_lvalue lval ^" "^ gen_postop op
     
   (* Membership testing with keyword 'in' *)
-  | Membership(exElem, exArray) -> 
+  | A.Membership(exElem, exArray) -> 
     (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
     (* Shouldn't change over calls!!! *)
     let exElem = gen_expr exElem in
@@ -140,7 +129,7 @@ let rec gen_expr = function
       exElem^ ") != " ^surr exArray^ ".end()"
     
   (* Function calls *)
-  | FunctionCall(funcId, exlist) -> 
+  | A.FunctionCall(funcId, exlist) -> 
     gen_id funcId ^ surr( gen_expr_list exlist )
   
   | _ -> failwith "some expr not parsed"
@@ -156,9 +145,9 @@ and gen_expr_list exlist =
     String.sub exlistStr 0 ((String.length exlistStr) - 2)
     
 and gen_lvalue = function
-  | Variable(id) -> 
+  | A.Variable(id) -> 
     gen_id id
-  | ArrayElem(id, exlist) -> 
+  | A.ArrayElem(id, exlist) -> 
     gen_id id ^ "[" ^ gen_expr_list exlist ^ "]"
 
 and gen_matrix_list exlistlist =
@@ -173,7 +162,7 @@ and gen_matrix_list exlistlist =
   
 
 let rec gen_param = function 
-  | PrimitiveDecl(typ, id) -> 
+  | A.PrimitiveDecl(typ, id) -> 
 		(gen_datatype typ) ^ " " ^ (gen_id id)
   | _ -> failwith "decl list fatal error"
 
@@ -187,7 +176,7 @@ let rec gen_param_list paramList =
     String.sub paramStr 0 ((String.length paramStr) - 2)
 	
 let rec gen_range id = function
-	| Range(exStart, exEnd, exStep) -> 
+	| A.Range(exStart, exEnd, exStep) -> 
     let exStart = gen_expr exStart in
     let exEnd = gen_expr exEnd in
     let exStep = gen_expr exStep in
@@ -201,91 +190,91 @@ let rec gen_range id = function
   | _ -> failwith "range fatal error"
 	
 let rec gen_iterator = function
-  | RangeIterator(id, rng) -> 
+  | A.RangeIterator(id, rng) -> 
     gen_range id rng
-  | ArrayIterator(id, ex) -> 
+  | A.ArrayIterator(id, ex) -> 
     gen_id id ^ " in " ^ gen_expr ex
 	
 let rec gen_decl = function
-  | AssigningDecl(typ, id, ex) -> 
+  | A.AssigningDecl(typ, id, ex) -> 
     gen_datatype typ ^ " " ^ gen_id id ^ " = " ^ gen_expr ex
-  | PrimitiveDecl(typ, id) -> 
+  | A.PrimitiveDecl(typ, id) -> 
     gen_datatype typ ^ " " ^ gen_id id
 
 
-let rec eval stmts =
+let rec gen_sast stmts =
   match stmts with
   | [] -> ()
   | stmt :: rest ->
     begin
       match stmt with
 			(* top level statements *)
-      | FunctionDecl(returnTyp, funcId, paramList, stmtList) ->
+      | A.FunctionDecl(returnTyp, funcId, paramList, stmtList) ->
         let funcId = gen_id funcId in
           begin
             print_endline @@ gen_datatype returnTyp ^ " " ^ 
               funcId ^ surr( gen_param_list paramList );
             print_endline @@ "{ // start " ^ funcId;
-            eval stmtList;
+            gen_sast stmtList;
             print_endline @@ "} // end " ^ funcId ^ "\n";
           end
       
       (* TODO: get rid of forward decl *)
-      | ForwardDecl(returnTyp, funcId, paramList) -> 
+      | A.ForwardDecl(returnTyp, funcId, paramList) -> 
           print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
             (gen_id funcId) ^ surr( gen_param_list paramList ) ^";\n";
 
       (* statements *)
-      | IfStatement(ex, stmtIf, stmtElse) -> 
+      | A.IfStatement(ex, stmtIf, stmtElse) -> 
         begin
           print_endline @@ "if " ^ surr(gen_expr ex);
           print_endline "{ // start if";
-          eval [stmtIf];
+          gen_sast [stmtIf];
           print_endline "else";
-          eval [stmtElse];
+          gen_sast [stmtElse];
           print_endline "} // end if";
         end
 				
-      | WhileStatement(ex, stmt) -> 
+      | A.WhileStatement(ex, stmt) -> 
         begin
           print_endline @@ "while " ^ surr(gen_expr ex);
           print_endline "{ // start while";
-          eval [stmt];
+          gen_sast [stmt];
           print_endline "} // end while";
         end
             
-      | ForStatement(iter, stmt) -> 
+      | A.ForStatement(iter, stmt) -> 
         begin
           (* for (a in 1:5, b in 7:3:-1) *)
           (* List.iter (fun iter -> 
             print_endline @@ "for " ^ gen_iterator iter) iterList; *)
           print_endline @@ "for " ^ gen_iterator iter;
           print_endline "{ // start for";
-          eval [stmt];
+          gen_sast [stmt];
           print_endline "} // end for";
         end
             
-      | CompoundStatement(stmtList) -> 
+      | A.CompoundStatement(stmtList) -> 
         begin
           print_endline "{ // start compound";
-          eval stmtList;
+          gen_sast stmtList;
           print_endline "} // end compound";
         end
 
-      | Declaration(dec) -> 
+      | A.Declaration(dec) -> 
         print_endline @@ gen_decl dec ^ ";"
-      | Expression(ex) -> 
+      | A.Expression(ex) -> 
         print_endline @@ gen_expr ex ^ ";"
-      | ReturnStatement(ex) -> 
+      | A.ReturnStatement(ex) -> 
         print_endline @@ "return " ^ gen_expr ex ^ ";"
-      | EmptyStatement -> 
+      | A.EmptyStatement -> 
         print_endline ";"
-      | VoidReturnStatement -> 
+      | A.VoidReturnStatement -> 
         print_endline "return; // void"
-      | BreakStatement -> 
+      | A.BreakStatement -> 
         print_endline "break; // control"
-      | ContinueStatement -> 
+      | A.ContinueStatement -> 
         print_endline "continue; // control"
       | _ -> failwith "nothing for eval()"
     end;
-    eval rest
+    gen_sast rest

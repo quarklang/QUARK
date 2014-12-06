@@ -10,5 +10,5 @@ let _ =
   let outfile = open_out "output.cpp" in
   output_string outfile code
   *)
-  eval ast
+  gen_sast ast
   

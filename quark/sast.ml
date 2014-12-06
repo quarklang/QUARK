@@ -20,9 +20,10 @@ and expr =
   | StringLit of string * A.datatype
   | ArrayLit of expr list * A.datatype
   | MatrixLit of expr list list * A.datatype
-  | Cast of A.datatype * expr * A.datatype
+  | Membership of expr * expr * A.datatype
   | FunctionCall of A.ident * expr list
   | Lval of lvalue
+  
 
 type decl =
   | AssigningDecl of A.datatype * A.ident * expr
