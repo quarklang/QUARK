@@ -337,6 +337,7 @@ let gen_s_param_list param_list =
     (fun param -> gen_s_param param) param_list
 
 (* Used in A.FunctionDecl *)
+(* Input: env.var_table. return: add all formal params to updated var_table *)
 let update_env_s_param_list var_table s_param_list =
   List.fold_left 
     (fun var_table -> function
@@ -344,14 +345,24 @@ let update_env_s_param_list var_table s_param_list =
     | _ -> failwith "Function parameter list declaration error") 
     var_table s_param_list
     
-  
+    
 let rec gen_s_decl env = function
   | A.AssigningDecl(typ, id, ex) -> 
-    let env' = update_env_var env typ id in
-    (env', S.AssigningDecl(typ, id, S.BoolLit("TODO"))) (* TODO gen_s_expr *)
+    (* should not redeclare! *)
+    (match get_env_var env id with
+    | A.InvalidType -> 
+      let env' = update_env_var env typ id in
+      (env', S.AssigningDecl(typ, id, S.BoolLit("TODO"))) (* TODO gen_s_expr *)
+    | _ -> failwith @@ "Variable assigning redeclaration: " ^ Gen.gen_datatype typ ^ " " ^ get_id id
+    )
   | A.PrimitiveDecl(typ, id) -> 
-    let env' = update_env_var env typ id in
-    (env', S.PrimitiveDecl(typ, id))
+    (* should not redeclare! *)
+    (match get_env_var env id with
+    | A.InvalidType -> 
+      let env' = update_env_var env typ id in
+      (env', S.PrimitiveDecl(typ, id))
+    | _ -> failwith @@ "Variable primitive redeclaration: " ^ Gen.gen_datatype typ ^ " " ^ get_id id
+    )
 
 
 (* Main entry point: take AST and convert to SAST *)
