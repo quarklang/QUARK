@@ -25,7 +25,7 @@ let func_example = {
 (* surround with parenthesis *)
 let surr str = "(" ^ str ^ ")"
 
-let gen_id (A.Ident name) = name
+let get_id (A.Ident name) = name
 
 let gen_unop = function
   A.Neg -> "-"
@@ -150,7 +150,7 @@ let rec gen_expr = function
     
   (* Function calls *)
   | A.FunctionCall(funcId, exlist) -> 
-    gen_id funcId ^ surr( gen_expr_list exlist )
+    get_id funcId ^ surr( gen_expr_list exlist )
   
   | _ -> failwith "some expr not parsed"
 
@@ -166,9 +166,9 @@ and gen_expr_list exlist =
     
 and gen_lvalue = function
   | A.Variable(id) -> 
-    gen_id id
+    get_id id
   | A.ArrayElem(id, exlist) -> 
-    gen_id id ^ "[" ^ gen_expr_list exlist ^ "]"
+    get_id id ^ "[" ^ gen_expr_list exlist ^ "]"
 
 and gen_matrix_list exlistlist =
   let exlistlistStr = 
@@ -183,7 +183,7 @@ and gen_matrix_list exlistlist =
 
 let rec gen_param = function 
   | A.PrimitiveDecl(typ, id) -> 
-		(gen_datatype typ) ^ " " ^ (gen_id id)
+		(gen_datatype typ) ^ " " ^ (get_id id)
   | _ -> failwith "decl list fatal error"
 
 let rec gen_param_list paramList =
@@ -203,7 +203,7 @@ let rec gen_range id = function
     (* !!!! Needs to assign exStart, exEnd and exStep to compiled temp vars *)
     (* Shouldn't change over iteration!!! *)
     let exCmp = surr exEnd ^">"^ surr exStart ^" ? " in
-    let id = gen_id id in
+    let id = get_id id in
       "(" ^id^ "=" ^exStart^ "; " ^
       exCmp^ id^" < " ^surr exEnd^ " : " ^id^ " > " ^surr exEnd^ "; " ^
       exCmp^ id^" += " ^surr exStep^ " : " ^id^ " -= " ^surr exStep^ ")"
@@ -213,13 +213,13 @@ let rec gen_iterator = function
   | A.RangeIterator(id, rng) -> 
     gen_range id rng
   | A.ArrayIterator(id, ex) -> 
-    gen_id id ^ " in " ^ gen_expr ex
+    get_id id ^ " in " ^ gen_expr ex
 	
 let rec gen_decl = function
   | A.AssigningDecl(typ, id, ex) -> 
-    gen_datatype typ ^ " " ^ gen_id id ^ " = " ^ gen_expr ex
+    gen_datatype typ ^ " " ^ get_id id ^ " = " ^ gen_expr ex
   | A.PrimitiveDecl(typ, id) -> 
-    gen_datatype typ ^ " " ^ gen_id id
+    gen_datatype typ ^ " " ^ get_id id
 
 
 (* Main entry point: take stmts (AST) and convert to SAST *)
@@ -230,10 +230,23 @@ let rec gen_sast env stmts =
     let s_stmt =
       match stmt with
 			(* top level statements *)
-      | A.FunctionDecl(returnTyp, funcId, paramList, stmtList) ->
-        S.EmptyStatement
+      | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
+        let s_param_list = [] in (* should be gen_s_decl param_list *)
+        let func_entry = { 
+          f_ident = func_id;
+          f_args = s_param_list; 
+          f_return = return_type
+        } in
+        let func_table' = StrMap.add (get_id func_id) func_entry env.func_table in
+        let env' = { 
+          var_table = env.var_table; 
+          func_table = func_table'
+        } in
+        S.FunctionDecl(return_type, func_id, s_param_list, 
+          gen_sast env' stmt_list)
+        
         (*
-        let funcId = gen_id funcId in
+        let funcId = get_id funcId in
           begin
             print_endline @@ gen_datatype returnTyp ^ " " ^ 
               funcId ^ surr( gen_param_list paramList );
@@ -245,7 +258,7 @@ let rec gen_sast env stmts =
       | A.ForwardDecl(returnTyp, funcId, paramList) -> 
         S.EmptyStatement
           (* print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
-            (gen_id funcId) ^ surr( gen_param_list paramList ) ^";\n"; *)
+            (get_id funcId) ^ surr( gen_param_list paramList ) ^";\n"; *)
 
       (* statements *)
       | A.IfStatement(ex, stmtIf, stmtElse) -> 
