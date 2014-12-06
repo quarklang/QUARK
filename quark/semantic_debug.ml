@@ -5,6 +5,10 @@ module Gen = Generator
 
 module StrMap = Map.Make(String)
 
+(* utilities *)
+let fst_2 = function x, _ -> x;;
+let snd_2 = function _, x -> x;;
+
 type func_info = {
   f_args: S.decl list;
   f_return: A.datatype;
@@ -327,10 +331,11 @@ let rec gen_s_decl = function
 
 
 (* Main entry point: take AST and convert to SAST *)
+(* return env, [stmt] *)
 let rec gen_sast env = function
-  | [] -> []
+  | [] -> (env, [])
   | stmt :: rest ->
-    let s_stmt =
+    let env_new, s_stmt =
       match stmt with
 			(* top level statements *)
       | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
@@ -346,8 +351,8 @@ let rec gen_sast env = function
           func_table = func_table'
         } in
         let _ = debug_env env' "after FunctionDecl" in
-        S.FunctionDecl(return_type, func_id, s_param_list, 
-          gen_sast env' stmt_list)
+        (env', S.FunctionDecl(return_type, func_id, s_param_list, 
+          snd_2 @@ gen_sast env' stmt_list))
         
         (*
         let funcId = get_id funcId in
@@ -360,13 +365,13 @@ let rec gen_sast env = function
           end *)
       
       | A.ForwardDecl(returnTyp, funcId, paramList) -> 
-        S.EmptyStatement
+        (env, S.EmptyStatement)
           (* print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
             (get_id funcId) ^ surr( gen_param_list paramList ) ^";\n"; *)
 
       (* statements *)
       | A.IfStatement(ex, stmtIf, stmtElse) -> 
-        S.EmptyStatement
+        (env, S.EmptyStatement)
         (* begin
           print_endline @@ "if " ^ surr(gen_s_expr ex);
           print_endline "{ // start if";
@@ -377,7 +382,7 @@ let rec gen_sast env = function
         end *)
 				
       | A.WhileStatement(ex, stmt) -> 
-        S.EmptyStatement
+        (env, S.EmptyStatement)
         (* begin
           print_endline @@ "while " ^ surr(gen_s_expr ex);
           print_endline "{ // start while";
@@ -386,7 +391,7 @@ let rec gen_sast env = function
         end *)
             
       | A.ForStatement(iter, stmt) -> 
-        S.EmptyStatement
+        (env, S.EmptyStatement)
         (* begin
           (* for (a in 1:5, b in 7:3:-1) *)
           (* List.iter (fun iter -> 
@@ -398,7 +403,7 @@ let rec gen_sast env = function
         end *)
             
       | A.CompoundStatement(stmtList) -> 
-        S.EmptyStatement
+        (env, S.EmptyStatement)
         (* begin
           print_endline "{ // start compound";
           gen_sast stmtList;
@@ -406,25 +411,33 @@ let rec gen_sast env = function
         end *)
 
       | A.Declaration(dec) -> 
-        S.Declaration(gen_s_decl dec)
+        (env, S.Declaration(gen_s_decl dec))
+
       | A.Expression(ex) -> 
-        S.EmptyStatement
+        (env, S.EmptyStatement)
         (* print_endline @@ gen_s_expr ex ^ ";" *)
+
       | A.ReturnStatement(ex) -> 
-        S.EmptyStatement
+        (env, S.EmptyStatement)
         (* print_endline @@ "return " ^ gen_s_expr ex ^ ";" *)
+
       | A.EmptyStatement -> 
-        S.EmptyStatement
+        (env, S.EmptyStatement)
         (* print_endline ";" *)
+
       | A.VoidReturnStatement -> 
-        S.EmptyStatement
+        (env, S.EmptyStatement)
         (* print_endline "return; // void" *)
+
       | A.BreakStatement -> 
-        S.EmptyStatement
+        (env, S.EmptyStatement)
         (* print_endline "break; // control" *)
+
       | A.ContinueStatement -> 
-        S.EmptyStatement
+        (env, S.EmptyStatement)
         (* print_endline "continue; // control" *)
+
       | _ -> failwith "nothing for eval()"
     in 
-    s_stmt :: gen_sast env rest
+    let env_new, s_rest = gen_sast env_new rest in
+    (env_new, (s_stmt :: s_rest))
