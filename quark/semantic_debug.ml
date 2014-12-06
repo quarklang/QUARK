@@ -8,6 +8,9 @@ module StrMap = Map.Make(String)
 (* utilities *)
 let fst_2 = function x, _ -> x;;
 let snd_2 = function _, x -> x;;
+let fst_3 = function x, _, _ -> x;;
+let snd_3 = function _, x, _ -> x;;
+let trd_3 = function _, _, x -> x;;
 
 type func_info = {
   f_args: S.decl list;
@@ -24,6 +27,9 @@ let func_example = {
 type environment = {
     var_table: A.datatype StrMap.t;
     func_table: func_info StrMap.t;
+    (* current function name waiting for 'return' *)
+    (* if "", we are not inside any function *)
+    func_current: string; 
 }
 
 (* surround with parenthesis *)
@@ -49,15 +55,16 @@ let debug_s_decl_list f_args =
 let debug_env env msg =
   begin
     print_endline @@ "ENV " ^ msg ^ "{";
-    print_string "var= ";
+    print_string "Var= ";
     StrMap.iter 
       (fun key v -> print_string @@ key ^ ": " ^ Gen.gen_datatype v ^ "; ")
       env.var_table;
-    print_string "\nfunc= ";
+    print_string "\nFunc= ";
     StrMap.iter 
-      (fun key f_table -> print_string @@ 
-        key ^ ": " ^ debug_s_decl_list f_table.f_args ^ " => " ^ Gen.gen_datatype f_table.f_return ^ ";\n")
+      (fun key f_table -> print_endline @@ 
+        key ^ ": " ^ debug_s_decl_list f_table.f_args ^ " => " ^ Gen.gen_datatype f_table.f_return ^ ";")
       env.func_table;
+    print_endline @@ "Current= " ^ env.func_current;
     print_endline "}";
   end
 (************** END DEBUG **************)
@@ -341,19 +348,29 @@ let rec gen_sast env = function
       | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
         let _ = debug_env env "before FunctionDecl" in
         let s_param_list = gen_s_param_list param_list in
+        let func_name = get_id func_id in
         let func_entry = { 
           f_args = s_param_list; 
-          f_return = return_type
+          f_return = return_type;
         } in
         let func_table' = StrMap.add (get_id func_id) func_entry env.func_table in
         let env' = { 
           var_table = env.var_table; 
-          func_table = func_table'
+          func_table = func_table';
+          func_current = func_name
         } in
         let _ = debug_env env' "after FunctionDecl" in
-        (env', S.FunctionDecl(return_type, func_id, s_param_list, 
-          snd_2 @@ gen_sast env' stmt_list))
-        
+        (* get the function declaration, then close 'func_current' *)
+        let function_decl = S.FunctionDecl(return_type, func_id, s_param_list, 
+          snd_2 @@ gen_sast env' stmt_list) in
+        let env'' = { 
+          var_table = env'.var_table; 
+          func_table = env'.func_table;
+          func_current = ""
+        } in
+        let _ = debug_env env'' "closed after FuncDecl" in
+        (env'', function_decl)
+          
         (*
         let funcId = get_id funcId in
           begin
@@ -414,7 +431,8 @@ let rec gen_sast env = function
         (env, S.Declaration(gen_s_decl dec))
 
       | A.Expression(ex) -> 
-        (env, S.EmptyStatement)
+        let env', s_ex, _ = gen_s_expr env ex in
+        (env', S.Expression(s_ex))
         (* print_endline @@ gen_s_expr ex ^ ";" *)
 
       | A.ReturnStatement(ex) -> 
