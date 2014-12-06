@@ -1,5 +1,5 @@
 OBJS = type.cmo ast.cmo sast.cmo parser.cmo scanner.cmo \
-	compile.cmo generator.cmo
+	 semantic_debug.cmo compile.cmo generator.cmo
 
 TESTS = arith1 arith2 arith3 arith4 \
 	fib \
@@ -15,7 +15,7 @@ TESTS = arith1 arith2 arith3 arith4 \
 	while1
 
 TARFILES = Makefile testall.sh scanner.mll parser.mly \
-	type.ml ast.ml sast.ml compile.ml generator.ml \
+	type.ml ast.ml sast.ml semantic_debug.ml compile.ml generator.ml \
 	$(TESTS:%=tests/test-%.mc) \
 	$(TESTS:%=tests/test-%.out)
 
@@ -58,6 +58,8 @@ sast.cmo : ast.cmo
 sast.cmx : ast.cmx
 semantic.cmo : type.cmo sast.cmo ast.cmo
 semantic.cmx : type.cmx sast.cmx ast.cmx
+semantic_debug.cmo : type.cmo sast.cmo ast.cmo
+semantic_debug.cmx : type.cmx sast.cmx ast.cmx
 type.cmo :
 type.cmx :
 parser.cmi : ast.cmo

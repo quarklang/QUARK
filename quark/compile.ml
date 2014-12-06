@@ -1,3 +1,5 @@
+open Semantic_debug
+
 let _ =
   let lexbuf = Lexing.from_channel stdin in
   let ast = Parser.top_level Scanner.token lexbuf in
@@ -8,5 +10,5 @@ let _ =
   let outfile = open_out "output.cpp" in
   output_string outfile code
   *)
-
-  output_string stdout "hi mars"
+  eval ast
+  
