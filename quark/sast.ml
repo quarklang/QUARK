@@ -11,13 +11,13 @@ and expr =
   | Unop of A.unop * expr * A.datatype
   | PostOp of lvalue * A.postop * A.datatype
   | Assign of lvalue * expr * A.datatype
-  | IntLit of string * A.datatype
-  | BoolLit of string * A.datatype
-  | FractionLit of expr * expr * A.datatype
-  | QRegLit of expr * expr * A.datatype
-  | FloatLit of string * A.datatype
-  | ComplexLit of expr * expr * A.datatype
-  | StringLit of string * A.datatype
+  | IntLit of string
+  | BoolLit of string
+  | FractionLit of expr * expr
+  | QRegLit of expr * expr
+  | FloatLit of string
+  | ComplexLit of expr * expr
+  | StringLit of string
   | ArrayLit of expr list * A.datatype
   | MatrixLit of expr list list * A.datatype
   | Membership of expr * expr * A.datatype
