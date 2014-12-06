@@ -400,44 +400,40 @@ let add_variable env name typ value =
   new_env
 
 (* check both sides of an assignment are compatible*) 
-let check_assignments type1 type2 = match (type1, type2) with
-	(Int, Int) -> true
-	|(Float, Float) -> true
-	|(Int, Float) -> true
-	|(Float, Int) -> true
-	|(Boolean, Boolean) -> true
-	|(String, String) -> true
-	|(_,_) -> false
+let check_assignments type1 type2 =
+  match (type1, type2) with
+  (Int, Int) -> true
+| (Float, Float) -> true
+| (Int, Float) -> true
+| (Float, Int) -> true
+| (Boolean, Boolean) -> true
+| (String, String) -> true
+| (_,_) -> false
 
 (* checks the type of a variable in the symbol table*)
 (* Changed from "check_var_type" *)
-let match_var_type env v t =
-	let(name,ty,value) = find_variable env v in
-	if(t<>ty) then false else true
+let match_var_type env var datatype =
+  let name, typ, value = find_variable env var in
+  if (datatype <> typ) then
+    false
+  else true
 
 (* Checks that a function returned if it was supposed to*)
 let check_final_env env =
-	(if(false = env.return_seen && env.return_type <> Datatype(Void)) then
-		raise (Error("Missing Return Statement")));
-	true
+  if (false = env.return_seen && env.return_type <> Datatype(Void)) then
+    raise (Error("Missing Return Statement")));
+  true
 
 (* Default Table and Environment Initializations *)
 let empty_table_initialization = {
-    parent=None;
-    variables=[];
-}
-
-let empty_function_table_initialization = {
-    functions=[(Ident("print_string"), Void, [Formal(Datatype(String), Ident("s"))],[]);(Ident("print_int"),Void,[Formal(Datatype(Int),Ident("s"))],[])]
+    parent = None;
+    variables = [];
 }
 
 let empty_environment = {
-    return_type = Datatype(Void);
-    return_seen = false;
-    location="main";
-    global_scope = empty_table_initialization;
-    var_scope = empty_table_initialization;
-    fun_scope = empty_function_table_initialization
+  return_type = Datatype(Void);
+  return_seen = false;
+  scope = empty_table_initialization;
 }
 
 (* TODO remove. leave now for references
