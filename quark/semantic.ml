@@ -573,7 +573,7 @@ let rec check_stmt stmt env = match stmt with
         with Not_found -> name, typ, false in
         if found = false then
           match decl with
-            A.PrimitiveDecl(_,_) ->
+            A.PrimitiveDecl(datatype, ident) ->
               let semantic_decl, _ = get_semantic_decl env decl in
               let name, typ, value = get_name_type_val_from_decl decl in
               let env = add_variable env name typ value in
@@ -605,6 +605,14 @@ let rec check_stmt stmt env = match stmt with
                 S.ReturnType case in check_stmt(). What you need to do is make sure that
                 the last statement in statement_list is of type ReturnType
     *)
+
+    | A.FunctionDecl(returntype, ident, decl list, stmt list) ->
+        let _, stored_type, _ = find_variable env name in ident, stored_type, true
+        with Not_found -> name, typ, false in
+        if found = false then
+          (* TODO: finish this *)
+        else raise Error("Multiple declarations")        
+
 
     (* CHUNK 6 medium
         - move this to check_expr() since we have it defined as an expr
