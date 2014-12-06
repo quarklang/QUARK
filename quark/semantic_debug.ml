@@ -27,8 +27,8 @@ let surr str = "(" ^ str ^ ")"
 
 let get_id (A.Ident name) = name
 
-(* DEBUG ONLY *)
-(* print out the environment *)
+(************** DEBUG ONLY **************)
+(* print out the func decl param list *)
 let debug_s_decl_list f_args =
   let paramStr = 
     List.fold_left 
@@ -41,19 +41,22 @@ let debug_s_decl_list f_args =
   else
     String.sub paramStr 0 ((String.length paramStr) - 2)
   
-let debug_env env =
+(* print out the func decl param list *)
+let debug_env env msg =
   begin
-    print_string "ENV{var= ";
+    print_endline @@ "ENV " ^ msg ^ "{";
+    print_string "var= ";
     StrMap.iter 
       (fun key v -> print_string @@ key ^ ": " ^ Gen.gen_datatype v ^ "; ")
       env.var_table;
     print_string "\nfunc= ";
     StrMap.iter 
       (fun key f_table -> print_string @@ 
-        key ^ ": " ^ debug_s_decl_list f_table.f_args ^ " => " ^ Gen.gen_datatype f_table.f_return)
+        key ^ ": " ^ debug_s_decl_list f_table.f_args ^ " => " ^ Gen.gen_datatype f_table.f_return ^ ";\n")
       env.func_table;
     print_endline "}";
   end
+(************** END DEBUG **************)
 
 let gen_unop = function
   A.Neg -> "-"
@@ -255,7 +258,7 @@ let rec gen_sast env stmts =
       match stmt with
 			(* top level statements *)
       | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
-        let _ = debug_env env in
+        let _ = debug_env env "before FunctionDecl" in
         let s_param_list = gen_s_param_list param_list in
         let func_entry = { 
           f_args = s_param_list; 
@@ -266,7 +269,7 @@ let rec gen_sast env stmts =
           var_table = env.var_table; 
           func_table = func_table'
         } in
-        let _ = debug_env env' in
+        let _ = debug_env env' "after FunctionDecl" in
         S.FunctionDecl(return_type, func_id, s_param_list, 
           gen_sast env' stmt_list)
         
