@@ -2,6 +2,26 @@ module A = Ast
 module S = Sast
 module T = Type
 
+module StrMap = Map.Make(String)
+
+type func_info = {
+  f_ident: A.ident;
+  f_args: S.decl list;
+  f_return: A.datatype;
+}
+
+(* map string ident name to datatype or function info *)
+type environment = {
+    var_table: A.datatype StrMap.t;
+    func_table: func_info StrMap.t;
+}
+
+(* 
+let func_example = { 
+  f_ident = A.Ident "shit"; 
+  f_args = [S.PrimitiveDecl(A.DataType T.Int, A.Ident "gugu")]; 
+  f_return = A.DataType T.Float };; *)
+
 (* surround with parenthesis *)
 let surr str = "(" ^ str ^ ")"
 
@@ -204,7 +224,7 @@ let rec gen_decl = function
 
 let rec gen_sast stmts =
   match stmts with
-  | [] -> ()
+  | [] -> []
   | stmt :: rest ->
     begin
       match stmt with
