@@ -181,19 +181,15 @@ and gen_matrix_list exlistlist =
     String.sub exlistlistStr 0 ((String.length exlistlistStr) - 2)
   
 
-let rec gen_param = function 
+let gen_s_param = function 
   | A.PrimitiveDecl(typ, id) -> 
-		(gen_datatype typ) ^ " " ^ (get_id id)
-  | _ -> failwith "decl list fatal error"
+    S.PrimitiveDecl(typ, id)
+  | _ -> failwith "Function parameter list declaration error"
 
-let rec gen_param_list paramList =
-  let paramStr = 
-    List.fold_left 
-      (fun s param -> s ^ gen_param param ^ ", ") "" paramList
-  in
-  if paramStr = "" then ""
-  else
-    String.sub paramStr 0 ((String.length paramStr) - 2)
+let gen_s_param_list param_list =
+  List.map 
+    (fun param -> gen_s_param param) param_list
+  
 	
 let rec gen_range id = function
 	| A.Range(exStart, exEnd, exStep) -> 
@@ -215,11 +211,11 @@ let rec gen_iterator = function
   | A.ArrayIterator(id, ex) -> 
     get_id id ^ " in " ^ gen_expr ex
 	
-let rec gen_decl = function
+let rec gen_s_decl = function
   | A.AssigningDecl(typ, id, ex) -> 
-    gen_datatype typ ^ " " ^ get_id id ^ " = " ^ gen_expr ex
+    S.AssigningDecl(typ, id, S.BoolLit("DUMMY", A.DataType(T.Bool))) (* TODO gen_s_expr *)
   | A.PrimitiveDecl(typ, id) -> 
-    gen_datatype typ ^ " " ^ get_id id
+    S.PrimitiveDecl(typ, id)
 
 
 (* Main entry point: take stmts (AST) and convert to SAST *)
@@ -231,7 +227,7 @@ let rec gen_sast env stmts =
       match stmt with
 			(* top level statements *)
       | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
-        let s_param_list = [] in (* should be gen_s_decl param_list *)
+        let s_param_list = gen_s_param_list param_list in
         let func_entry = { 
           f_ident = func_id;
           f_args = s_param_list; 
@@ -302,8 +298,7 @@ let rec gen_sast env stmts =
         end *)
 
       | A.Declaration(dec) -> 
-        S.EmptyStatement
-        (* print_endline @@ gen_decl dec ^ ";" *)
+        S.Declaration(gen_s_decl dec)
       | A.Expression(ex) -> 
         S.EmptyStatement
         (* print_endline @@ gen_expr ex ^ ";" *)
