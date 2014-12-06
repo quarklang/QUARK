@@ -575,21 +575,21 @@ let rec check_stmt stmt env = match stmt with
         with Not_found -> name, typ, false in
         if found = false then
           match decl with
-            PrimitiveDecl(_,_) ->
+            A.PrimitiveDecl(_,_) ->
               let semantic_decl, _ = get_semantic_decl env decl in
               let name, typ, value = get_name_type_val_from_decl decl in
-              let env = add_variable env n t v in
+              let env = add_variable env name typ value in
               S.Declaration(semantic_decl), env
-          | AssigningDecl(datatype, ident, expression) ->
-                  let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(get_datatype_from_val env value) in
-                  if t1 = t2 then
-                      let (sdecl,_) = get_sdecl env decl in
-                      let (n, t, v) = get_name_type_val_from_decl decl in
-                      let new_env = add_variable env n t v in
-                      (SDeclaration(sdecl), new_env)
-                  else raise (Error("Type mismatch"))
-              else
-                  raise (Error("Multiple declarations")) in ret
+          | A.AssigningDecl(datatype, ident, expression) ->
+              let left_type = get_type_from_datatype datatype and
+              right_type = get_type_from_datatype get_datatype_from_val env value in
+              if left_type = right_type then
+                let semantic_decl, _ = get_semantic_decl env decl in
+                let name, typ, value = get_name_type_val_from_decl decl in
+                let new_env = add_variable env name typ value in
+                S.Declaration(sdecl), new_env
+              else raise Error("Type mismatch")
+        else raise Error("Multiple declarations")
 
     (* CHUNK 5 hard
     | A.FunctionDecl case
