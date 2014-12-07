@@ -1,4 +1,5 @@
 module A = Ast
+module T = Type
 
 type lvalue =
   | Variable of A.datatype * A.ident
@@ -13,11 +14,11 @@ and expr =
   | Assign of A.datatype * lvalue * A.datatype * expr
   | IntLit of string
   | BoolLit of string
-  | FractionLit of expr * expr
-  | QRegLit of expr * expr
   | FloatLit of string
-  | ComplexLit of expr * expr
   | StringLit of string
+  | FractionLit of T.vartype * expr * T.vartype * expr
+  | QRegLit of T.vartype * expr * T.vartype * expr
+  | ComplexLit of T.vartype * expr * T.vartype * expr
   | ArrayLit of A.datatype * expr list
   | MatrixLit of A.datatype * expr list list
   | Membership of A.datatype * expr * A.datatype * expr
