@@ -92,3 +92,21 @@ type statement =
   | VoidReturnStatement
   | BreakStatement
   | ContinueStatement
+
+
+let rec str_of_datatype = function
+	| DataType(t) -> 
+    T.str_of_type t
+	| ArrayType(t) -> 
+		str_of_datatype t ^ "[]"
+	| MatrixType(t) -> 
+   (match t with
+    | DataType(matType) -> 
+      (match matType with
+      (* only support 3 numerical types *)
+      | Int | Float | Complex -> 
+      "Matrix<" ^ T.str_of_type matType ^ ", Dynamic, Dynamic>"
+      | _ -> failwith "Non-numerical matrix type")
+    (* we shouldn't support float[][[]] *)
+    | _ -> 
+      failwith "Bad matrix type")
