@@ -1,6 +1,9 @@
 % Test semantic checking
 
 float a = 6;
+
+string foo: int a, int b;
+
 def int f1: int a, int b, string[][][] c
 {
     int e;
@@ -8,7 +11,7 @@ def int f1: int a, int b, string[][][] c
 
 qreg q;
 
-def string f1: int a, int b
+def string foo: int a, int b
 {
     int e;
 }

@@ -18,6 +18,7 @@ let get_id (A.Ident name) = name
 type func_info = {
   f_args: S.decl list;
   f_return: A.datatype;
+  f_defined: bool; (* for forward declaration *)
 }
 
 type var_info = {
@@ -62,7 +63,8 @@ let debug_env env msg =
     print_string "\nFunc= ";
     StrMap.iter 
       (fun key finfo -> print_endline @@ 
-        key ^ ": " ^ debug_s_decl_list finfo.f_args ^ " => " ^ Gen.gen_datatype finfo.f_return ^ ";")
+        key ^ "(" ^ string_of_bool finfo.f_defined ^ "): " ^ 
+        debug_s_decl_list finfo.f_args ^ " => " ^ Gen.gen_datatype finfo.f_return ^ ";")
       env.func_table;
     print_endline @@ "Current= " ^ env.func_current;
     print_endline "}";
@@ -115,22 +117,26 @@ let get_env_func env func_id =
     StrMap.find (get_id func_id) env.func_table
   with Not_found -> { 
     f_args = []; 
-    f_return = A.NoneType
+    f_return = A.NoneType;
+    f_defined = false;
   }
   
 (* Used in A.FunctionDecl *)
 (* add all formal params to updated var_table *)
-let update_env_func env return_type func_id s_param_list =
-  match (get_env_func env func_id).f_return with
+let update_env_func env return_type func_id s_param_list is_defined =
+  let finfo = get_env_func env func_id in
+  let errmsg_str = ": " ^ get_id func_id ^ "()" in
+  match finfo.f_return with
   | A.NoneType -> begin
-    let func_entry = { 
+    let func_table' = { 
       f_args = s_param_list; 
       f_return = return_type;
+      f_defined = is_defined
     } in
     let env' = { 
       (*var_table = update_env_s_param_list env s_param_list; *)
       var_table = env.var_table;
-      func_table = StrMap.add (get_id func_id) func_entry env.func_table;
+      func_table = StrMap.add (get_id func_id) func_table' env.func_table;
       func_current = get_id func_id; 
       depth = env.depth + 1;
     } in
@@ -138,10 +144,30 @@ let update_env_func env return_type func_id s_param_list =
         (fun env -> function
         | S.PrimitiveDecl(typ, id) -> 
           update_env_var env typ id
-        | _ -> failwith "Function parameter list declaration error") 
+        | _ -> failwith @@ "Function parameter list declaration error" ^ errmsg_str) 
         env' s_param_list
     end
-  | _ -> failwith @@ "Function redefinition: " ^ get_id func_id ^ "()"
+  | _ when not finfo.f_defined ->
+    if is_defined then
+      (* check param list and return type, should be the same *)
+      if finfo.f_return = return_type && finfo.f_args = s_param_list then
+        let func_table' = { 
+          f_args = finfo.f_args; 
+          f_return = finfo.f_return;
+          f_defined = true
+        } in
+        { 
+          (*var_table = update_env_s_param_list env s_param_list; *)
+          var_table = env.var_table;
+          func_table = StrMap.add (get_id func_id) func_table' env.func_table;
+          func_current = get_id func_id; 
+          depth = env.depth + 1;
+        }
+      else
+        failwith @@ "Incompatible forward declaration" ^ errmsg_str
+    else
+      failwith @@ "Function forward redeclaration" ^ errmsg_str
+  | _ -> failwith @@ "Function redefinition" ^ errmsg_str
 
 
 
@@ -428,7 +454,7 @@ let rec gen_sast env = function
       | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
         let _ = debug_env env "before FunctionDecl" in
         let s_param_list = gen_s_param_list param_list in
-        let env' = update_env_func env return_type func_id s_param_list in
+        let env' = update_env_func env return_type func_id s_param_list true in
         let _ = debug_env env' "after FunctionDecl" in
         (* get the function declaration, then close 'func_current' *)
         let function_decl = S.FunctionDecl(return_type, func_id, s_param_list, 
@@ -452,8 +478,10 @@ let rec gen_sast env = function
             print_endline @@ "} // end " ^ funcId ^ "\n";
           end *)
       
-      | A.ForwardDecl(returnTyp, funcId, paramList) -> 
-        (env, S.EmptyStatement)
+      | A.ForwardDecl(return_type, func_id, param_list) -> 
+        let s_param_list = gen_s_param_list param_list in
+        let env' = update_env_func env return_type func_id s_param_list false in
+        (env', S.ForwardDecl(return_type, func_id, s_param_list))
           (* print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
             (get_id funcId) ^ surr( gen_param_list paramList ) ^";\n"; *)
 
