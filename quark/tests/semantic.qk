@@ -10,7 +10,7 @@ def int f1: int a, int b, string[][][] c
     % float a;
     int e;
     5$4.3;
-    <| 3.6, 5 |>;
+    <| 3.6, 34 |>;
     i(2,3);
     
 }

@@ -250,19 +250,10 @@ let check_int_float typ1 typ2 return_stuff error_msg =
     | T.Float, T.Float -> return_stuff
     | _ -> failwith error_msg
 
-(* Including fraction, complex and qreg *)
-let rec check_compound_literal env ex1 ex2 name =
-    let env, s_ex1, typ1 = gen_s_expr env ex1 in
-    let env, s_ex2, typ2 = gen_s_expr env ex2 in
-    check_int_float 
-      typ1 typ2
-      (env, s_ex1, s_ex2, typ1, typ2)
-      ("Invalid " ^ name ^ " operand type: (" ^ 
-            T.str_of_type typ1 ^ ", " ^ T.str_of_type typ2 ^ ")")
 
 (* Main expr semantic checker entry *)
 (* return env', S.expr, type *)
-and gen_s_expr env = function
+let rec gen_s_expr env = function
   (* simple literals *)
   | A.IntLit(i) -> env, S.IntLit(i), T.Int
   | A.BoolLit(b) -> env, S.BoolLit(b), T.Bool
@@ -389,6 +380,15 @@ and gen_s_expr env = function
   
   | _ -> failwith "some expr not parsed"
 
+(* Helper: including fraction, complex and qreg *)
+and check_compound_literal env ex1 ex2 name =
+    let env, s_ex1, typ1 = gen_s_expr env ex1 in
+    let env, s_ex2, typ2 = gen_s_expr env ex2 in
+    check_int_float 
+      typ1 typ2
+      (env, s_ex1, s_ex2, typ1, typ2)
+      ("Invalid " ^ name ^ " operand type: (" ^ 
+            T.str_of_type typ1 ^ ", " ^ T.str_of_type typ2 ^ ")")
 (*
 and gen_expr_list exlist =
   let exlistStr = 
