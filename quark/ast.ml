@@ -104,9 +104,36 @@ let rec str_of_datatype = function
     | DataType(matType) -> 
       (match matType with
       (* only support 3 numerical types *)
-      | Int | Float | Complex -> 
+      | T.Int | T.Float | T.Complex -> 
       "Matrix<" ^ T.str_of_type matType ^ ", Dynamic, Dynamic>"
       | _ -> failwith "Non-numerical matrix type")
     (* we shouldn't support float[][[]] *)
     | _ -> 
       failwith "Bad matrix type")
+
+let str_of_binop = function
+  Add -> "+"
+| Sub -> "-"
+| Mul -> "*"
+| Div -> "/"
+| Mod -> "%"
+| Pow -> "**"
+| Lshift -> "<<"
+| Rshift -> ">>"
+| Less -> "<"
+| LessEq -> "<="
+| Greater -> ">"
+| GreaterEq -> ">="
+| Eq -> "=="
+| NotEq -> "!="
+| BitAnd -> "&"
+| BitXor -> "^"
+| BitOr -> "|"
+| And -> "&&"
+| Or -> "||"
+| AddEq -> "+="
+| SubEq -> "-="
+| MulEq -> "*="
+| DivEq -> "/="
+| AndEq -> "&="
+| _ -> failwith "unhandled binop"
