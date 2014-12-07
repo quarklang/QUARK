@@ -15,5 +15,6 @@ qreg q;
 
 def string foo: int a, int b
 {
+    %int f1;
     int e;
 }

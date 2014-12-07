@@ -78,12 +78,18 @@ let update_var_table env var_typ var_id =
   
 (* if doesn't exist, return NoneType *)
 let get_env_var env var_id =
+  let id = get_id var_id in
   try
-    StrMap.find (get_id var_id) env.var_table
-  with Not_found -> { 
-    v_type = A.NoneType; 
-    v_depth = -1
-  }
+    StrMap.find id env.var_table
+  with Not_found -> 
+    (* if the identifier appears as a func_id, then error! *)
+    if StrMap.mem id env.func_table then
+      failwith @@ "Confuse a function with a variable: " ^ id
+    else
+      { 
+        v_type = A.NoneType; 
+        v_depth = -1
+      }
 
 let update_env_var env var_typ var_id =
   let vinfo = get_env_var env var_id in
