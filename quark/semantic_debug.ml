@@ -256,7 +256,7 @@ let rec check_compound_literal env ex1 ex2 name =
     let env, s_ex2, typ2 = gen_s_expr env ex2 in
     check_int_float 
       typ1 typ2
-      (env, s_ex1, s_ex2)
+      (env, s_ex1, s_ex2, typ1, typ2)
       ("Invalid " ^ name ^ " operand type: (" ^ 
             T.str_of_type typ1 ^ ", " ^ T.str_of_type typ2 ^ ")")
 
@@ -271,19 +271,19 @@ and gen_s_expr env = function
 
   (* compound literals *)
   | A.FractionLit(num_ex, denom_ex) -> 
-    let env, s_num_ex, s_denom_ex = 
+    let env, s_num_ex, s_denom_ex, num_typ, denom_typ = 
       check_compound_literal env num_ex denom_ex "fraction" in
-    env, S.FractionLit(s_num_ex, s_denom_ex), T.Fraction
+    env, S.FractionLit(num_typ, s_num_ex, denom_typ, s_denom_ex), T.Fraction
             
   | A.QRegLit(qex1, qex2) -> 
-    let env, s_qex1, s_qex2 = 
+    let env, s_qex1, s_qex2, q1_typ, q2_typ = 
       check_compound_literal env qex1 qex2 "qreg" in
-    env, S.QRegLit(s_qex1, s_qex2), T.QReg
+    env, S.QRegLit(q1_typ, s_qex1, q2_typ, s_qex2), T.QReg
 
   | A.ComplexLit(real_ex, im_ex) -> 
-    let env, s_real_ex, s_im_ex = 
+    let env, s_real_ex, s_im_ex, real_typ, im_typ = 
       check_compound_literal env real_ex im_ex "complex" in
-    env, S.ComplexLit(s_real_ex, s_im_ex), T.Complex
+    env, S.ComplexLit(real_typ, s_real_ex, im_typ, s_im_ex), T.Complex
 
   | A.ArrayLit(exprs) ->
     env, S.IntLit("TODO"), T.Int
