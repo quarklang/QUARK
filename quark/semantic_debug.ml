@@ -12,6 +12,9 @@ let snd_3 = function _, x, _ -> x;;
 let trd_3 = function _, _, x -> x;;
 
 let get_id (A.Ident name) = name
+let get_raw_type = function 
+  | A.DataType(typ) -> typ
+  | _ -> failwith "shouldn't happen"
 
 (****** Environment definition ******)
 type func_info = {
@@ -243,7 +246,7 @@ let rec gen_datatype = function
 
 (* Helper: interchangeable int and float *)
 let check_int_float typ1 typ2 return_stuff error_msg =
-    match typ1, typ2 with
+    match get_raw_type typ1, get_raw_type typ2 with
     | T.Int, T.Int
     | T.Float, T.Int
     | T.Int, T.Float
@@ -255,36 +258,36 @@ let check_int_float typ1 typ2 return_stuff error_msg =
 (* return env', S.expr, type *)
 let rec gen_s_expr env = function
   (* simple literals *)
-  | A.IntLit(i) -> env, S.IntLit(i), T.Int
-  | A.BoolLit(b) -> env, S.BoolLit(b), T.Bool
-  | A.FloatLit(f) -> env, S.FloatLit(f), T.Float
-  | A.StringLit(s) -> env, S.StringLit(s), T.String
+  | A.IntLit(i) -> env, S.IntLit(i), A.DataType(T.Int)
+  | A.BoolLit(b) -> env, S.BoolLit(b), A.DataType(T.Bool)
+  | A.FloatLit(f) -> env, S.FloatLit(f), A.DataType(T.Float)
+  | A.StringLit(s) -> env, S.StringLit(s), A.DataType(T.String)
 
   (* compound literals *)
   | A.FractionLit(num_ex, denom_ex) -> 
     let env, s_num_ex, s_denom_ex, num_typ, denom_typ = 
       check_compound_literal env num_ex denom_ex "fraction" in
-    env, S.FractionLit(num_typ, s_num_ex, denom_typ, s_denom_ex), T.Fraction
+    env, S.FractionLit(num_typ, s_num_ex, denom_typ, s_denom_ex), A.DataType(T.Fraction)
             
   | A.QRegLit(qex1, qex2) -> 
     let env, s_qex1, s_qex2, q1_typ, q2_typ = 
       check_compound_literal env qex1 qex2 "qreg" in
-    env, S.QRegLit(q1_typ, s_qex1, q2_typ, s_qex2), T.QReg
+    env, S.QRegLit(q1_typ, s_qex1, q2_typ, s_qex2), A.DataType(T.QReg)
 
   | A.ComplexLit(real_ex, im_ex) -> 
     let env, s_real_ex, s_im_ex, real_typ, im_typ = 
       check_compound_literal env real_ex im_ex "complex" in
-    env, S.ComplexLit(real_typ, s_real_ex, im_typ, s_im_ex), T.Complex
+    env, S.ComplexLit(real_typ, s_real_ex, im_typ, s_im_ex), A.DataType(T.Complex)
 
   | A.ArrayLit(exprs) ->
-    env, S.IntLit("TODO"), T.Int
+    env, S.IntLit("TODO"), A.DataType(T.Int)
       (*
       let arr, typ, env = check_array exprs env in
       S.ArrayLit(arr, A.DataType(typ)), env
       *)
 
   | A.MatrixLit(exprs_list_list) ->
-    env, S.IntLit("TODO"), T.Int
+    env, S.IntLit("TODO"), A.DataType(T.Int)
       (*
       (* each expression list (aka row) must be the same length.
        * each expression list must be a valid expression list. *)
@@ -318,7 +321,7 @@ let rec gen_s_expr env = function
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)
   | A.Binop(ex1, op, ex2) -> 
-    env, S.IntLit("TODO"), T.Int
+    env, S.IntLit("TODO"), A.DataType(T.Int)
       (*
     let ex1 = gen_s_expr ex1 in
     let ex2 = gen_s_expr ex2 in
@@ -330,38 +333,38 @@ let rec gen_s_expr env = function
   
   (* Unary ops *)
   | A.Unop(op, ex) -> 
-    env, S.IntLit("TODO"), T.Int
+    env, S.IntLit("TODO"), A.DataType(T.Int)
       (*
     gen_unop op ^ gen_s_expr ex
       *)
   
   (* Assignment *)
   | A.Assign(lval, ex) -> 
-    env, S.IntLit("TODO"), T.Int
+    env, S.IntLit("TODO"), A.DataType(T.Int)
       (*
     gen_lvalue lval ^ " = " ^ gen_s_expr ex
       *)
   | A.Lval(lval) -> 
-    env, S.IntLit("TODO"), T.Int
+    env, S.IntLit("TODO"), A.DataType(T.Int)
       (*
     gen_lvalue lval
       *)
   
   (* Special assignment *)
   | A.AssignOp(lval, op, ex) -> 
-    env, S.IntLit("TODO"), T.Int
+    env, S.IntLit("TODO"), A.DataType(T.Int)
       (*
     gen_lvalue lval ^" "^ gen_binop op ^" "^ gen_s_expr ex
       *)
   | A.PostOp(lval, op) -> 
-    env, S.IntLit("TODO"), T.Int
+    env, S.IntLit("TODO"), A.DataType(T.Int)
       (*
     gen_lvalue lval ^" "^ gen_postop op
       *)
     
   (* Membership testing with keyword 'in' *)
   | A.Membership(exElem, exArray) -> 
-    env, S.IntLit("TODO"), T.Int
+    env, S.IntLit("TODO"), A.DataType(T.Int)
       (*
     (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
     (* Shouldn't change over calls!!! *)
@@ -373,7 +376,7 @@ let rec gen_s_expr env = function
     
   (* Function calls *)
   | A.FunctionCall(funcId, exlist) -> 
-    env, S.IntLit("TODO"), T.Int
+    env, S.IntLit("TODO"), A.DataType(T.Int)
       (*
     get_id funcId ^ surr( gen_expr_list exlist )
       *)
@@ -382,13 +385,13 @@ let rec gen_s_expr env = function
 
 (* Helper: including fraction, complex and qreg *)
 and check_compound_literal env ex1 ex2 name =
-    let env, s_ex1, typ1 = gen_s_expr env ex1 in
-    let env, s_ex2, typ2 = gen_s_expr env ex2 in
-    check_int_float 
-      typ1 typ2
-      (env, s_ex1, s_ex2, typ1, typ2)
-      ("Invalid " ^ name ^ " operand type: (" ^ 
-            T.str_of_type typ1 ^ ", " ^ T.str_of_type typ2 ^ ")")
+  let env, s_ex1, typ1 = gen_s_expr env ex1 in
+  let env, s_ex2, typ2 = gen_s_expr env ex2 in
+  check_int_float 
+    typ1 typ2
+    (env, s_ex1, s_ex2, get_raw_type typ1, get_raw_type typ2)
+    ("Invalid " ^ name ^ " operand type: (" ^ 
+          A.str_of_datatype typ1 ^ ", " ^ A.str_of_datatype typ2 ^ ")")
 (*
 and gen_expr_list exlist =
   let exlistStr = 
