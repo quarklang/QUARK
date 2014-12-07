@@ -163,13 +163,19 @@ let update_env_func env return_type func_id s_param_list is_defined =
           f_return = finfo.f_return;
           f_defined = true
         } in
-        { 
+        let env' = { 
           (*var_table = update_env_s_param_list env s_param_list; *)
           var_table = env.var_table;
           func_table = StrMap.add (get_id func_id) func_table' env.func_table;
           func_current = get_id func_id; 
           depth = env.depth;
-        }
+        } in
+        List.fold_left 
+            (fun env -> function
+            | S.PrimitiveDecl(typ, id) -> 
+              update_env_var env typ id
+            | _ -> failwith @@ "Function parameter list declaration error" ^ errmsg_str) 
+            env' s_param_list
       else
         failwith @@ "Incompatible forward declaration" ^ errmsg_str
     else
@@ -461,8 +467,8 @@ let rec gen_sast env = function
       | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
         let _ = debug_env env "before FunctionDecl" in
         let s_param_list = gen_s_param_list param_list in
-        let env' = update_env_func env return_type func_id s_param_list true in
-        let env' = incr_env_depth env' in
+        let env' = incr_env_depth env in
+        let env' = update_env_func env' return_type func_id s_param_list true in
         let _ = debug_env env' "after FunctionDecl" in
         (* get the function declaration, then close 'func_current' *)
         let function_decl = S.FunctionDecl(return_type, func_id, s_param_list, 
