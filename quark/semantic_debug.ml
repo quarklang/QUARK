@@ -293,17 +293,95 @@ let rec gen_s_expr env = function
   
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)
-  | A.Binop(ex1, op, ex2) -> 
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
-    let ex1 = gen_s_expr ex1 in
-    let ex2 = gen_s_expr ex2 in
-     (match op with
-      | A.Query -> "measure_top(" ^ex1^ ", " ^ex2^ ", true)"
-      | A.QueryUnreal -> "measure_top(" ^ex1^ ", " ^ex2^ ", false)"
-      | _ -> ex1 ^" "^ gen_binop op ^" "^ ex2)
-      *)
-  
+  | A.Binop(expr1, op, expr2) -> 
+    (* helper functions for Binop case *)
+    let err_msg_helper func_str_of op type1 type2 =
+      "Incompatible types for " ^ A.str_of_binop op ^ ": " 
+      ^ func_str_of type1 ^ " -.- " ^ func_str_of type2 in
+    let err_msg = err_msg_helper T.str_of_type in
+    
+    (* check left and right children *)
+    let env, s_expr1, ex_type1 = gen_s_expr env expr1 in
+    let env, s_expr2, ex_type2 = gen_s_expr env expr2 in
+    begin
+    match ex_type1, ex_type2 with 
+    (* cases with raw types *)
+    | A.DataType(type1), A.DataType(type2) -> 
+      begin
+      let logic_relational op type1 type2 =
+        match type1, type2 with
+          | T.Int,   T.Int 
+          | T.Float, T.Float 
+          | T.Int,   T.Float 
+          | T.Float, T.Int -> T.Bool, S.OpVerbatim
+          (* | T.Fraction, T.Fraction -> T.Bool *)
+          | t1, t2 -> failwith @@ err_msg op t1 t2 in
+
+      let binop_math op type1 type2 = 
+          let notmod = op <> A.Mod in
+          match type1, type2 with
+          | T.Float, T.Int
+          | T.Int,   T.Float 
+          | T.Float, T.Float when notmod -> 
+              T.Float, S.OpVerbatim
+          | T.Int,   T.Int -> 
+              T.Int, S.OpVerbatim
+          | T.Float, T.Complex when notmod -> 
+              T.Complex, S.CastComplex1
+          | T.Complex, T.Float when notmod -> 
+              T.Complex, S.CastComplex2
+          | T.Complex, T.Complex when notmod -> 
+              T.Complex, S.OpVerbatim
+          | T.Int, T.Fraction
+          | T.Fraction, T.Int
+          | T.Fraction, T.Fraction when notmod && op <> A.Pow -> 
+              T.Fraction, S.OpVerbatim
+          | t1, t2 -> failwith @@ err_msg op t1 t2 in
+
+      let logic_basic op type1 type2 =
+        match type1, type2 with
+          | T.Bool, T.Bool -> T.Bool, S.OpVerbatim
+          | t1, t2 -> failwith @@ err_msg op t1 t2 in
+
+      let logic_equal op type1 type2 = 
+        match type1, type2 with
+          | T.Float, T.Int
+          | T.Int,   T.Float -> T.Bool, S.OpVerbatim
+          | t1, t2 when t1 = t2 -> T.Bool, S.OpVerbatim
+          | t1, t2 -> failwith @@ err_msg op t1 t2 in
+
+      let result_type, optag = 
+        match op with 
+          | A.Add         -> binop_math op type1 type2
+          | A.Sub         -> binop_math op type1 type2
+          | A.Mul         -> binop_math op type1 type2
+          | A.Div         -> binop_math op type1 type2
+          | A.Pow         -> binop_math op type1 type2
+          | A.Mod         -> binop_math op type1 type2
+          | A.Eq          -> logic_equal op type1 type2 
+          | A.NotEq       -> logic_equal op type1 type2
+          | A.Less        -> logic_relational op type1 type2 
+          | A.LessEq      -> logic_relational op type1 type2
+          | A.Greater     -> logic_relational op type1 type2
+          | A.GreaterEq   -> logic_relational op type1 type2
+          | A.And         -> logic_basic op type1 type2
+          | A.Or          -> logic_basic op type1 type2
+          | _ -> failwith "TODO match op"
+          (* TODO
+          | BitAnd
+          | BitOr
+          | BitXor
+          | Lshift
+          | Rshift
+          | Query
+          | QueryUnreal
+          *)
+      in
+      env, S.Binop(s_expr1, op, s_expr2, optag), A.DataType(result_type)
+      end
+    (* At least one of the operand is an array/matrix *)
+    | _ -> failwith "TODO"
+    end
   (* Unary ops *)
   | A.Unop(op, ex) -> 
     env, S.IntLit("TODO"), A.DataType(T.Int)
@@ -419,10 +497,10 @@ and gen_s_matrix env exprs_list_list =
             else (
             (* ensure all rows have the same type and can only be complex, int or float *)
             match curr_type, prev_type with
-            | T.Int, T.Int -> T.Int
-            | T.Float, T.Int -> T.Float
-            | T.Int, T.Float -> T.Float
+            | T.Float, T.Int
+            | T.Int, T.Float
             | T.Float, T.Float -> T.Float
+            | T.Int, T.Int -> T.Int
             | T.Complex, T.Complex -> T.Complex
             | _ ->  failwith @@ 
               "Array element type conflict: " 
