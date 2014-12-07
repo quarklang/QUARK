@@ -1,7 +1,6 @@
 module A = Ast
 module S = Sast
 module T = Type
-module Gen = Generator
 
 module StrMap = Map.Make(String)
 
@@ -41,7 +40,7 @@ type environment = {
 let debug_s_decl_list f_args =
   let paramStr = 
     List.fold_left 
-      (fun s typ -> s ^ (Gen.gen_datatype typ) ^ ", ") "" f_args
+      (fun s typ -> s ^ (A.str_of_datatype typ) ^ ", ") "" f_args
   in
   if paramStr = "" then ""
   else
@@ -54,13 +53,13 @@ let debug_env env msg =
     print_string "Var= ";
     StrMap.iter 
       (fun key vinfo -> print_string @@ 
-      key ^ ": " ^ Gen.gen_datatype vinfo.v_type ^ "(" ^ string_of_int vinfo.v_depth ^ "); ")
+      key ^ ": " ^ A.str_of_datatype vinfo.v_type ^ "(" ^ string_of_int vinfo.v_depth ^ "); ")
       env.var_table;
     print_string "\nFunc= ";
     StrMap.iter 
       (fun key finfo -> print_endline @@ 
         key ^ "(" ^ string_of_bool finfo.f_defined ^ "): " ^ 
-        debug_s_decl_list finfo.f_args ^ " => " ^ Gen.gen_datatype finfo.f_return ^ ";")
+        debug_s_decl_list finfo.f_args ^ " => " ^ A.str_of_datatype finfo.f_return ^ ";")
       env.func_table;
     print_endline @@ "Current= " ^ env.func_current;
     print_endline "}";
@@ -102,7 +101,7 @@ let update_env_var env var_typ var_id =
     func_current = env.func_current;
     depth = env.depth;
   }
-  | _ -> failwith @@ "Variable redeclaration: " ^ Gen.gen_datatype var_typ ^ " " ^ get_id var_id
+  | _ -> failwith @@ "Variable redeclaration: " ^ A.str_of_datatype var_typ ^ " " ^ get_id var_id
 
 (* go one scope deeper *)
 let incr_env_depth env = 
@@ -222,16 +221,8 @@ let gen_binop = function
 | A.AndEq -> "&="
 | _ -> failwith "unhandled binop"
 
-let gen_vartype = function
-  | T.Int -> "int64_t"
-  | T.Float -> "float"
-  | T.Bool -> "bool"
-  | T.Fraction -> "Frac"
-  | T.Complex -> "complex<float>"
-  | T.QReg -> "Qureg"
-  | T.String -> "string"
-  | T.Void -> "void"
 
+(*
 let rec gen_datatype = function
 	| A.DataType(t) -> 
     gen_vartype t
@@ -248,6 +239,7 @@ let rec gen_datatype = function
     (* we shouldn't support float[][[]] *)
     | _ -> 
       failwith "Bad matrix type")
+*)
 
 (* return env', S.expr, type *)
 let rec gen_s_expr env = function
@@ -258,13 +250,17 @@ let rec gen_s_expr env = function
   | A.StringLit(s) -> env, S.StringLit(s), T.String
 
   | A.FractionLit(num_expr, denom_expr) -> 
-    env, S.IntLit("TODO"), T.Int
-      (*
-      let env, num_expr = gen_s_expr env num_expr in
-      let env, denom_expr = gen_s_expr env denom_expr in
-      env, S.FractionLit(num_expr, denom_expr), Ty.Fraction
-      *)
-
+    let env, s_num_expr, num_typ = gen_s_expr env num_expr in
+    let env, s_denom_expr, denom_typ = gen_s_expr env denom_expr in (
+    match num_typ, denom_typ with
+    | T.Int, T.Int
+    | T.Float, T.Int
+    | T.Int, T.Float
+    | T.Float, T.Float -> 
+      env, S.FractionLit(s_num_expr, s_denom_expr), T.Fraction
+    | _ -> failwith @@ "Invalid fraction operand type: (" ^ 
+            T.str_of_type num_typ ^ ", " ^ T.str_of_type denom_typ ^ ")"
+    )
   | A.QRegLit(expr1, expr2) -> 
     env, S.IntLit("TODO"), T.Int
       (* checks expressions first *)
@@ -546,7 +542,6 @@ let rec gen_sast env = function
       | A.Expression(ex) -> 
         let env', s_ex, _ = gen_s_expr env ex in
         (env', S.Expression(s_ex))
-        (* print_endline @@ gen_s_expr ex ^ ";" *)
 
       | A.ReturnStatement(ex) -> 
         (env, S.EmptyStatement)

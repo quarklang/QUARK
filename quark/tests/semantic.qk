@@ -9,6 +9,7 @@ def int f1: int a, int b, string[][][] c
 {
     % float a;
     int e;
+    5$3;
 }
 
 qreg q;
@@ -19,7 +20,7 @@ def string foo: int a, int b
     int e;
     {
         {
-            int e;
+            fraction e;
         }
     }
 }
