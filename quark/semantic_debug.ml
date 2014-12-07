@@ -250,8 +250,19 @@ let check_int_float typ1 typ2 return_stuff error_msg =
     | T.Float, T.Float -> return_stuff
     | _ -> failwith error_msg
 
+(* Including fraction, complex and qreg *)
+let rec check_compound_literal env ex1 ex2 name =
+    let env, s_ex1, typ1 = gen_s_expr env ex1 in
+    let env, s_ex2, typ2 = gen_s_expr env ex2 in
+    check_int_float 
+      typ1 typ2
+      (env, s_ex1, s_ex2)
+      ("Invalid " ^ name ^ " operand type: (" ^ 
+            T.str_of_type typ1 ^ ", " ^ T.str_of_type typ2 ^ ")")
+
+(* Main expr semantic checker entry *)
 (* return env', S.expr, type *)
-let rec gen_s_expr env = function
+and gen_s_expr env = function
   (* simple literals *)
   | A.IntLit(i) -> env, S.IntLit(i), T.Int
   | A.BoolLit(b) -> env, S.BoolLit(b), T.Bool
@@ -260,31 +271,19 @@ let rec gen_s_expr env = function
 
   (* compound literals *)
   | A.FractionLit(num_ex, denom_ex) -> 
-    let env, s_num_ex, num_typ = gen_s_expr env num_ex in
-    let env, s_denom_ex, denom_typ = gen_s_expr env denom_ex in
-    check_int_float 
-      num_typ denom_typ 
-      (env, S.FractionLit(s_num_ex, s_denom_ex), T.Fraction)
-      ("Invalid fraction operand type: (" ^ 
-            T.str_of_type num_typ ^ ", " ^ T.str_of_type denom_typ ^ ")")
+    let env, s_num_ex, s_denom_ex = 
+      check_compound_literal env num_ex denom_ex "fraction" in
+    env, S.FractionLit(s_num_ex, s_denom_ex), T.Fraction
             
-  | A.QRegLit(ex1, ex2) -> 
-    env, S.IntLit("TODO"), T.Int
-      (* checks expressions first *)
-      (*
-      let env, expr1 = gen_s_expr env expr1 in
-      let env, expr2 = gen_s_expr env expr2 in
-      S.QRegLit(expr1, expr2, A.DataType(T.QReg)), env
-      *)
+  | A.QRegLit(qex1, qex2) -> 
+    let env, s_qex1, s_qex2 = 
+      check_compound_literal env qex1 qex2 "qreg" in
+    env, S.QRegLit(s_qex1, s_qex2), T.QReg
 
-  | A.ComplexLit(real_expr, im_expr) -> 
-    env, S.IntLit("TODO"), T.Int
-      (* checks expressions first *)
-      (*
-      let real_expr, env   = gen_s_expr real_expr env in
-      let im_expr, env = gen_s_expr im_expr env in
-      S.ComplexLit(real_expr, im_expr, A.DataType(T.Complex)), env
-      *)
+  | A.ComplexLit(real_ex, im_ex) -> 
+    let env, s_real_ex, s_im_ex = 
+      check_compound_literal env real_ex im_ex "complex" in
+    env, S.ComplexLit(s_real_ex, s_im_ex), T.Complex
 
   | A.ArrayLit(exprs) ->
     env, S.IntLit("TODO"), T.Int
