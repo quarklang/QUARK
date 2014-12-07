@@ -26,7 +26,6 @@
 %left IN 
 %right QUERY QUERY_UNREAL
 
-%left DOLLAR
 %left FRACTION
 %left COMPLEX_SYM
 %left OR
@@ -39,6 +38,7 @@
 %left LSHIFT RSHIFT
 %left PLUS MINUS
 %left TIMES DIVIDE MODULO
+%left DOLLAR
 %left DEF
 
 %right NOT BITNOT POWER UMINUS
