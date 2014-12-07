@@ -534,13 +534,9 @@ let rec gen_sast env = function
           print_endline "} // end for";
         end *)
             
-      | A.CompoundStatement(stmtList) -> 
-        (env, S.EmptyStatement)
-        (* begin
-          print_endline "{ // start compound";
-          gen_sast stmtList;
-          print_endline "} // end compound";
-        end *)
+      | A.CompoundStatement(stmt_list) -> 
+        let env' = incr_env_depth env in
+        (env, S.CompoundStatement(snd_2 @@ gen_sast env' stmt_list))
 
       | A.Declaration(dec) -> 
         let env', s_dec = gen_s_decl env dec in
