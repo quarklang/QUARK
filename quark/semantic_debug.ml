@@ -280,11 +280,8 @@ let rec gen_s_expr env = function
     env, S.ComplexLit(real_typ, s_real_ex, im_typ, s_im_ex), A.DataType(T.Complex)
 
   | A.ArrayLit(exprs) ->
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
-      let arr, typ, env = check_array exprs env in
-      S.ArrayLit(arr, A.DataType(typ)), env
-      *)
+    let env, s_exprs, elem_type = gen_s_expr_list env exprs in
+    env, S.ArrayLit(elem_type, s_exprs), A.ArrayType(elem_type)
 
   | A.MatrixLit(exprs_list_list) ->
     env, S.IntLit("TODO"), A.DataType(T.Int)
@@ -392,17 +389,32 @@ and check_compound_literal env ex1 ex2 name =
     (env, s_ex1, s_ex2, get_raw_type typ1, get_raw_type typ2)
     ("Invalid " ^ name ^ " operand type: (" ^ 
           A.str_of_datatype typ1 ^ ", " ^ A.str_of_datatype typ2 ^ ")")
-(*
-and gen_expr_list exlist =
-  let exlistStr = 
-    List.fold_left 
-      (fun s ex -> s ^ gen_s_expr ex ^ ", ") "" exlist
-  in
-  (* get rid of the last 2 chars ', ' *)
-  if exlistStr = "" then ""
-  else
-    String.sub exlistStr 0 ((String.length exlistStr) - 2)
+
+and gen_s_expr_list env exprs =
+  let env, s_exprs, array_type = List.fold_left
+    (* evaluate each expression in the list *)
+    (fun (env, checked_exprs_acc, prev_type) unchecked_expr ->
+        let env, checked_expr, expr_type = gen_s_expr env unchecked_expr in
+        match prev_type with
+        | A.NoneType ->
+          (* means we're seeing the 1st expr in the array and now know array type *)
+          env, checked_expr :: checked_exprs_acc, expr_type
+        | array_type -> (
+          (* ensure all elems in array are the same type *)
+          match array_type, expr_type with (* <> for != *)
+          | A.DataType(T.Int), A.DataType(T.Float)
+          | A.DataType(T.Float), A.DataType(T.Int) -> 
+            env, checked_expr :: checked_exprs_acc, A.DataType(T.Float)
+          | _ when array_type = expr_type -> 
+            env, checked_expr :: checked_exprs_acc, array_type
+          | _ ->  failwith @@ 
+            "All elements in an array must be the same type: " 
+            ^ A.str_of_datatype array_type ^ " conflicts with " ^ A.str_of_datatype expr_type)
+          )
+    (env, [], A.NoneType) exprs in
+  env, List.rev(s_exprs), array_type
     
+(*
 and gen_lvalue = function
   | A.Variable(id) -> 
     get_id id
