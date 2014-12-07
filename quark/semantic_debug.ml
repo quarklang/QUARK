@@ -16,7 +16,7 @@ let get_id (A.Ident name) = name
 
 (****** Environment definition ******)
 type func_info = {
-  f_args: S.decl list;
+  f_args: A.datatype list;
   f_return: A.datatype;
   f_defined: bool; (* for forward declaration *)
 }
@@ -41,11 +41,7 @@ type environment = {
 let debug_s_decl_list f_args =
   let paramStr = 
     List.fold_left 
-      (fun s param -> s ^ (
-        (function 
-        | S.PrimitiveDecl(typ, id) -> 
-		    (Gen.gen_datatype typ) ^ " " ^ (get_id id)
-        | _ -> "FATAL") param) ^ ", ") "" f_args
+      (fun s typ -> s ^ (Gen.gen_datatype typ) ^ ", ") "" f_args
   in
   if paramStr = "" then ""
   else
@@ -126,10 +122,16 @@ let get_env_func env func_id =
 let update_env_func env return_type func_id s_param_list is_defined =
   let finfo = get_env_func env func_id in
   let errmsg_str = ": " ^ get_id func_id ^ "()" in
+  let s_arg_types = 
+    List.map (function
+        | S.PrimitiveDecl(typ, id) -> typ
+        | _ -> failwith @@ "Function parameter list declaration error" ^ errmsg_str
+        ) s_param_list in
   match finfo.f_return with
   | A.NoneType -> begin
     let func_table' = { 
-      f_args = s_param_list; 
+      (* only keep the formal param types *)
+      f_args = s_arg_types; 
       f_return = return_type;
       f_defined = is_defined
     } in
@@ -138,19 +140,24 @@ let update_env_func env return_type func_id s_param_list is_defined =
       var_table = env.var_table;
       func_table = StrMap.add (get_id func_id) func_table' env.func_table;
       func_current = get_id func_id; 
-      depth = env.depth + 1;
+      depth = env.depth;
     } in
-    List.fold_left 
-        (fun env -> function
-        | S.PrimitiveDecl(typ, id) -> 
-          update_env_var env typ id
-        | _ -> failwith @@ "Function parameter list declaration error" ^ errmsg_str) 
-        env' s_param_list
+    if is_defined then
+      (* add the formal param idents to scope *)
+      List.fold_left 
+          (fun env -> function
+          | S.PrimitiveDecl(typ, id) -> 
+            update_env_var env typ id
+          | _ -> failwith @@ "Function parameter list declaration error" ^ errmsg_str) 
+          env' s_param_list
+    else
+      (* simply forward decl, don't add stuff to scope *)
+      env'
     end
   | _ when not finfo.f_defined ->
     if is_defined then
       (* check param list and return type, should be the same *)
-      if finfo.f_return = return_type && finfo.f_args = s_param_list then
+      if finfo.f_return = return_type && finfo.f_args = s_arg_types then
         let func_table' = { 
           f_args = finfo.f_args; 
           f_return = finfo.f_return;
@@ -161,7 +168,7 @@ let update_env_func env return_type func_id s_param_list is_defined =
           var_table = env.var_table;
           func_table = StrMap.add (get_id func_id) func_table' env.func_table;
           func_current = get_id func_id; 
-          depth = env.depth + 1;
+          depth = env.depth;
         }
       else
         failwith @@ "Incompatible forward declaration" ^ errmsg_str
@@ -455,6 +462,7 @@ let rec gen_sast env = function
         let _ = debug_env env "before FunctionDecl" in
         let s_param_list = gen_s_param_list param_list in
         let env' = update_env_func env return_type func_id s_param_list true in
+        let env' = incr_env_depth env' in
         let _ = debug_env env' "after FunctionDecl" in
         (* get the function declaration, then close 'func_current' *)
         let function_decl = S.FunctionDecl(return_type, func_id, s_param_list, 
