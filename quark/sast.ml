@@ -20,7 +20,7 @@ and expr =
   | QRegLit of T.vartype * expr * T.vartype * expr
   | ComplexLit of T.vartype * expr * T.vartype * expr
   | ArrayLit of A.datatype * expr list
-  | MatrixLit of A.datatype * expr list list
+  | MatrixLit of T.vartype * expr list list
   | Membership of A.datatype * expr * A.datatype * expr
   | FunctionCall of A.ident * expr list
   | Lval of lvalue

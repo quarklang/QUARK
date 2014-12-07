@@ -280,40 +280,16 @@ let rec gen_s_expr env = function
     env, S.ComplexLit(real_typ, s_real_ex, im_typ, s_im_ex), A.DataType(T.Complex)
 
   | A.ArrayLit(exprs) ->
-    let env, s_exprs, elem_type = gen_s_expr_list env exprs in
+    let env, s_exprs, elem_type = gen_s_array env exprs in
+    let _tmp = A.ArrayType(elem_type) in
+    let _ = print_endline @@ "ARRAY " ^ (A.str_of_datatype _tmp) in
     env, S.ArrayLit(elem_type, s_exprs), A.ArrayType(elem_type)
 
   | A.MatrixLit(exprs_list_list) ->
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
-      (* each expression list (aka row) must be the same length.
-       * each expression list must be a valid expression list. *)
-      let matrix, matrix_type, _, env = List.fold_left
-
-          (fun (rows, curr_type, row_length, env) exprs -> 
-              (* evaluate each row where each row is an expr list *)
-              let exprs, row_type, env = check_array exprs env in
-              let exprs_length = List.length exprs in
-
-              match curr_type with
-                  | T.Void -> 
-                      (* means this is the 1st row which means we now know the matrix type *)
-                      (exprs :: rows), row_type, exprs_length, env
-
-                  | matrix_type ->
-                      (* ensure all rows have the same type ... *)
-                      if matrix_type <> row_type
-                      then raise(Error "All elements in a matrix must be the same type");
-
-                      (* ... and are the same length*)
-                      if row_length <> exprs_length
-                      then raise(Error "All rows in a matrix must be the same length");
-
-                      (exprs :: rows), row_type, row_length, env)
-
-          ([], T.Void, 0, env) exprs_list_list in
-      S.MatrixLit(List.rev matrix, A.DataType(matrix_type)), env
-      *)
+    let env, s_matrix, elem_type = gen_s_matrix env exprs_list_list in
+    let _tmp = A.MatrixType(A.DataType(elem_type)) in
+    let _ = print_endline @@ "MATRIX " ^ (A.str_of_datatype _tmp) in
+    env, S.MatrixLit(elem_type, s_matrix), A.MatrixType(A.DataType(elem_type))
   
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)
@@ -390,7 +366,7 @@ and check_compound_literal env ex1 ex2 name =
     ("Invalid " ^ name ^ " operand type: (" ^ 
           A.str_of_datatype typ1 ^ ", " ^ A.str_of_datatype typ2 ^ ")")
 
-and gen_s_expr_list env exprs =
+and gen_s_array env exprs =
   let env, s_exprs, array_type = List.fold_left
     (* evaluate each expression in the list *)
     (fun (env, checked_exprs_acc, prev_type) unchecked_expr ->
@@ -408,12 +384,55 @@ and gen_s_expr_list env exprs =
           | _ when array_type = expr_type -> 
             env, checked_expr :: checked_exprs_acc, array_type
           | _ ->  failwith @@ 
-            "All elements in an array must be the same type: " 
-            ^ A.str_of_datatype array_type ^ " conflicts with " ^ A.str_of_datatype expr_type)
+            "Array element type conflict: " 
+            ^ A.str_of_datatype array_type ^ " -.- " ^ A.str_of_datatype expr_type)
           )
     (env, [], A.NoneType) exprs in
-  env, List.rev(s_exprs), array_type
-    
+  (env, List.rev s_exprs , array_type)
+
+and gen_s_matrix env exprs_list_list =
+  let env, matrix, matrix_type, _ = List.fold_left
+    (fun (env, rows, curr_type, row_length) exprs -> 
+        (* evaluate each row where each row is an expr list *)
+        let env, exprs, row_type = gen_s_array env exprs in
+        let prev_type = 
+            match row_type with 
+            | A.DataType(prev_type) -> (
+              match prev_type with
+              | T.Int  | T.Float  | T.Complex -> prev_type
+              | _ -> failwith @@ "Matrix element type unsupported: " ^ T.str_of_type prev_type
+              )
+            | _ -> failwith @@ "Invalid matrix row type: " ^ A.str_of_datatype row_type
+        in
+        let exprs_length = List.length exprs in
+
+        match curr_type with
+        | T.Void -> 
+            (* means this is the 1st row which means we now know the matrix type *)
+            env, (exprs :: rows), prev_type, exprs_length
+
+        | _ -> (
+          let curr_type' = 
+            (* the same length*)
+            if row_length <> exprs_length
+            then failwith "All rows in a matrix must be the same length"
+            else (
+            (* ensure all rows have the same type and can only be complex, int or float *)
+            match curr_type, prev_type with
+            | T.Int, T.Int -> T.Int
+            | T.Float, T.Int -> T.Float
+            | T.Int, T.Float -> T.Float
+            | T.Float, T.Float -> T.Float
+            | T.Complex, T.Complex -> T.Complex
+            | _ ->  failwith @@ 
+              "Array element type conflict: " 
+              ^ T.str_of_type curr_type ^ " -.- " ^ T.str_of_type prev_type
+            )
+            in
+          env, (exprs :: rows), curr_type', row_length ))
+    (env, [], T.Void, 0) exprs_list_list in
+  (env, List.rev matrix , matrix_type)
+  
 (*
 and gen_lvalue = function
   | A.Variable(id) -> 
