@@ -1,16 +1,16 @@
 module A = Ast
 
 type lvalue =
-  | Variable of A.ident * A.datatype
-  | ArrayElem of A.ident * expr list * A.datatype
+  | Variable of A.datatype * A.ident
+  | ArrayElem of A.datatype * A.ident * expr list
 (* TODO? add MatrixElem of A.ident * expr * A.datatype *)
 
 and expr =
-  | Binop of expr * A.binop * expr * A.datatype
-  | AssignOp of lvalue * A.binop * expr * A.datatype
-  | Unop of A.unop * expr * A.datatype
-  | PostOp of lvalue * A.postop * A.datatype
-  | Assign of lvalue * expr * A.datatype
+  | Binop of A.datatype * expr * A.binop * A.datatype * expr
+  | AssignOp of A.datatype * lvalue * A.binop * A.datatype * expr
+  | Unop of A.unop * A.datatype * expr
+  | PostOp of A.datatype * lvalue * A.postop
+  | Assign of A.datatype * lvalue * A.datatype * expr
   | IntLit of string
   | BoolLit of string
   | FractionLit of expr * expr
@@ -18,9 +18,9 @@ and expr =
   | FloatLit of string
   | ComplexLit of expr * expr
   | StringLit of string
-  | ArrayLit of expr list * A.datatype
-  | MatrixLit of expr list list * A.datatype
-  | Membership of expr * expr * A.datatype
+  | ArrayLit of A.datatype * expr list
+  | MatrixLit of A.datatype * expr list list
+  | Membership of A.datatype * expr * A.datatype * expr
   | FunctionCall of A.ident * expr list
   | Lval of lvalue
   
@@ -28,7 +28,7 @@ and expr =
 type decl =
   | AssigningDecl of A.datatype * A.ident * expr
   | PrimitiveDecl of A.datatype * A.ident
-  | ArrayDecl of A.datatype * A.ident * expr list
+  (* | ArrayDecl of A.datatype * A.ident * expr list *)
 
 type range = Range of expr * expr * expr
 
