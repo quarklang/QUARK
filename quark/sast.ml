@@ -6,6 +6,8 @@ type op_tag =
   | OpVerbatim  (* no change to the operator *)
   | CastComplex1 (* cast the first arg to complex *)
   | CastComplex2 (* cast the second arg to complex *)
+  | CastFraction1 (* cast the first arg to fraction *)
+  | CastFraction2 (* cast the second arg to fraction *)
   | OpConcat (* list concatenation *)
 
 type lvalue =

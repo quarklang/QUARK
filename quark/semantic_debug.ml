@@ -319,6 +319,7 @@ let rec gen_s_expr env = function
 
       let binop_math op type1 type2 = 
           let notmod = op <> A.Mod in
+          let notmodpow = notmod && op <> A.Pow in
           match type1, type2 with
           | T.Float, T.Int
           | T.Int,   T.Float 
@@ -332,9 +333,11 @@ let rec gen_s_expr env = function
               T.Complex, S.CastComplex2
           | T.Complex, T.Complex when notmod -> 
               T.Complex, S.OpVerbatim
-          | T.Int, T.Fraction
-          | T.Fraction, T.Int
-          | T.Fraction, T.Fraction when notmod && op <> A.Pow -> 
+          | T.Int, T.Fraction when notmodpow -> 
+              T.Fraction, S.CastFraction1
+          | T.Fraction, T.Int when notmodpow -> 
+              T.Fraction, S.CastFraction2
+          | T.Fraction, T.Fraction  when notmodpow ->
               T.Fraction, S.OpVerbatim
           | t1, t2 -> failwith @@ err_msg op t1 t2 in
 
