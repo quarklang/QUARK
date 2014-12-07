@@ -241,6 +241,15 @@ let rec gen_datatype = function
       failwith "Bad matrix type")
 *)
 
+(* Helper: interchangeable int and float *)
+let check_int_float typ1 typ2 return_stuff error_msg =
+    match typ1, typ2 with
+    | T.Int, T.Int
+    | T.Float, T.Int
+    | T.Int, T.Float
+    | T.Float, T.Float -> return_stuff
+    | _ -> failwith error_msg
+
 (* return env', S.expr, type *)
 let rec gen_s_expr env = function
   (* simple literals *)
@@ -249,19 +258,17 @@ let rec gen_s_expr env = function
   | A.FloatLit(f) -> env, S.FloatLit(f), T.Float
   | A.StringLit(s) -> env, S.StringLit(s), T.String
 
-  | A.FractionLit(num_expr, denom_expr) -> 
-    let env, s_num_expr, num_typ = gen_s_expr env num_expr in
-    let env, s_denom_expr, denom_typ = gen_s_expr env denom_expr in (
-    match num_typ, denom_typ with
-    | T.Int, T.Int
-    | T.Float, T.Int
-    | T.Int, T.Float
-    | T.Float, T.Float -> 
-      env, S.FractionLit(s_num_expr, s_denom_expr), T.Fraction
-    | _ -> failwith @@ "Invalid fraction operand type: (" ^ 
-            T.str_of_type num_typ ^ ", " ^ T.str_of_type denom_typ ^ ")"
-    )
-  | A.QRegLit(expr1, expr2) -> 
+  (* compound literals *)
+  | A.FractionLit(num_ex, denom_ex) -> 
+    let env, s_num_ex, num_typ = gen_s_expr env num_ex in
+    let env, s_denom_ex, denom_typ = gen_s_expr env denom_ex in
+    check_int_float 
+      num_typ denom_typ 
+      (env, S.FractionLit(s_num_ex, s_denom_ex), T.Fraction)
+      ("Invalid fraction operand type: (" ^ 
+            T.str_of_type num_typ ^ ", " ^ T.str_of_type denom_typ ^ ")")
+            
+  | A.QRegLit(ex1, ex2) -> 
     env, S.IntLit("TODO"), T.Int
       (* checks expressions first *)
       (*
