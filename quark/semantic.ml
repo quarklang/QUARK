@@ -2,769 +2,688 @@ module A = Ast
 module S = Sast
 module T = Type
 
-exception Error of string
+module StrMap = Map.Make(String)
 
-(* TODO need a valid variable_decl type! may have one already *)
-type variable_decl = {
-    todo: string
+(* utilities *)
+let fst_2 = function x, _ -> x;;
+let snd_2 = function _, x -> x;;
+let fst_3 = function x, _, _ -> x;;
+let snd_3 = function _, x, _ -> x;;
+let trd_3 = function _, _, x -> x;;
+
+let get_id (A.Ident name) = name
+let get_raw_type = function 
+  | A.DataType(typ) -> typ
+  | _ -> failwith "shouldn't happen"
+
+(****** Environment definition ******)
+type func_info = {
+  f_args: A.datatype list;
+  f_return: A.datatype;
+  f_defined: bool; (* for forward declaration *)
 }
 
-type symbol_table = {
-    parent: symbol_table option;
-    variables: variable_decl list; (* TODO need actual type. see above *)
+type var_info = {
+  v_type: A.datatype;
+  v_depth: int; (* how deep in scope *)
 }
 
-type translation_environment = {
-    scope: symbol_table;        (* symbol table for vars (includes funcs) *)
-    return_type: Type.vartype;  (* function's return type *)
-    return_seen: bool
+(* map string ident name to datatype or function info *)
+type environment = {
+    var_table: var_info StrMap.t;
+    func_table: func_info StrMap.t;
+    (* current function name waiting for 'return' *)
+    (* if "", we are not inside any function *)
+    func_current: string; 
+    depth: int;
 }
 
-let rec find_variable (scope : symbol_table) name =
-    try
-      List.find (fun (s, _, _, _) -> s = name) scope.variables
-    with Not_found ->
-      match scope.parent with
-          Some(parent) -> find_variable parent name
-        | _ -> raise Not_found
+(************** DEBUG ONLY **************)
+(* print out the func decl param list *)
+let debug_s_decl_list f_args =
+  let paramStr = 
+    List.fold_left 
+      (fun s typ -> s ^ (A.str_of_datatype typ) ^ ", ") "" f_args
+  in
+  if paramStr = "" then ""
+  else
+    String.sub paramStr 0 ((String.length paramStr) - 2)
+  
+(* print out the func decl param list *)
+let debug_env env msg =
+  begin
+    print_endline @@ "ENV " ^ msg ^ "{";
+    print_string "Var= ";
+    StrMap.iter 
+      (fun key vinfo -> print_string @@ 
+      key ^ ": " ^ A.str_of_datatype vinfo.v_type ^ "(" ^ string_of_int vinfo.v_depth ^ "); ")
+      env.var_table;
+    print_string "\nFunc= ";
+    StrMap.iter 
+      (fun key finfo -> print_endline @@ 
+        key ^ "(" ^ string_of_bool finfo.f_defined ^ "): " ^ 
+        debug_s_decl_list finfo.f_args ^ " => " ^ A.str_of_datatype finfo.f_return ^ ";")
+      env.func_table;
+    print_endline @@ "Current= " ^ env.func_current;
+    print_endline "}";
+  end
 
-(*extracts the type from a datatype declaration*)
-let rec get_type_from_datatype = function
-  A.Datatype(typ) -> typ
-| A.Arraytype(typ) -> get_type_from_datatype typ
+(****** Environment var_table ******)
+(* return updated var_table field (keep env.depth) *)
+let update_var_table env var_typ var_id =
+  StrMap.add (get_id var_id)
+    {
+      v_type = var_typ;
+      v_depth = env.depth
+    }
+    env.var_table
+  
+(* if doesn't exist, return NoneType *)
+let get_env_var env var_id =
+  let id = get_id var_id in
+  try
+    StrMap.find id env.var_table
+  with Not_found -> 
+    (* if the identifier appears as a func_id, then error! *)
+    if StrMap.mem id env.func_table then
+      failwith @@ "Confuse a function with a variable: " ^ id
+    else
+      { 
+        v_type = A.NoneType; 
+        v_depth = -1
+      }
 
-(*extracts the type and name from a Formal declaration*)
-let get_name_type_from_formal env = function
-    Formal(datatype,ident) -> (ident,datatype,None)
+let update_env_var env var_typ var_id =
+  let vinfo = get_env_var env var_id in
+  match vinfo.v_type with
+  | A.NoneType 
+  | _ when vinfo.v_depth < env.depth ->  (* we can safely add the var if it's in the inner scope *)
+  {
+    var_table = update_var_table env var_typ var_id;
+    func_table = env.func_table;
+    func_current = env.func_current;
+    depth = env.depth;
+  }
+  | _ -> failwith @@ "Variable redeclaration: " ^ A.str_of_datatype var_typ ^ " " ^ get_id var_id
 
-(* Find the variable. If you find the variable:
-	Create a new list with the updated variable *)
-let update_variable env name, datatype, value = 
-	let _,_,_ = find_variable name
-	let new_env =
-        match location with 
-		1 -> 
-			(* update local vars *)
-			let new_vars = List.map (fun (n, t, v) -> if(n=name) then (name, datatype, value) else (n, t, v)) env.var_scope.variables in
-			let new_sym_table = {parent = env.var_scope.parent; variables = new_vars;} in
-			let new_env = {env with var_scope = new_sym_table} in
-			new_env
-		| 2 -> 
-			(* update global vars *)
-			let new_vars = List.map (fun (n, t, v) -> if(n=name) then (name, datatype, value) else (n, t, v)) env.global_scope.variables in
-			let new_sym_table = {parent = env.var_scope.parent; variables = new_vars;} in
-			let new_env = {env with global_scope = new_sym_table} in
-			new_env
-        | _ -> raise(Error("Undefined scope"))
-	in new_envf
+(* go one scope deeper *)
+let incr_env_depth env = 
+  {
+    var_table = env.var_table;
+    func_table = env.func_table;
+    func_current = env.func_current;
+    depth = env.depth + 1;
+  }
 
-let update_list expr_list index expr = 
-	let xarr = Array.of_list expr_list in
-	let _ = Array.set xarr index expr in
-	let xlist = Array.to_list xarr in
-	xlist
+(****** Environment func_table ******)
+let get_env_func env func_id =
+  try
+    StrMap.find (get_id func_id) env.func_table
+  with Not_found -> { 
+    f_args = []; 
+    f_return = A.NoneType;
+    f_defined = false;
+  }
+  
+(* Used in A.FunctionDecl *)
+(* add all formal params to updated var_table *)
+let update_env_func env return_type func_id s_param_list is_defined =
+  let finfo = get_env_func env func_id in
+  let errmsg_str = ": " ^ get_id func_id ^ "()" in
+  let s_arg_types = 
+    List.map (function
+        | S.PrimitiveDecl(typ, id) -> typ
+        | _ -> failwith @@ "Function parameter list declaration error" ^ errmsg_str
+        ) s_param_list in
+  (* add formal params to var scope. This is a lambda function *)
+  let add_formal_var_lambda = 
+    List.fold_left 
+        (fun env -> function
+        | S.PrimitiveDecl(typ, id) -> 
+          update_env_var env typ id
+        | _ -> failwith @@ "Function parameter list declaration error" ^ errmsg_str) in
+  (* utility function *)
+  let add_new_func_table_to_env func_table' =
+    { 
+      var_table = env.var_table;
+      func_table = StrMap.add (get_id func_id) func_table' env.func_table;
+      func_current = 
+        (* if forward_decl, we don't have a func_current *)
+        if is_defined then get_id func_id else ""; 
+      depth = env.depth;
+    } in
+   
+  match finfo.f_return with
+  | A.NoneType -> begin
+    let func_table' = { 
+      (* only keep the formal param types *)
+      f_args = s_arg_types; 
+      f_return = return_type;
+      f_defined = is_defined
+    } in
+    let env' = add_new_func_table_to_env func_table' in
+    if is_defined then
+      (* add the formal param idents to scope *)
+      add_formal_var_lambda env' s_param_list
+    else
+      (* simply forward decl, don't add stuff to scope *)
+      env'
+    end
+  | _ when not finfo.f_defined ->
+    if is_defined then
+      (* check param list and return type, should be the same *)
+      if finfo.f_return = return_type && finfo.f_args = s_arg_types then
+        let func_table' = { 
+          f_args = finfo.f_args; 
+          f_return = finfo.f_return;
+          f_defined = true
+        } in
+        let env' = add_new_func_table_to_env func_table' in
+        add_formal_var_lambda env' s_param_list
+      else
+        failwith @@ "Incompatible forward declaration" ^ errmsg_str
+    else
+      failwith @@ "Function forward redeclaration" ^ errmsg_str
+  | _ -> failwith @@ "Function redefinition" ^ errmsg_str
 
-let get_int_from_var env v = 
-    let (_,ty,value) = try find_variable env v with Not_found -> raise(Error("Cannot
-    index a non-initialized variable")) in match value with
-        Some(ExprVal(IntLit(x))) -> x
-        | _ -> raise(Error("Non-integer variable value"))
 
 
-let get_type = function
-    | S.Binop(_, _, _, t) -> t
-    | S.AssignOp(_, _, _, t) -> t
-    | S.Unop(_, _, t) -> t
-    | S.PostOp(_, _, t) -> t
-    | S.PostOp(_, _, t) -> t
-    | S.Assign(_, _, t) -> t
-    | S.IntLit(_, t) -> t
-    | S.BoolLit(_, t) -> t
-    | S.FractionLit(_, _, t) -> t
-    | S.QRegLit(_, _, t) -> t
-    | S.FloatLit(_, t) -> t
-    | S.ComplexLit(_, _, t) -> t
-    | S.StringLit(_, t) -> t
-    | S.ArrayLit(_, t) -> t
-    | S.MatrixLit(_, t) -> t
-    | S.Cast(_, _, t) -> t
-    | _ -> raise(Error "There is not get_type() implemented for this type");
-    (* TODO why don't these have types in sast?
-    |FunctionCall(_, _, _, t) -> t
-    | Lva(_,
-    *)
+let gen_unop = function
+  A.Neg -> "-"
+| A.Not -> "!"
+| A.BitNot -> "~"
 
-(*Semantic checking on expressions*)
-let rec check_expr expr env =
+let gen_postop = function
+  A.Inc -> "++"
+| A.Dec -> "--"
 
-    (* check_expr() helper functions *)
+let gen_binop = function
+  A.Add -> "+"
+| A.Sub -> "-"
+| A.Mul -> "*"
+| A.Div -> "/"
+| A.Mod -> "%"
+| A.Pow -> "**"
+| A.Lshift -> "<<"
+| A.Rshift -> ">>"
+| A.Less -> "<"
+| A.LessEq -> "<="
+| A.Greater -> ">"
+| A.GreaterEq -> ">="
+| A.Eq -> "=="
+| A.NotEq -> "!="
+| A.BitAnd -> "&"
+| A.BitXor -> "^"
+| A.BitOr -> "|"
+| A.And -> "&&"
+| A.Or -> "||"
+| A.AddEq -> "+="
+| A.SubEq -> "-="
+| A.MulEq -> "*="
+| A.DivEq -> "/="
+| A.AndEq -> "&="
+| _ -> failwith "unhandled binop"
 
-    let check_array exprs env = 
-        (* evaluates each expr in an arr and ensures all exprs are the same type.
-         * returns: array of checked exprs * T.vartype of array * env. *)
-        let checked_array, array_type, env = List.fold_left
 
-            (* evaluate each expression in the list *)
-            (fun (checked_exprs_acc, prev_type, env) unchecked_expr ->
-                let checked_expr, env = check_expr unchecked_expr env in
-                let expr_type = get_type checked_expr in
-                match prev_type with
-                    | T.Void ->
-                        (* means we're seeing the 1st expr in the array and now know array type *)
-                        checked_expr :: checked_exprs_acc, expr_type, env
-                    | array_type ->
-                        (* ensure all elems in array are the same type *)
-                        if array_type <> expr_type
-                        then raise(Error "All elements in an array must be the same type");
-                        checked_expr :: checked_exprs_acc, array_type, env)
+(*
+let rec gen_datatype = function
+	| A.DataType(t) -> 
+    gen_vartype t
+	| A.ArrayType(t) -> 
+		gen_datatype t ^ "[]"
+	| A.MatrixType(t) -> 
+   (match t with
+    | A.DataType(matType) -> 
+      (match matType with
+      (* only support 3 numerical types *)
+      | T.Int | T.Float | T.Complex -> 
+      "Matrix<" ^ gen_vartype matType ^ ", Dynamic, Dynamic>"
+      | _ -> failwith "Non-numerical matrix type")
+    (* we shouldn't support float[][[]] *)
+    | _ -> 
+      failwith "Bad matrix type")
+*)
 
-        ([], T.Void, env) exprs in
-        List.rev(checked_array), array_type, env
-    in
+(* Helper: interchangeable int and float *)
+let check_int_float typ1 typ2 return_stuff error_msg =
+    match get_raw_type typ1, get_raw_type typ2 with
+    | T.Int, T.Int
+    | T.Float, T.Int
+    | T.Int, T.Float
+    | T.Float, T.Float -> return_stuff
+    | _ -> failwith error_msg
 
-    match expr with
-        | A.IntLit(i) -> S.IntLit(i, A.DataType(T.Int)), env
-        | A.BoolLit(b) -> S.BoolLit(b, A.DataType(T.Bool)), env
-        | A.FloatLit(f) -> S.FloatLit(f, A.DataType(T.Float)), env
-        | A.StringLit(s) -> S.StringLit(s, A.DataType(T.String)), env
 
-        | A.FractionLit(num_expr, denom_expr) -> 
-            (* checks fraction expressions first *)
-            let num_expr, env   = check_expr num_expr env in
-            let denom_expr, env = check_expr denom_expr env in
-            S.FractionLit(num_expr, denom_expr, A.DataType(T.Fraction)), env
+(* Main expr semantic checker entry *)
+(* return env', S.expr, type *)
+let rec gen_s_expr env = function
+  (* simple literals *)
+  | A.IntLit(i) -> env, S.IntLit(i), A.DataType(T.Int)
+  | A.BoolLit(b) -> env, S.BoolLit(b), A.DataType(T.Bool)
+  | A.FloatLit(f) -> env, S.FloatLit(f), A.DataType(T.Float)
+  | A.StringLit(s) -> env, S.StringLit(s), A.DataType(T.String)
 
-        | A.QRegLit(expr1, expr2) -> 
-            (* checks expressions first *)
-            let expr1, env   = check_expr expr1 env in
-            let expr2, env = check_expr expr2 env in
-            S.QRegLit(expr1, expr2, A.DataType(T.QReg)), env
+  (* compound literals *)
+  | A.FractionLit(num_ex, denom_ex) -> 
+    let env, s_num_ex, s_denom_ex, num_typ, denom_typ = 
+      check_compound_literal env num_ex denom_ex "fraction" in
+    env, S.FractionLit(num_typ, s_num_ex, denom_typ, s_denom_ex), A.DataType(T.Fraction)
+            
+  | A.QRegLit(qex1, qex2) -> 
+    let env, s_qex1, s_qex2, q1_typ, q2_typ = 
+      check_compound_literal env qex1 qex2 "qreg" in
+    env, S.QRegLit(q1_typ, s_qex1, q2_typ, s_qex2), A.DataType(T.QReg)
 
-        | A.ComplexLit(real_expr, im_expr) -> 
-            (* checks expressions first *)
-            let real_expr, env   = check_expr real_expr env in
-            let im_expr, env = check_expr im_expr env in
-            S.ComplexLit(real_expr, im_expr, A.DataType(T.Complex)), env
+  | A.ComplexLit(real_ex, im_ex) -> 
+    let env, s_real_ex, s_im_ex, real_typ, im_typ = 
+      check_compound_literal env real_ex im_ex "complex" in
+    env, S.ComplexLit(real_typ, s_real_ex, im_typ, s_im_ex), A.DataType(T.Complex)
 
-        | A.ArrayLit(exprs) ->
-            let arr, typ, env = check_array exprs env in
-            S.ArrayLit(arr, A.DataType(typ)), env
+  | A.ArrayLit(exprs) ->
+    let env, s_exprs, elem_type = gen_s_array env exprs in
+    let _tmp = A.ArrayType(elem_type) in
+    let _ = print_endline @@ "ARRAY " ^ (A.str_of_datatype _tmp) in
+    env, S.ArrayLit(elem_type, s_exprs), A.ArrayType(elem_type)
 
-        | A.MatrixLit(exprs_list_list) ->
-            (* each expression list (aka row) must be the same length.
-             * each expression list must be a valid expression list. *)
-            let matrix, matrix_type, _, env = List.fold_left
+  | A.MatrixLit(exprs_list_list) ->
+    let env, s_matrix, elem_type = gen_s_matrix env exprs_list_list in
+    let _tmp = A.MatrixType(A.DataType(elem_type)) in
+    let _ = print_endline @@ "MATRIX " ^ (A.str_of_datatype _tmp) in
+    env, S.MatrixLit(elem_type, s_matrix), A.MatrixType(A.DataType(elem_type))
+  
+  (* Binary ops *)
+  (* '+' used for matrix addition, '&' for array concatenation *)
+  | A.Binop(expr1, op, expr2) -> 
+    (* helper functions for Binop case *)
+    let err_msg_helper func_str_of op type1 type2 =
+      "Incompatible types for " ^ A.str_of_binop op ^ ": " 
+      ^ func_str_of type1 ^ " -.- " ^ func_str_of type2 in
+    let err_msg = err_msg_helper T.str_of_type in
+    
+    (* check left and right children *)
+    let env, s_expr1, ex_type1 = gen_s_expr env expr1 in
+    let env, s_expr2, ex_type2 = gen_s_expr env expr2 in
+    begin
+    match ex_type1, ex_type2 with 
+    (* cases with raw types *)
+    | A.DataType(type1), A.DataType(type2) -> 
+      begin
+      let logic_relational op type1 type2 =
+        match type1, type2 with
+          | T.Int,   T.Int 
+          | T.Float, T.Float 
+          | T.Int,   T.Float 
+          | T.Float, T.Int -> T.Bool, S.OpVerbatim
+          (* | T.Fraction, T.Fraction -> T.Bool *)
+          | t1, t2 -> failwith @@ err_msg op t1 t2 in
 
-                (fun (rows, curr_type, row_length, env) exprs -> 
-                    (* evaluate each row where each row is an expr list *)
-                    let exprs, row_type, env = check_array exprs env in
-                    let exprs_length = List.length exprs in
+      let binop_math op type1 type2 = 
+          let notmod = op <> A.Mod in
+          let notmodpow = notmod && op <> A.Pow in
+          match type1, type2 with
+          | T.Float, T.Int
+          | T.Int,   T.Float 
+          | T.Float, T.Float when notmod -> 
+              T.Float, S.OpVerbatim
+          | T.Int,   T.Int -> 
+              T.Int, S.OpVerbatim
+          | T.Float, T.Complex when notmod -> 
+              T.Complex, S.CastComplex1
+          | T.Complex, T.Float when notmod -> 
+              T.Complex, S.CastComplex2
+          | T.Complex, T.Complex when notmod -> 
+              T.Complex, S.OpVerbatim
+          | T.Int, T.Fraction when notmodpow -> 
+              T.Fraction, S.CastFraction1
+          | T.Fraction, T.Int when notmodpow -> 
+              T.Fraction, S.CastFraction2
+          | T.Fraction, T.Fraction  when notmodpow ->
+              T.Fraction, S.OpVerbatim
+          | t1, t2 -> failwith @@ err_msg op t1 t2 in
 
-                    match curr_type with
-                        | T.Void -> 
-                            (* means this is the 1st row which means we now know the matrix type *)
-                            (exprs :: rows), row_type, exprs_length, env
+      let logic_basic op type1 type2 =
+        match type1, type2 with
+          | T.Bool, T.Bool -> T.Bool, S.OpVerbatim
+          | t1, t2 -> failwith @@ err_msg op t1 t2 in
 
-                        | matrix_type ->
-                            (* ensure all rows have the same type ... *)
-                            if matrix_type <> row_type
-                            then raise(Error "All elements in a matrix must be the same type");
+      let logic_equal op type1 type2 = 
+        match type1, type2 with
+          | T.Float, T.Int
+          | T.Int,   T.Float -> T.Bool, S.OpVerbatim
+          | t1, t2 when t1 = t2 -> T.Bool, S.OpVerbatim
+          | t1, t2 -> failwith @@ err_msg op t1 t2 in
 
-                            (* ... and are the same length*)
-                            if row_length <> exprs_length
-                            then raise(Error "All rows in a matrix must be the same length");
+      let result_type, optag = 
+        match op with 
+          | A.Add         -> binop_math op type1 type2
+          | A.Sub         -> binop_math op type1 type2
+          | A.Mul         -> binop_math op type1 type2
+          | A.Div         -> binop_math op type1 type2
+          | A.Pow         -> binop_math op type1 type2
+          | A.Mod         -> binop_math op type1 type2
+          | A.Eq          -> logic_equal op type1 type2 
+          | A.NotEq       -> logic_equal op type1 type2
+          | A.Less        -> logic_relational op type1 type2 
+          | A.LessEq      -> logic_relational op type1 type2
+          | A.Greater     -> logic_relational op type1 type2
+          | A.GreaterEq   -> logic_relational op type1 type2
+          | A.And         -> logic_basic op type1 type2
+          | A.Or          -> logic_basic op type1 type2
+          | _ -> failwith "TODO match op"
+          (* TODO
+          | BitAnd
+          | BitOr
+          | BitXor
+          | Lshift
+          | Rshift
+          | Query
+          | QueryUnreal
+          *)
+      in
+      env, S.Binop(s_expr1, op, s_expr2, optag), A.DataType(result_type)
+      end
+    (* At least one of the operand is an array/matrix *)
+    | _ -> failwith "TODO"
+    end
+  (* Unary ops *)
+  | A.Unop(op, ex) -> 
+    env, S.IntLit("TODO"), A.DataType(T.Int)
+      (*
+    gen_unop op ^ gen_s_expr ex
+      *)
+  
+  (* Assignment *)
+  | A.Assign(lval, ex) -> 
+    env, S.IntLit("TODO"), A.DataType(T.Int)
+      (*
+    gen_lvalue lval ^ " = " ^ gen_s_expr ex
+      *)
+  | A.Lval(lval) -> 
+    env, S.IntLit("TODO"), A.DataType(T.Int)
+      (*
+    gen_lvalue lval
+      *)
+  
+  (* Special assignment *)
+  | A.AssignOp(lval, op, ex) -> 
+    env, S.IntLit("TODO"), A.DataType(T.Int)
+      (*
+    gen_lvalue lval ^" "^ gen_binop op ^" "^ gen_s_expr ex
+      *)
+  | A.PostOp(lval, op) -> 
+    env, S.IntLit("TODO"), A.DataType(T.Int)
+      (*
+    gen_lvalue lval ^" "^ gen_postop op
+      *)
+    
+  (* Membership testing with keyword 'in' *)
+  | A.Membership(exElem, exArray) -> 
+    env, S.IntLit("TODO"), A.DataType(T.Int)
+      (*
+    (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
+    (* Shouldn't change over calls!!! *)
+    let exElem = gen_s_expr exElem in
+    let exArray = gen_s_expr exArray in
+      "std::find(" ^surr exArray^ ".begin(), " ^surr exArray^ ".end(), " ^
+      exElem^ ") != " ^surr exArray^ ".end()"
+      *)
+    
+  (* Function calls *)
+  | A.FunctionCall(funcId, exlist) -> 
+    env, S.IntLit("TODO"), A.DataType(T.Int)
+      (*
+    get_id funcId ^ surr( gen_expr_list exlist )
+      *)
+  
+  | _ -> failwith "some expr not parsed"
 
-                            (exprs :: rows), row_type, row_length, env)
+(* Helper: including fraction, complex and qreg *)
+and check_compound_literal env ex1 ex2 name =
+  let env, s_ex1, typ1 = gen_s_expr env ex1 in
+  let env, s_ex2, typ2 = gen_s_expr env ex2 in
+  check_int_float 
+    typ1 typ2
+    (env, s_ex1, s_ex2, get_raw_type typ1, get_raw_type typ2)
+    ("Invalid " ^ name ^ " operand type: (" ^ 
+          A.str_of_datatype typ1 ^ ", " ^ A.str_of_datatype typ2 ^ ")")
 
-                ([], T.Void, 0, env) exprs_list_list in
-            S.MatrixLit(List.rev matrix, A.DataType(matrix_type)), env
+and gen_s_array env exprs =
+  let env, s_exprs, array_type = List.fold_left
+    (* evaluate each expression in the list *)
+    (fun (env, checked_exprs_acc, prev_type) unchecked_expr ->
+        let env, checked_expr, expr_type = gen_s_expr env unchecked_expr in
+        match prev_type with
+        | A.NoneType ->
+          (* means we're seeing the 1st expr in the array and now know array type *)
+          env, checked_expr :: checked_exprs_acc, expr_type
+        | array_type -> (
+          (* ensure all elems in array are the same type *)
+          match array_type, expr_type with (* <> for != *)
+          | A.DataType(T.Int), A.DataType(T.Float)
+          | A.DataType(T.Float), A.DataType(T.Int) -> 
+            env, checked_expr :: checked_exprs_acc, A.DataType(T.Float)
+          | _ when array_type = expr_type -> 
+            env, checked_expr :: checked_exprs_acc, array_type
+          | _ ->  failwith @@ 
+            "Array element type conflict: " 
+            ^ A.str_of_datatype array_type ^ " -.- " ^ A.str_of_datatype expr_type)
+          )
+    (env, [], A.NoneType) exprs in
+  (env, List.rev s_exprs , array_type)
 
-        | A.Binop(expr1, operation, expr2) -> 
-            (* helper functions for Binop case *)
-            let logic_relational type1 type2 = match type1, type2 with
-                | T.Int,   T.Int 
-                | T.Float, T.Float 
-                | T.Int,   T.Float 
-                | T.Float, T.Int -> T.Bool
-                | _ -> raise(Error "Incompatible types for relational logic.") in
+and gen_s_matrix env exprs_list_list =
+  let env, matrix, matrix_type, _ = List.fold_left
+    (fun (env, rows, curr_type, row_length) exprs -> 
+        (* evaluate each row where each row is an expr list *)
+        let env, exprs, row_type = gen_s_array env exprs in
+        let prev_type = 
+            match row_type with 
+            | A.DataType(prev_type) -> (
+              match prev_type with
+              | T.Int  | T.Float  | T.Complex -> prev_type
+              | _ -> failwith @@ "Matrix element type unsupported: " ^ T.str_of_type prev_type
+              )
+            | _ -> failwith @@ "Invalid matrix row type: " ^ A.str_of_datatype row_type
+        in
+        let exprs_length = List.length exprs in
 
-            let math type1 type2 = match type1, type2 with
-                | T.Float, T.Int
-                | T.Int,   T.Float 
-                | T.Float, T.Float  -> T.Float
-                | T.Int,   T.Int    -> T.Int
-                | _ -> raise(Error "Incompatible types for math.") in
+        match curr_type with
+        | T.Void -> 
+            (* means this is the 1st row which means we now know the matrix type *)
+            env, (exprs :: rows), prev_type, exprs_length
 
-            let logic_basic type1 type2 = match type1, type2 with
-                | T.Bool, T.Bool -> T.Bool
-                | _ -> raise(Error "Incompatible types for basic logic (ie. 'and', 'or').") in
+        | _ -> (
+          let curr_type' = 
+            (* the same length*)
+            if row_length <> exprs_length
+            then failwith "All rows in a matrix must be the same length"
+            else (
+            (* ensure all rows have the same type and can only be complex, int or float *)
+            match curr_type, prev_type with
+            | T.Float, T.Int
+            | T.Int, T.Float
+            | T.Float, T.Float -> T.Float
+            | T.Int, T.Int -> T.Int
+            | T.Complex, T.Complex -> T.Complex
+            | _ ->  failwith @@ 
+              "Array element type conflict: " 
+              ^ T.str_of_type curr_type ^ " -.- " ^ T.str_of_type prev_type
+            )
+            in
+          env, (exprs :: rows), curr_type', row_length ))
+    (env, [], T.Void, 0) exprs_list_list in
+  (env, List.rev matrix , matrix_type)
+  
+(*
+and gen_lvalue = function
+  | A.Variable(id) -> 
+    get_id id
+  | A.ArrayElem(id, exlist) -> 
+    get_id id ^ "[" ^ gen_expr_list exlist ^ "]"
 
-            let logic_equal type1 type2 = match type1, type2 with
-                | type1', type2' when type1' == type2' -> T.Bool
-                | _ -> raise(Error "Incompatible types for equal logic.") in
+and gen_matrix_list exlistlist =
+  let exlistlistStr = 
+    List.fold_left 
+      (fun s exlist -> s ^ gen_expr_list exlist ^ "; ") "" exlistlist
+  in
+  (* get rid of the last 2 chars ', ' *)
+  if exlistlistStr = "" then ""
+  else
+    String.sub exlistlistStr 0 ((String.length exlistlistStr) - 2)
+  
 
-            (* check left and right children *)
-            let expr1, type1 = check_expr expr1 env
-            and expr2, type2 = check_expr expr2 env in
+	
+let rec gen_range id = function
+	| A.Range(exStart, exEnd, exStep) -> 
+    let exStart = gen_s_expr exStart in
+    let exEnd = gen_s_expr exEnd in
+    let exStep = gen_s_expr exStep in
+    (* !!!! Needs to assign exStart, exEnd and exStep to compiled temp vars *)
+    (* Shouldn't change over iteration!!! *)
+    let exCmp = surr exEnd ^">"^ surr exStart ^" ? " in
+    let id = get_id id in
+      "(" ^id^ "=" ^exStart^ "; " ^
+      exCmp^ id^" < " ^surr exEnd^ " : " ^id^ " > " ^surr exEnd^ "; " ^
+      exCmp^ id^" += " ^surr exStep^ " : " ^id^ " -= " ^surr exStep^ ")"
+  | _ -> failwith "range fatal error"
+	
+let rec gen_iterator = function
+  | A.RangeIterator(id, rng) -> 
+    gen_range id rng
+  | A.ArrayIterator(id, ex) -> 
+    get_id id ^ " in " ^ gen_s_expr ex
+*)
 
-            let result_type = match operation with 
-                | A.Add         -> math type1 type2
-                | A.Sub         -> math type1 type2
-                | A.Mul         -> math type1 type2
-                | A.Div         -> math type1 type2
-                | A.Mod         -> math type1 type2
-                | A.Pow         -> math type1 type2
-                | A.Eq          -> logic_equal type1 type2 
-                | A.NotEq       -> logic_equal type1 type2
-                | A.Less        -> logic_relational type1 type2 
-                | A.LessEq      -> logic_relational type1 type2
-                | A.Greater     -> logic_relational type1 type2
-                | A.GreaterEq   -> logic_relational type1 type2
-                | A.And         -> logic_basic type1 type2
-                | A.Or          -> logic_basic type1 type2
-                (* TODO
-                | BitAnd
-                | BitOr
-                | BitXor
-                | Lshift
-                | Rshift
-                | AddEq
-                | SubEq
-                | MulEq
-                | DivEq
-                | AndEq
-                | Query
-                | QueryUnreal
-                *)
-                in
-            S.Binop(expr1, operation, expr2, A.DataType(result_type)), env
+let gen_s_param = function 
+  | A.PrimitiveDecl(typ, id) -> 
+    S.PrimitiveDecl(typ, id)
+  | _ -> failwith "Function parameter list declaration error"
 
+(* Used in A.FunctionDecl *)
+let gen_s_param_list param_list =
+  List.map 
+    (fun param -> gen_s_param param) param_list
+    
+(* decl *)
+let rec gen_s_decl env = function
+  (* update_env_var checks redeclaration error *)
+  | A.AssigningDecl(typ, id, ex) -> 
+    let env' = update_env_var env typ id in
+    (env', S.AssigningDecl(typ, id, S.BoolLit("TODO"))) (* TODO gen_s_expr *)
+  | A.PrimitiveDecl(typ, id) -> 
+    let env' = update_env_var env typ id in
+    (env', S.PrimitiveDecl(typ, id))
+
+
+(* Main entry point: take AST and convert to SAST *)
+(* return env, [stmt] *)
+let rec gen_sast env = function
+  | [] -> (env, [])
+  | stmt :: rest ->
+    let env_new, s_stmt =
+      match stmt with
+			(* top level statements *)
+      | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
+        let _ = debug_env env "before FunctionDecl" in
+        let s_param_list = gen_s_param_list param_list in
+        let env' = incr_env_depth env in
+        let env' = update_env_func env' return_type func_id s_param_list true in
+        let _ = debug_env env' "after FunctionDecl" in
+        (* get the function declaration, then close 'func_current' *)
+        let function_decl = S.FunctionDecl(return_type, func_id, s_param_list, 
+          snd_2 @@ gen_sast env' stmt_list) in
+        let env'' = { 
+          var_table = env.var_table; 
+          func_table = env'.func_table;
+          func_current = "";
+          depth = env.depth;
+        } in
+        let _ = debug_env env'' "closed after FuncDecl" in
+        (env'', function_decl)
+          
         (*
-        | A.AssignOp(lvalue, binop, expr) ->
-        | A.Assign(lvalue, expr) ->
-        | A.Unop(unop, expr) ->
-            (* TODO
-             * is lvalue variable in table
-             * is lvalue of type int?
-             *)
-        | A.PostOp(lvalue, postop) ->
-            (* TODO
-             * is lvalue variable in table
-             * is lvalue of type int?
-             *)
-            S.Datatype(T.Int), T.Int
+        let funcId = get_id funcId in
+          begin
+            print_endline @@ gen_datatype returnTyp ^ " " ^ 
+              funcId ^ surr( gen_param_list paramList );
+            print_endline @@ "{ // start " ^ funcId;
+            gen_sast stmtList;
+            print_endline @@ "} // end " ^ funcId ^ "\n";
+          end *)
+      
+      | A.ForwardDecl(return_type, func_id, param_list) -> 
+        let s_param_list = gen_s_param_list param_list in
+        let env' = update_env_func env return_type func_id s_param_list false in
+        (env', S.ForwardDecl(return_type, func_id, s_param_list))
+          (* print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
+            (get_id funcId) ^ surr( gen_param_list paramList ) ^";\n"; *)
 
-        | Variable(v) -> 
-            let (_,s_type,_) = try find_variable env v with 
-                Not_found ->
-                    raise (Error("Undeclared Identifier " )) in s_type
-        | Unop(u, e) -> 
-            let t = check_expr e env in 
-            (match u with
-                Not -> if t = Datatype(Boolean) then t else raise (Error("Cannot negate a non-boolean value"))
-                | _ -> if t = Datatype(Int) then t else if t = Datatype(Float) then t 
-                            else
-                                raise (Error("Cannot perform operation on " )))
-        | ArrElem(id, expr) -> 
-            (* return SArrElem(id, expr, datatype) where:
-                id is name of array variable
-                expr has datatype Int
-                datatype is type of array *)
-            let (_, ty, v) = try find_variable env id with
-                Not_found -> raise(Error("Uninitialized array")) in
-            let el_type = (match ty with 
-                Arraytype(Datatype(x)) -> Datatype(x)
-                | _ -> raise(Error("Cannot index a non-array expression"))) in
-            let expr_type = check_expr expr env in 
-            let sty = match expr_type with
-                Datatype(ty) -> Some(ty) 
-                | Arraytype(dt) -> None in
-            let ty = match sty with
-                Some(ty) -> ty
-                | None -> raise(Error("Can't invoke array element as index")) in
-            let _ = if not(ty=Int) then raise(Error("index must be an integer")) in
-            (el_type)
-        | ExprAssign(id, e) -> let (_,t1,_) = (find_variable env id) and t2 =
-            check_expr e env
-            in (if not (t1 = t2) then (raise (Error("Mismatch in types for assignment")))); check_expr e env
-        | Cast(ty, e) -> ty
-        | Call(Ident("print"),e) -> let _ = List.map(fun exp -> check_expr exp env) e in
-                    Datatype(Void)
-        | Call(Ident("print_time"),e) -> let _ = List.map(fun exp -> check_expr exp env) e in
-                    Datatype(Void)
-        | Call(id, e) -> try (let (fname, fret, fargs, fbody)  = find_function env.fun_scope id in
-                    let el_tys = List.map (fun exp -> check_expr exp env) e in
-                    let fn_tys = List.map (fun farg-> let (_,ty,_) = get_name_type_from_formal env farg in ty) fargs in
-                    if not (el_tys = fn_tys) then
-                        raise (Error("Mismatching types in function call")) else
-                        Datatype(fret))
-                with Not_found ->
-                    raise (Error("Undeclared Function "))
-    *)
+      (* statements *)
+      | A.IfStatement(ex, stmtIf, stmtElse) -> 
+        (env, S.EmptyStatement)
+        (* begin
+          print_endline @@ "if " ^ surr(gen_s_expr ex);
+          print_endline "{ // start if";
+          gen_sast [stmtIf];
+          print_endline "else";
+          gen_sast [stmtElse];
+          print_endline "} // end if";
+        end *)
+				
+      | A.WhileStatement(ex, stmt) -> 
+        (env, S.EmptyStatement)
+        (* begin
+          print_endline @@ "while " ^ surr(gen_s_expr ex);
+          print_endline "{ // start while";
+          gen_sast [stmt];
+          print_endline "} // end while";
+        end *)
+            
+      | A.ForStatement(iter, stmt) -> 
+        (env, S.EmptyStatement)
+        (* begin
+          (* for (a in 1:5, b in 7:3:-1) *)
+          (* List.iter (fun iter -> 
+            print_endline @@ "for " ^ gen_iterator iter) iterList; *)
+          print_endline @@ "for " ^ gen_iterator iter;
+          print_endline "{ // start for";
+          gen_sast [stmt];
+          print_endline "} // end for";
+        end *)
+            
+      | A.CompoundStatement(stmt_list) -> 
+        let env' = incr_env_depth env in
+        (env, S.CompoundStatement(snd_2 @@ gen_sast env' stmt_list))
 
-let get_val_type env = function
-    ExprVal(expr) -> check_expr expr env
-    | ArrVal(expr_list) -> check_expr (List.hd expr_list) env
+      | A.Declaration(dec) -> 
+        let env', s_dec = gen_s_decl env dec in
+        let _ = debug_env env' "after decl" in
+        (env', S.Declaration(s_dec))
 
+      | A.Expression(ex) -> 
+        let env', s_ex, _ = gen_s_expr env ex in
+        (env', S.Expression(s_ex))
 
-let get_var_scope env name =  
-    try (let (_,_,_) = List.find (fun (s,_,_) -> s=name) env.var_scope.variables in Local)
-          with Not_found -> try (let (_,_,_) = List.find(fun (s,_,_) -> s=name) env.global_scope.variables in Global)
-                with Not_found -> raise(Error("get_var_scope is failing"))
-                
-(*converts expr to sexpr*)
-let rec get_sexpr env e = match e with
-      IntLit(i) -> SIntLit(i, Datatype(Int))
-      | BoolLit(b) -> SBoolLit(b,Datatype(Boolean))
-      | FloatLit(f) -> SFloatLit(f,Datatype(Float))
-      | StringLit(s) -> SStringLit(s,Datatype(String))
-      | Variable(id) -> SVariable(SIdent(id, get_var_scope env id), check_expr e env)
-      | Unop(u,ex) -> SUnop(u, get_sexpr env ex, check_expr e env)
-      | Binop(e1,b,e2) -> SBinop(get_sexpr env e1,b, get_sexpr env e2,check_expr e env)
-      | ArrElem(id, expr) -> SArrElem(SIdent(id, get_var_scope env id), get_sexpr env expr, check_expr env expr)
-      | ExprAssign(id,ex) -> SExprAssign(SIdent(id, get_var_scope env id),
-      get_sexpr env ex,check_expr e env) 
-      | Cast(ty,ex) -> SCast(ty,get_sexpr env ex,ty)
-	  | Call(Ident("print"),ex_list) -> let s_ex_list = List.map(fun exp -> get_sexpr env exp) ex_list 
-	  in SCall(SIdent(Ident("print"),Global),s_ex_list,check_expr e env)
-	  | Call(Ident("print_time"),ex_list) -> let s_ex_list = List.map(fun exp -> get_sexpr env exp) ex_list
-	  in SCall(SIdent(Ident("print_time"),Global), s_ex_list, check_expr e env)
-      | Call(id, ex_list) -> let s_ex_list = List.map(fun exp -> get_sexpr env
-      exp) ex_list in SCall(SIdent(id,Global),s_ex_list, check_expr e env) 
+      | A.ReturnStatement(ex) -> 
+        (env, S.EmptyStatement)
+        (* print_endline @@ "return " ^ gen_s_expr ex ^ ";" *)
 
-(* Make sure a list contains all items of only a single type; returns (sexpr list, type in list) *)
-let get_sexpr_list env expr_list = 
-	let sexpr_list = 
-		List.map (fun expr -> 
-				let t1 = get_type_from_datatype(check_expr (List.hd expr_list) env) 
-				and t2 = get_type_from_datatype (check_expr expr env) in
-				if(t1=t2) then get_sexpr env expr 
-					else raise (Error("Type Mismatch"))
-				 ) expr_list in sexpr_list
+      | A.EmptyStatement -> 
+        (env, S.EmptyStatement)
 
+      | A.VoidReturnStatement -> 
+        (env, S.EmptyStatement)
+        (* print_endline "return; // void" *)
 
-(* replacement for get_typed_value *)
-let get_sval env = function
-		ExprVal(expr) -> SExprVal(get_sexpr env expr)
-		| ArrVal(expr_list) -> SArrVal(get_sexpr_list env expr_list)
+      | A.BreakStatement -> 
+        (env, S.EmptyStatement)
+        (* print_endline "break; // control" *)
 
-let get_datatype_of_list env expr_list = 
-	let ty = List.fold_left (fun dt1 expr2 -> 
-								let dt2 = check_expr expr2 env in
-								if(dt1 = dt2) then dt1 else raise (Error("Inconsistent array types"))) (check_expr (List.hd expr_list) env) expr_list in ty
+      | A.ContinueStatement -> 
+        (env, S.EmptyStatement)
+        (* print_endline "continue; // control" *)
 
-
-let get_datatype_from_val env = function
-	ExprVal(expr) -> check_expr expr env
-	| ArrVal(expr_list) -> get_datatype_of_list env expr_list
-
-(* if variable is not found, then add it to table and return SVarDecl *)
-(* if variable is found, throw an error: multiple declarations *)
-let get_semantic_decl env decl = match decl with
-(* if ident is in env, return typed sdecl *)
-  A.PrimitiveDecl(datatype, ident) -> S.PrimitiveDecl(datatype, S.Ident(ident))
-| A.AssigningDecl(datatype, ident, expression) ->
-    let expr_val = get_sval env expression in
-    (S.AssigningDecl(datatype, S.Ident(ident), expr_val), env)
-
-let get_name_type_from_decl decl = match decl with
-  A.PrimitiveDecl(datatype, ident) -> ident, datatype
-| A.AssigningDecl(datatype,ident,value) -> ident, datatype
-
-let get_name_type_val_from_decl decl = match decl with
-  A.PrimitiveDecl(datatype, ident) -> (ident, datatype, None)
-| A.AssigningDecl(datatype, ident, value) -> (ident, datatype, Some(value))
-
-(* returns tuple (left hand id, left hand id type, right hand value type) *)
-let get_name_type_from_var env = function
-  A.PrimitiveDecl(datatype,ident) -> (ident,datatype,None)
-| A.AssigningDecl(datatype,ident,value) -> (ident,datatype,Some(value))
-
-(* function to check if a range is valid for a range iterator *)
-let check_range range env = function
-  A.Range(expr1, expr2, expr3) ->
-    let expr1, typ1 = check_expr expr1 env in
-    let expr2, typ2 = check_expr expr2 env in
-    let expr3, typ3 = check_expr expr3 env in
-    if not (typ1 = FloatLit || typ1 = IntLit) ||
-       not (typ2 = FloatLit || typ2 = IntLit) ||
-       not (typ3 = FloatLit || typ3 = IntLit) then
-        raise (Error("Improper Array Iterator in For statement"));
-    else S.Range(expr1, expr2, expr3)
-
-(* function that adds variables to environment's scope *)
-let add_variable env name typ value = 
-  let new_vars = (name, typ, value)::env.scope.variables in
-  let new_symbol_table = { parent = env.scope.parent; variables = new_vars;} in
-  let new_env = { env with scope = new_sym_table } in
-  new_env
-
-(* check both sides of an assignment are compatible*) 
-let check_assignments type1 type2 =
-  match (type1, type2) with
-  (Int, Int) -> true
-| (Float, Float) -> true
-| (Int, Float) -> true
-| (Float, Int) -> true
-| (Boolean, Boolean) -> true
-| (String, String) -> true
-| (_,_) -> false
-
-(* checks the type of a variable in the symbol table*)
-(* Changed from "check_var_type" *)
-let match_var_type env var datatype =
-  let name, typ, value = find_variable env var in
-  if (datatype <> typ) then
-    false
-  else true
-
-(* Checks that a function returned if it was supposed to*)
-let check_final_env env =
-  if (false = env.return_seen && env.return_type <> Datatype(Void)) then
-    raise (Error("Missing Return Statement")));
-  true
-
-(* Default Table and Environment Initializations *)
-let empty_table_initialization = {
-    parent = None;
-    variables = [];
-}
-
-let empty_environment = {
-  return_type = Datatype(Void);
-  return_seen = false;
-  scope = empty_table_initialization;
-}
-
-(* TODO remove. leave now for references
-let initialize_globals (globals, env) decl = 
-	let (name, ty) = get_name_type_from_decl decl in
-		let ((_,dt,_),found) = try (fun f -> ((f env name),true)) find_global_variable with 
-			Not_found ->
-				((name,ty,None),false) in
-		let ret = if(found=false) then
-			match decl with
-				VarDecl(datatype,ident) ->
-		        	let (name,ty,_) = get_name_type_from_var env decl in
-		            let new_env = add_to_global_table env name ty None in
-		            (SVarDecl(datatype,SIdent(ident,Global))::globals, new_env)
-				| VarAssignDecl(dt, id, value) ->
-					let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(get_datatype_from_val env value) in
-					if(t1=t2) then
-						let (n, t, v) = get_name_type_val_from_decl decl in
-						let new_env = add_to_global_table env n t v in
-						(SVarAssignDecl(dt,SIdent(id,Global),get_sval env value)::globals, new_env)
-					else raise (Error("Type mismatch"))
-				else
-					raise (Error("Multiple declarations")) in ret
-*)
-
-(* semantic checking on a stmt*)
-let rec check_stmt stmt env = match stmt with
-    | A.CompoundStatement(stmts) ->
-        (* creates; new scope: parent is the existing scope, start out empty *)
-        let scope' = { parent = Some(env.scope); variables = [] } in
-
-        (* creates new env: same, but with a fresh symbol table *)
-        let env = { env with scope = scope'; } in
-
-        (* recursively check each statement in the block *)
-        let statements, env = check_stmts stmts env in
-
-        (* TODO not sure if we need scope'.variables <- List.rev scope'.variables; microc does this. *)
-        (* TODO where dafuq do we pop the scope after a block? *)
-
-        S.CompoundStatement(statements), env
-
-    | A.Expression(expr) -> 
-        let expr, typ = check_expr expr env in
-        S.Expression(expr), env
-
-    | A.ReturnStatement(expr) ->
-        let expr, typ = check_expr expr env in
-        if t <> env.return_type then
-          raise Error("Incorrect return type");
-        let env = { env with return_seen = true } in
-        S.ReturnStatement(expr), env
-
-    | A.IfStatement(expr, stmt1, stmt2) ->
-        let expr = get_type_from_datatype(check_expr expr env) in
-        if not expr = T.Boolean then
-          raise Error("Predicate of an if statement must be boolean");
-        
-        let (st1, env1) =check_stmt s1 env
-        and (st2, env2) = check_stmt s2 env in
-        let this_return_seen = (env1.return_seen && env2.return_seen) in
-        let env = { env with return_seen = this_return_seen } in
-        S.IfStatement((get_sexpr env e), s1, s2), env
-
-    (* CHUNK 2 medium. 
-        INTERFACE
-        NOTE: currently our sast has 'iterator list' like vector. we probably 
-                need to change that to just iterator. so do that too.
-        
-        you need to match on iterator, ie. | A.ForStatement(iter, statement)
-        - ensure iter is valid iterator. not entirely sure how to do this but
-          there are only two types of iterators so just case match on those two
-          and throw an error if not successful
-        - while checking ArrayIterator you will need to recursively evaluate
-          check_expr because there might be side effects
-        - return S.WhileStatement(check_stmt statement env) which will recursively
-          validate statement
-
-        - Need to check if iter is A.RangeIterator or A.ArrayIterator
-        - if RangeIterator, need to check RangeIterator(ident, range)
-            - need to make sure ident is defined, and that range is a valid
-            - range(e1, e2, e3) -> validate all three expressions; 
-            - make sure e1, e2, and e3 are all IntLits and e1 < e2
-        - if ArrayIterator, need to check ArrayIterator(ident, expr)
-            - ident is 'x' in 'x in arr'; need to put ident into environment
-              make sure expr is a valid ArrayElem
-
-        - need to write check_range function
-        - need to write get_siterator function
-        - need to write get_srange function*)
-
-    | A.ForStatement(iter, stmt) ->
-        match iter with
-            | A.ArrayIterator(ident, _expr) -> 
-                let expr, typ = check_expr _expr env in 
-                if not (typ = ArrayLit) then
-                    raise Error("Improper Array Iterator in For statement");  
-                let semantic_stmt, env = check_stmt stmt env in   
-                S.ForStatement(S.ArrayIterator(ident, expr), semantic_stmt), env
-            | A.RangeIterator(ident, range) ->
-                let semantic_range = check_range range env in
-                if not (typ = ArrayLit) then
-                    raise Error("Improper Range Iterator in Ffor statement"); 
-                let semantic_stmt, env = check_stmt stmt env in  
-                S.ForStatement(S.RangeIterator(ident, semantic_range), semantic_stmt), env
-
-    (* CHUNK 3 easy *)
-    (* INTERFACE
-        - verify expression is valid by running check_expr expression env
-        - pass statement back into check_stmt() function. *)
-    | A.WhileStatement(expr, stmt) ->
-        let expr, typ = get_type_from_datatype(check_expr expr env) in
-        if not(typ = Boolean) then
-            raise Error("Improper While loop format");
-        let semantic_stmt, env = check_stmt stmt env in
-        S.WhileStatement(S.Expression(expr), semantic_stmt)
-
-    (* CHUNK 4 hard *)
-    (* INTERFACE 
-        match cases for each type of declaration, ie. 
-        | A.AssigningDecl ->
-        | A.PrimitiveDecl ->
-        | A.ArrayDecl ->
-        
-        here is the gist of what each of these should do:
-        - add to *or* modify the scope. check if variable with the same 
-          name exists, if it does change scope, else add new var to scope
-        - call check_expr to evaluate right side of decl
-        - ensure datatype and check_expr match
-        *)
-    | A.Declaration(decl) -> 
-        (* If variable is found, throw multiple declarations error and if
-         * variable not found and var is AssignDecl, make sure types are compatible *)
-        let name, typ = get_name_type_from_decl decl in
-        try
-          let _, stored_type, _ = find_variable env name in ident, stored_type, true
-        with Not_found -> name, typ, false in
-        if found = false then
-          match decl with
-            A.PrimitiveDecl(datatype, ident) ->
-              let semantic_decl, _ = get_semantic_decl env decl in
-              let name, typ, value = get_name_type_val_from_decl decl in
-              let env = add_variable env name typ value in
-              S.Declaration(semantic_decl), env
-          | A.AssigningDecl(datatype, ident, expression) ->
-              let left_type = get_type_from_datatype datatype and
-              right_type = get_type_from_datatype get_datatype_from_val env value in
-              if left_type = right_type then
-                let semantic_decl, _ = get_semantic_decl env decl in
-                let name, typ, value = get_name_type_val_from_decl decl in
-                let new_env = add_variable env name typ value in
-                S.Declaration(sdecl), new_env
-              else raise Error("Type mismatch")
-        else raise Error("Multiple declarations")
-
-    (* CHUNK 5 hard
-    | A.FunctionDecl case
-    | A.ForwardDecl case
-        - ideally we would move FunctionDecl and ForwardDecl to be decl's in both Sast and Ast
-          this *shouldn't* cause any shift reduce errors and it would help to get 
-          that done so please make it a decl and ensure no shift reduce errors
-        - store new or modify existing function in env.scope
-        - recursively validate and store all parameters in 'decl list' by calling
-          something like List.map (fun statement -> check_stmt statement env) decl_list
-        - validate each statement in statement_list and ensure last type 
-          is ReturnType with matching type as the defined return type
-          NOTE: I believe this is done by modifying the env.scope.return_type. 
-                you sets the return_type and then that is checked in the 
-                S.ReturnType case in check_stmt(). What you need to do is make sure that
-                the last statement in statement_list is of type ReturnType
-    *)
-
-    | A.FunctionDecl(returntype, ident, decl list, stmt list) ->
-        let _, stored_type, _ = find_variable env name in ident, stored_type, true
-        with Not_found -> name, typ, false in
-        if found = false then
-          (* TODO: finish this *)
-        else raise Error("Multiple declarations")        
-
-
-    (* CHUNK 6 medium
-        - move this to check_expr() since we have it defined as an expr
-        - pattern match on lvalue parameter: A.Variable and A.ArrayElem
-        - do we need to add MatrixElem to type lvavlue in (S)Ast? Maybe ask to Jim
-          add it if necessary and handle that case as well.
-        - for each case, store/modify env.scope
-        - ensure types don't conflict (probably by recursively calling check_expr()
-    | A.Assign(ident, expr) ->
-        (* make sure 1) variable exists, 2) variable and expr have same types *)
-        let (_, dt, _) = try find_variable env ident with Not_found -> raise (Error("Uninitialized variable")) in
-        let t1 = get_type_from_datatype dt 
-        and t2 = get_type_from_datatype(check_expr expr env) in
-        if( not(t1=t2) ) then 
-            raise (Error("Mismatched type assignments"));
-        let sexpr = get_sexpr env expr in
-        let new_env = update_variable env (ident,dt, Some((Expression(expr)))) in
-        S.Assign(S.Ident(ident, get_var_scope env ident), sexpr)
-
-    | A.ArrAssign(ident, expr_list) ->
-        (* make sure 1) array exists and 2) all types in expr list are equal *)
-        let (n,dt,v) = try find_variable env ident with Not_found -> raise (Error("Undeclared array")) in
-        let sexpr_list = List.map (fun expr2 -> 
-                            let expr1 = List.hd expr_list in
-                            let t1 = get_type_from_datatype(check_expr expr1 env) and t2 = get_type_from_datatype(check_expr expr2 env) in
-                            if(t1=t2) then 
-                                let sexpr2 = get_sexpr env expr2 in sexpr2
-                                else raise (Error("Array has inconsistent types"))) expr_list in
-        let _ = 
-            let t1=get_type_from_datatype(check_expr (List.hd expr_list) env) and t2=get_type_from_datatype(dt) in
-            if(t1!=t2) then raise (Error("Type Mismatch")) in
-        let new_env = update_variable env (n,dt,(Some(A.ArrayLit(expr_list)))) in
-        S.ArrAssign(SIdent(ident,get_var_scope env ident), sexpr_list)
-
-    | A.ArrElemAssign(ident, expr1, expr2) ->
-        (* Make sure
-            1) array exists (if it exists, then it was already declared and semantically checked)
-            2) expr matches type of array 
-            3) index is not out of bounds *)
-        let (id, dt, v) = try find_variable env ident with Not_found -> raise (Error("Undeclared array")) in
-        let t1 = get_type_from_datatype(dt) and t2 = get_type_from_datatype(check_expr expr2 env) in
-        let _ = if(t1=t2) then true else raise (Error("Type Mismatch")) in
-        let _ = (match v with
-                Some(ArrVal(el)) -> (* get_sexpr_list env  *)el
-                | None -> raise (Error("No expression on right hand side"))
-                | _ -> raise (Error("???"))) in
-        let t = get_type_from_datatype(check_expr expr1 env) in
-        let _ = if not(t=Int) then raise(Error("Array index must be an integer")) in
-        S.ArrElemAssign(SIdent(ident,get_var_scope env ident), get_sexpr env expr1, get_sexpr env expr2)
-    *)
-
-    | A.ReturnStatement(expr) ->
-        let expr, typ = check_expr expr env in
-        if not (typ = env.return_type) then
-          raise Error("Incorrect return type") in 
-        S.ReturnStatement(expr), env
-
-    | A.VoidReturnStatement -> S.VoidReturnStatement
-    | A.ContinueStatement -> S.ContinueStatement
-    | A.BreakStatement -> S.BreakStatement
-
-(* runs each stmt in a stmt-list through check_stmt() *)
-let check_stmts stmts env =
-    let checked_stmts, env = List.fold_left 
-        (fun (checked_stmt_list, curr_env) unchecked_stmt -> 
-            let checked_stmt, new_env = check_stmt(unchecked_stmt curr_env) in
-            checked_stmt :: checked_stmt_list, new_env)
-    ([], env) stmts in
-    (* rev list because of fold_left *)
-    let checked_stmts = List.rev checked_stmts in
-    checked_stmts, env
-
-let get_sstmt_list env stmt_list = 
-    List.fold_left
-        (fun (sstmt_list,env) stmt ->
-            let (sstmt, new_env) = check_stmt stmt env in 
-            (sstmt::sstmt_list, new_env))
-    ([],env) stmt_list
-
-    (* add a function to the environment*)
-    let add_function env sfunc_decl =
-    let f_table = env.fun_scope in
-    let old_functions = f_table.functions in
-    match sfunc_decl with
-        SFunc_Decl(sfuncstr, datatype) ->
-            let func_name = sfuncstr.sfname in
-            let func_type = get_type_from_datatype sfuncstr.sreturn in
-            let func_formals = sfuncstr.sformals in
-            let func_body = sfuncstr.sbody in
-            let new_functions = (func_name, func_type, func_formals, func_body)::old_functions in
-            let new_fun_scope = {functions = new_functions} in
-            let final_env = {env with fun_scope = new_fun_scope} in
-            final_env
-
-(* Semantic checking on a function*)
-(* TODO remove. checking functions should be in either check_stmt() or check_expr()
-let check_func env func_declaration =
-    let new_locals = List.fold_left
-        (fun a vs -> (get_name_type_from_formal env vs)::a)
-    [] func_declaration.formals in
-
-    let new_var_scope = {
-        parent=Some(env.var_scope);
-        variables = new_locals;
-    } in
-    let new_env = {
-        return_type = func_declaration.return;
-        return_seen=false;
-        location="in_func";
-        global_scope = env.global_scope;
-        var_scope = new_var_scope;
-        fun_scope = env.fun_scope
-    } in
-    let (typed_statements, final_env) = get_sstmt_list new_env func_declaration.body in
-    let _ = check_final_env final_env in
-    let sfuncdecl = ({
-        sreturn = func_declaration.return;
-        sfname = func_declaration.fname;
-        sformals = func_declaration.formals;
-        sbody = typed_statements
-    }) in
-    (SFunc_Decl(sfuncdecl,func_declaration.return), env) 
-*)
-
-(* TODO remove below but keep as reference for the moment
-let initialize_functions env function_list = 
-    let (typed_functions, last_env) = List.fold_left
-        (fun (sfuncdecl_list, env) func ->
-            let (sfuncdecl, _) = check_func env func in
-            let final_env = add_function env sfuncdecl in
-            (sfuncdecl::sfuncdecl_list, final_env))
-        ([],env) function_list in
-        (typed_functions, last_env)
-*)
-
-
-(* checks the semantics of a program *)
-let check_program ast =
-    (* creates new scope and env *)
-    let scope' = { parent=None; variables=[]; } in
-    let env = { scope: scope'; return_type: T.Void; } in
-    (* TODO should the toplevel return_type be int or bool? *)
-    (* check all toplevel stmts *)
-    let stmts, env = check_stmts ast env in stmts
-
-    (* TODO remove below but keep as reference for the moment
-    let (functions,(globals, threads)) = ast in
-    let env = empty_environment in
-    let (typed_functions, new_env) = initialize_functions env functions in
-    let (typed_globals, new_env2) = List.fold_left(
-        fun (new_globals, env) globals -> 
-            initialize_globals (new_globals, env) globals) 
-        ([], new_env) globals in
-    Prog(typed_functions, (typed_globals, typed_threads))
-    *)
+      | _ -> failwith "nothing for eval()"
+    in 
+    let env_new, s_rest = gen_sast env_new rest in
+    (env_new, (s_stmt :: s_rest))

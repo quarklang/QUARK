@@ -1,4 +1,4 @@
-open Semantic_debug
+open Semantic
 
 let _ =
   let lexbuf = Lexing.from_channel stdin in
