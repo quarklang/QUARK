@@ -62,13 +62,9 @@ Check() {
 
     generatedfiles=""
 
-    generatedfiles="$generatedfiles ${basename}.i.out" &&
-    Run "$QUARKC" "-i" "<" $1 ">" ${basename}.i.out &&
-    Compare ${basename}.i.out ${reffile}.out ${basename}.i.diff
-
-    generatedfiles="$generatedfiles ${basename}.c.out" &&
-    Run "$QUARKC" "-c" "<" $1 ">" ${basename}.c.out &&
-    Compare ${basename}.c.out ${reffile}.out ${basename}.c.diff
+    generatedfiles="$generatedfiles ${basename}.test.out" &&
+    Run "$QUARKC" "<" $1 ">" ${basename}.test.out &&
+    Compare ${basename}.test.out ${reffile}.output ${basename}.test.out.diff
 
     # Report the status and clean up the generated files
 
