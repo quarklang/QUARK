@@ -9,6 +9,7 @@ let _ =
     func_current = "";
     depth = 0;
     is_returned = true;
+    in_loop = false;
   }
   in
   (*TODO 

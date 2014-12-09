@@ -34,6 +34,7 @@ type environment = {
     func_current: string; 
     depth: int;
     is_returned: bool;
+    in_loop: bool;  (* check break/continue validity *)
 }
 
 (************** DEBUG ONLY **************)
@@ -148,6 +149,7 @@ let update_env_func env return_type func_id s_param_list is_defined =
         if is_defined then get_id func_id else ""; 
       depth = env.depth;
       is_returned = not is_defined; (* if not forward decl, we need to return *)
+      in_loop = false;
     } in
    
   match finfo.f_return with
@@ -780,6 +782,7 @@ let rec gen_sast env = function
           func_current = "";
           depth = env.depth;
           is_returned = true;
+          in_loop = false;
         } in
         let _ = debug_env env'' "closed after FuncDecl" in
         env'', function_decl
@@ -809,6 +812,7 @@ let rec gen_sast env = function
         let env', s_pred_ex, pred_type = gen_s_expr env pred_ex in
         let env' = handle_compound_env env' stmt in
         if pred_type = A.DataType(T.Bool) then
+          let env' = { env' with in_loop = true } in
           let env', s_stmt = gen_sast env' [stmt] in
           let env = 
             if env'.is_returned then set_env_returned env else env in
@@ -824,6 +828,7 @@ let rec gen_sast env = function
         let env', s_iter = gen_s_iter env' iter in
         let env' = decr_env_depth env' in
         let env' = handle_compound_env env' stmt in
+        let env' = { env' with in_loop = true } in
         let env', s_stmt = gen_sast env' [stmt] in
         let env = 
           if env'.is_returned then set_env_returned env else env in
@@ -876,16 +881,18 @@ let rec gen_sast env = function
             failwith @@ "Function " ^env.func_current 
               ^ " should return " ^ A.str_of_datatype f_return ^ ", not void"
 
-      | A.EmptyStatement -> 
-        env, S.EmptyStatement
-
       | A.BreakStatement -> 
-        env, S.BreakStatement
-        (* print_endline "break; // control" *)
+        if env.in_loop then
+          env, S.BreakStatement
+        else failwith "Invalid break statement outside a loop"
 
       | A.ContinueStatement -> 
-        env, S.ContinueStatement
-        (* print_endline "continue; // control" *)
+        if env.in_loop then
+          env, S.ContinueStatement
+        else failwith "Invalid continue statement outside a loop"
+
+      | A.EmptyStatement -> 
+        env, S.EmptyStatement
 
       | _ -> failwith "nothing for eval()"
     in 
