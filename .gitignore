@@ -13,6 +13,7 @@
 *.cmxa
 
 # Output files
+*.out
 
 # Repo specific
 scanner.ml
