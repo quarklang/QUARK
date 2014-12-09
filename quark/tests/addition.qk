@@ -1,0 +1,13 @@
+
+def add: int x, int y 
+{
+    return x + y;
+}
+
+def void test_add:
+{
+    int x = 7;
+    int y = 20;
+
+    print add(x, y);
+}
