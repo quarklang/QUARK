@@ -353,6 +353,16 @@ let rec gen_s_expr env = function
           | t1, t2 when t1 = t2 -> T.Bool, S.OpVerbatim
           | t1, t2 -> failwith @@ err_msg op t1 t2 in
 
+      let binop_bitwise op type1 type2 = 
+        match type1, type2 with
+          | T.Int, T.Int -> T.Int, S.OpVerbatim
+          | t1, t2 -> failwith @@ err_msg op t1 t2 in
+
+      let binop_query op type1 type2 = 
+        match type1, type2 with
+          | T.Int, T.Int -> T.Int, S.OpVerbatim
+          | t1, t2 -> failwith @@ err_msg op t1 t2 in
+
       let result_type, optag = 
         match op with 
           | A.Add         -> binop_math op type1 type2
@@ -369,16 +379,16 @@ let rec gen_s_expr env = function
           | A.GreaterEq   -> logic_relational op type1 type2
           | A.And         -> logic_basic op type1 type2
           | A.Or          -> logic_basic op type1 type2
-          | _ -> failwith "TODO match op"
+          | A.BitAnd      -> binop_bitwise op type1 type2
+          | A.BitOr       -> binop_bitwise op type1 type2
+          | A.BitXor      -> binop_bitwise op type1 type2
+          | A.Lshift      -> binop_bitwise op type1 type2
+          | A.Rshift      -> binop_bitwise op type1 type2
           (* TODO
-          | BitAnd
-          | BitOr
-          | BitXor
-          | Lshift
-          | Rshift
-          | Query
-          | QueryUnreal
+          | A.Query
+          | A.QueryUnreal
           *)
+          | _ -> failwith "TODO match op"
       in
       env, S.Binop(s_expr1, op, s_expr2, optag), A.DataType(result_type)
       end
