@@ -461,8 +461,9 @@ let rec gen_s_expr env = function
         S.Variable(id), vtype
     | A.ArrayElem(id, ex_list) -> 
       let vtype = (get_env_var env id).v_type in
+      let idstr = get_id id in
       if vtype = A.NoneType then
-        failwith @@ "Array/Matrix " ^ get_id id ^ " is undefined"
+        failwith @@ "Array/Matrix " ^ idstr ^ " is undefined"
       else
         match vtype with
         (* array *)
@@ -470,8 +471,24 @@ let rec gen_s_expr env = function
           failwith "TODO lval arraytype"
         (* matrix *)
         | A.MatrixType(elem_type) -> 
-          failwith "TODO lval matrixtype"
-        | _ -> failwith @@ (get_id id) ^ " is not an array/matrix"
+          let subscript_len = List.length ex_list in
+          if subscript_len = 2 then
+            let s_ex_list = 
+              List.map (fun ex -> 
+                let _, s_ex, typ = gen_s_expr env ex in
+                if typ = A.DataType(T.Int) then s_ex
+                else failwith @@ "Matrix subscript contains non-int: " 
+                    ^ idstr ^"["^ A.str_of_datatype typ ^ "]")
+                ex_list in
+            match elem_type with
+            | A.DataType(raw_elem_type) -> 
+              S.MatrixElem(raw_elem_type, id, s_ex_list), elem_type
+            | _ -> failwith @@ 
+                "INTERNAL bad matrix type should've been handled in S.decl: " ^idstr
+          else
+            failwith @@ "Subscript of matrix " ^idstr 
+                ^ " must have 2 args, but " ^ string_of_int subscript_len ^ " provided"
+        | _ -> failwith @@ idstr ^ " is not an array/matrix"
     in
     env, S.Lval(s_lval), ltype
   
@@ -583,12 +600,6 @@ and gen_s_matrix env exprs_list_list =
   (env, List.rev matrix , matrix_type, row_length)
   
 (*
-and gen_lvalue = function
-  | A.Variable(id) -> 
-    get_id id
-  | A.ArrayElem(id, exlist) -> 
-    get_id id ^ "[" ^ gen_expr_list exlist ^ "]"
-
 let rec gen_range id = function
 	| A.Range(exStart, exEnd, exStep) -> 
     let exStart = gen_s_expr exStart in
