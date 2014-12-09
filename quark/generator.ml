@@ -109,11 +109,17 @@ let rec gen_expr = function
   | Binop(ex1, op, ex2) -> 
     let ex1 = gen_expr ex1 in
     let ex2 = gen_expr ex2 in
+      ex1 ^" "^ gen_binop op ^" "^ ex2
+  
+  (* Query ops *)
+  | Queryop(ex1, op, ex2, ex3) -> 
+    "TODO"
+    (*
      (match op with
       | Query -> "measure_top(" ^ex1^ ", " ^ex2^ ", true)"
       | QueryUnreal -> "measure_top(" ^ex1^ ", " ^ex2^ ", false)"
-      | _ -> ex1 ^" "^ gen_binop op ^" "^ ex2)
-  
+      | _ -> ) *)
+    
   (* Unary ops *)
   | Unop(op, ex) -> 
     gen_unop op ^ gen_expr ex
