@@ -104,6 +104,9 @@ let update_env_var env var_typ var_id =
 (* go one scope deeper *)
 let incr_env_depth env = 
   { env with depth = env.depth + 1 }
+(* go one scope shallower *)
+let incr_env_depth env = 
+  { env with depth = env.depth - 1 }
 
 let set_env_returned env = 
   { env with is_returned = true }
@@ -718,8 +721,25 @@ let gen_s_iter env = function
       let env', _ = gen_s_decl env (A.PrimitiveDecl(typ, id)) in
       env', S.RangeIterator(typ, get_id id, gen_s_range env' id range)
     )
+
   | A.ArrayIterator(typ, id, array_ex) -> 
-    failwith "INTERNAL todo"
+    let idstr = get_id id in
+    let env', s_array_ex, array_type = gen_s_expr env array_ex in
+    let env', _ = gen_s_decl env (A.PrimitiveDecl(typ, id)) in
+    let elem_type = match array_type with 
+      | A.ArrayType(elem_type) -> elem_type
+      | _ -> failwith @@ 
+        "Array-style for-loop must have array type, not " ^ A.str_of_datatype array_type
+    in
+    (* check iterator variable and list consistency *)
+    let _ = match typ, elem_type with
+      | A.DataType(T.Int), A.DataType(T.Float)
+      | A.DataType(T.Float), A.DataType(T.Int) -> ()
+      | typ', elem_type' when typ' = elem_type' -> ()
+      | _ -> failwith @@ "For-loop has incompatible types: " ^ A.str_of_datatype typ 
+          ^" "^idstr^ " but " ^ A.str_of_datatype elem_type ^ " expected"
+    in
+    env', S.ArrayIterator(typ, idstr, s_array_ex)
     
     
 (* When if/while/for are followed by a non-compound single-line stmt, *)

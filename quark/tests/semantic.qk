@@ -15,8 +15,13 @@ def int test_scope: int aaa, int b
         return a+2;
     }
 
-     for aaa in [3:5]:
-        glob_a;
+    for fraction b in [35$2, 13$3] & [4$3, 3$2]:
+    {
+        string[][][] sss;
+        string[] b;
+        for string[][] b in sss:
+            b &= b;
+    }
 }
 
 def int test_return: int a, int b
