@@ -12,6 +12,8 @@ def int f1: int a, int b, string[][][] c
     5$43;
     <| 36, 32 |>;
     i(2);
+    
+    f1(53, 2.5, c);
 
     [["shit","damn", "ad"], ["shit"]] & [["sdf"]];
 
@@ -43,7 +45,7 @@ qreg q;
 
 def void foo: int a, int b
 {
-    %int f1;
+    f1(a, 4.5, [[["shit"]]]);
     int e;
     {
         {

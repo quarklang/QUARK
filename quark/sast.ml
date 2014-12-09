@@ -33,9 +33,9 @@ and expr =
   | ComplexLit of expr * expr
   | ArrayLit of A.datatype * expr list
   | MatrixLit of T.vartype * expr list list * int (* column dimension *)
-  | Membership of A.datatype * expr * A.datatype * expr
   | FunctionCall of string * expr list
   | Lval of lvalue
+  | Membership of expr * expr (* not yet supported *)
 
 type decl =
   | AssigningDecl of A.datatype * string * expr
