@@ -105,7 +105,7 @@ let update_env_var env var_typ var_id =
 let incr_env_depth env = 
   { env with depth = env.depth + 1 }
 (* go one scope shallower *)
-let incr_env_depth env = 
+let decr_env_depth env = 
   { env with depth = env.depth - 1 }
 
 let set_env_returned env = 
@@ -806,8 +806,8 @@ let rec gen_sast env = function
               ^ A.str_of_datatype pred_type ^ " provided"
 				
       | A.WhileStatement(pred_ex, stmt) -> 
-        let env' = handle_compound_env env stmt in
-        let env', s_pred_ex, pred_type = gen_s_expr env' pred_ex in
+        let env', s_pred_ex, pred_type = gen_s_expr env pred_ex in
+        let env' = handle_compound_env env' stmt in
         if pred_type = A.DataType(T.Bool) then
           let env', s_stmt = gen_sast env' [stmt] in
           let env = 
@@ -818,9 +818,12 @@ let rec gen_sast env = function
               ^ A.str_of_datatype pred_type ^ " provided"
             
       | A.ForStatement(iter, stmt) -> 
-        (* hack: unconditionally go one scope deeper *)
+        (* hack: first go one scope deeper, then go back to ensure that*)
+        (* the iterator variable is in the right scope *)
         let env' = incr_env_depth env in
         let env', s_iter = gen_s_iter env' iter in
+        let env' = decr_env_depth env' in
+        let env' = handle_compound_env env' stmt in
         let env', s_stmt = gen_sast env' [stmt] in
         let env = 
           if env'.is_returned then set_env_returned env else env in

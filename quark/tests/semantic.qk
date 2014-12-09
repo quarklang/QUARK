@@ -17,10 +17,12 @@ def int test_scope: int aaa, int b
 
     for fraction b in [35$2, 13$3] & [4$3, 3$2]:
     {
-        string[][][] sss;
-        string[] b;
-        for string[][] b in sss:
-            b &= b;
+        string[][][] saaa;
+        string[] c;
+        for string[][] saa in saaa:
+            for string[] sa in saa:
+                for string s in sa:
+                    s &= "gooooood";
     }
 }
 
