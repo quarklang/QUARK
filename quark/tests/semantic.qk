@@ -5,9 +5,17 @@ float a = 6;
 int f1: int c, int SDUI_9, string[][][] shit;
 void foo: int c, int b;
 
-def void fvoid: int a, int b
+def int test_return: int a, int b
 {
-return;
+    if true:
+        1+1;
+    else
+        int i;
+        for i in [3:4]:
+        {
+            while true:
+                return i(10);
+        }
 }
 
 def int f1: int a, int b, string[][][] c
@@ -19,8 +27,8 @@ def int f1: int a, int b, string[][][] c
     }
     else
     {
-int a = 6;
-}
+        int a = 6;
+    }
 
     while true:
         a = 3;
