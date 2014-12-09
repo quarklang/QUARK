@@ -460,36 +460,56 @@ let rec gen_s_expr env = function
         failwith @@ "Variable " ^ idstr ^ " is undefined"
       else
         S.Variable(idstr), vtype
+        
+    (* Array/matrix lvalue e.g. arr[2,3,4] *)
     | A.ArrayElem(id, ex_list) -> 
       let vtype = (get_env_var env id).v_type in
       let idstr = get_id id in
       if vtype = A.NoneType then
         failwith @@ "Array/Matrix " ^ idstr ^ " is undefined"
       else
+        let sub_dim = List.length ex_list in (* subscript [2,3,4] dimension *)
+        let s_ex_list = (* check subscript types, must all be ints *)
+          List.map (fun ex -> 
+            let _, s_ex, typ = gen_s_expr env ex in
+            if typ = A.DataType(T.Int) then s_ex
+            else failwith @@ "Subscript contains non-int: " 
+                ^ idstr ^"["^ A.str_of_datatype typ ^ "]") ex_list
+        in
         match vtype with
         (* Array lvalue *)
         | A.ArrayType(elem_type) -> 
-          failwith "TODO lval arraytype"
+          (* dim(original array) = dim(result lval) + dim(subscript) *)
+          (* think of this as de-[] operation *)
+          let rec get_array_lval_type sub_dim elem =
+            if sub_dim = 0 then elem else
+            match elem with
+            | A.DataType(_) ->
+              failwith @@ "Bad subscript dimension for array: " ^idstr
+            | A.ArrayType(elem') ->
+              get_array_lval_type (sub_dim - 1) elem'
+              (* assume decl has already checked that matrix type is valid *)
+            | A.MatrixType(A.DataType(raw_elem)) ->
+              if sub_dim = 2 then A.DataType(raw_elem)
+              else failwith @@ 
+                  "Bad subscript dimension for array that contains matrix: " ^idstr
+            | _ -> failwith @@ "INTERNAL bad array type: " ^ idstr
+          in
+          let lval_type = get_array_lval_type (sub_dim - 1) elem_type in
+          let _ = print_endline @@ "DEBUG LVALUE "^idstr^" -> "^A.str_of_datatype lval_type in
+          S.ArrayElem(idstr, s_ex_list), lval_type
 
         (* Matrix lvalue *)
         | A.MatrixType(elem_type) -> 
-          let subscript_len = List.length ex_list in
-          if subscript_len = 2 then
-            let s_ex_list = 
-              List.map (fun ex -> 
-                let _, s_ex, typ = gen_s_expr env ex in
-                if typ = A.DataType(T.Int) then s_ex
-                else failwith @@ "Matrix subscript contains non-int: " 
-                    ^ idstr ^"["^ A.str_of_datatype typ ^ "]")
-                ex_list in
+          if sub_dim = 2 then
             match elem_type with
-            | A.DataType(raw_elem_type) -> 
-              S.MatrixElem(raw_elem_type, idstr, s_ex_list), elem_type
+            | A.DataType(_) -> 
+              S.MatrixElem(idstr, s_ex_list), elem_type
             | _ -> failwith @@ 
                 "INTERNAL bad matrix type should've been handled in S.decl: " ^idstr
           else
             failwith @@ "Subscript of matrix " ^idstr 
-                ^ " must have 2 args, but " ^ string_of_int subscript_len ^ " provided"
+                ^ " must have 2 args, but " ^ string_of_int sub_dim ^ " provided"
                 
         (* bad lvalue *)
         | _ -> failwith @@ idstr ^ " is not an array/matrix"
@@ -635,9 +655,10 @@ let gen_s_param_list param_list =
     (fun param -> gen_s_param param) param_list
     
 (* decl *)
-let rec check_matrix_decl = function
+let rec check_matrix_decl idstr typ =
+  match typ with
   | A.DataType(_) -> ()
-  | A.ArrayType(t) -> check_matrix_decl t
+  | A.ArrayType(t) -> check_matrix_decl idstr t
   | A.MatrixType(t) -> (
     match t with
     | A.DataType(mat_type) -> (
@@ -645,24 +666,26 @@ let rec check_matrix_decl = function
       (* only support 3 numerical types *)
       | T.Int | T.Float | T.Complex -> ()
       | _ -> failwith @@ 
-            "Unsupported matrix element declaration: " ^ T.str_of_type mat_type)
+        "Unsupported matrix element declaration: " ^idstr^ " with " ^ T.str_of_type mat_type)
     (* we shouldn't support float[][[]] *)
     | _ -> failwith @@ 
-          "Invalid matrix declaration: " ^ A.str_of_datatype t
+      "Invalid matrix declaration: " ^idstr^ " with " ^ A.str_of_datatype t
     )
   | A.NoneType -> failwith "INTERNAL NoneType encountered in check_matrix"
   
 (* update_env_var checks redeclaration error *)
 let gen_s_decl env = function
   | A.AssigningDecl(typ, id, ex) -> 
-    let _ = check_matrix_decl typ in (* disallow certain bad matrices *)
+    let idstr = get_id id in
+    let _ = check_matrix_decl idstr typ in (* disallow certain bad matrices *)
     let env' = update_env_var env typ id in
-    env', S.AssigningDecl(typ, get_id id, S.BoolLit("TODO")) (* TODO gen_s_expr *)
+    env', S.AssigningDecl(typ, idstr, S.BoolLit("TODO")) (* TODO gen_s_expr *)
 
   | A.PrimitiveDecl(typ, id) -> 
-    let _ = check_matrix_decl typ in (* disallow certain bad matrices *)
+    let idstr = get_id id in
+    let _ = check_matrix_decl idstr typ in (* disallow certain bad matrices *)
     let env' = update_env_var env typ id in
-    env', S.PrimitiveDecl(typ, get_id id)
+    env', S.PrimitiveDecl(typ, idstr)
 
 
 (********** Main entry point: AST -> SAST **********)

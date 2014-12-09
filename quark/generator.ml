@@ -80,6 +80,7 @@ let rec gen_datatype = function
     (* we shouldn't support float[][[]] *)
     | _ -> 
       failwith "Bad matrix type")
+  | NoneType -> failwith "INTERNAL generator sees NoneType"
 
 
 let rec gen_expr = function

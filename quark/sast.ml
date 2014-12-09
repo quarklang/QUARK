@@ -15,8 +15,8 @@ type op_tag =
 
 type lvalue =
   | Variable of string
-  | ArrayElem of A.datatype * string * expr list
-  | MatrixElem of T.vartype * string * expr list
+  | ArrayElem of string * expr list
+  | MatrixElem of string * expr list
 
 and expr =
   | Binop of expr * A.binop * expr * op_tag
