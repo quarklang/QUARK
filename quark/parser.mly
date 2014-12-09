@@ -191,8 +191,9 @@ statement:
   | iterator { [$1] } */
 
 iterator:
-  | ident IN LSQUARE range RSQUARE { RangeIterator($1, $4) }
-  | ident IN expr { ArrayIterator($1, $3) }
+  | ident IN LSQUARE range RSQUARE { RangeIterator(NoneType, $1, $4) }
+  | datatype ident IN LSQUARE range RSQUARE { RangeIterator($1, $2, $5) }
+  | datatype ident IN expr { ArrayIterator($1, $2, $4) }
 
 range:
   | expr COLON expr COLON expr { Range($1, $3, $5) }

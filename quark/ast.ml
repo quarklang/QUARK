@@ -78,8 +78,8 @@ type decl =
 type range = Range of expr * expr * expr
 
 type iterator =
-  | RangeIterator of ident * range
-  | ArrayIterator of ident * expr
+  | RangeIterator of datatype * ident * range
+  | ArrayIterator of datatype * ident * expr
 
 type statement =
   | CompoundStatement of statement list

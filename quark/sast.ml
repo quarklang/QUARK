@@ -44,8 +44,9 @@ type decl =
 type range = Range of expr * expr * expr
 
 type iterator =
-  | RangeIterator of string * range
-  | ArrayIterator of string * expr
+    (* first datatype in RangeIterator might be NoneType *)
+  | RangeIterator of A.datatype * string * range 
+  | ArrayIterator of A.datatype * string * expr
 
 type statement =
   | CompoundStatement of statement list
