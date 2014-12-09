@@ -83,7 +83,7 @@ let get_env_var env var_id =
   with Not_found -> 
     (* if the identifier appears as a func_id, then error! *)
     if StrMap.mem id env.func_table then
-      failwith @@ "Confuse a function with a variable: " ^ id
+      failwith @@ "A function is confused with a variable: " ^ id
     else
       { 
         v_type = A.NoneType; 
@@ -222,26 +222,7 @@ let gen_binop = function
 | _ -> failwith "unhandled binop"
 
 
-(*
-let rec gen_datatype = function
-	| A.DataType(t) -> 
-    gen_vartype t
-	| A.ArrayType(t) -> 
-		gen_datatype t ^ "[]"
-	| A.MatrixType(t) -> 
-   (match t with
-    | A.DataType(matType) -> 
-      (match matType with
-      (* only support 3 numerical types *)
-      | T.Int | T.Float | T.Complex -> 
-      "Matrix<" ^ gen_vartype matType ^ ", Dynamic, Dynamic>"
-      | _ -> failwith "Non-numerical matrix type")
-    (* we shouldn't support float[][[]] *)
-    | _ -> 
-      failwith "Bad matrix type")
-*)
-
-(********* Helpers for gen_s_expr ********)
+(******* Helpers for gen_s_expr ******)
 (* Fraction, Qureg, Complex *)
 let compound_type_err_msg name type1 type2 =
   "Invalid " ^ name ^ " literal operands: " ^ 
@@ -251,7 +232,8 @@ let is_matrix = function
   | A.MatrixType(_) -> true
   | _ -> false
 
-(* Main expr semantic checker entry *)
+
+(********* Main expr semantic checker entry *********)
 (* return env', S.expr, type *)
 let rec gen_s_expr env = function
   (* simple literals *)
@@ -469,6 +451,30 @@ let rec gen_s_expr env = function
     in
     env, S.Unop(op, s_ex, S.OpVerbatim), return_type
   
+  | A.Lval(lval) -> 
+    let s_lval, ltype = match lval with
+    | A.Variable(id) -> 
+      let vtype = (get_env_var env id).v_type in
+      if vtype = A.NoneType then
+        failwith @@ "Variable " ^ get_id id ^ " is undefined"
+      else
+        S.Variable(id), vtype
+    | A.ArrayElem(id, ex_list) -> 
+      let vtype = (get_env_var env id).v_type in
+      if vtype = A.NoneType then
+        failwith @@ "Array/Matrix " ^ get_id id ^ " is undefined"
+      else
+        match vtype with
+        (* array *)
+        | A.ArrayType(elem_type) -> 
+          failwith "TODO lval arraytype"
+        (* matrix *)
+        | A.MatrixType(elem_type) -> 
+          failwith "TODO lval matrixtype"
+        | _ -> failwith @@ (get_id id) ^ " is not an array/matrix"
+    in
+    env, S.Lval(s_lval), ltype
+  
   (* Special assignment *)
   | A.AssignOp(lval, op, ex) -> 
     env, S.IntLit("TODO"), A.DataType(T.Int)
@@ -482,12 +488,6 @@ let rec gen_s_expr env = function
     gen_lvalue lval ^" "^ gen_postop op
       *)
     
-  | A.Lval(lval) -> 
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
-    gen_lvalue lval
-      *)
-  
   (* Assignment *)
   | A.Assign(lval, ex) -> 
     env, S.IntLit("TODO"), A.DataType(T.Int)
@@ -589,18 +589,6 @@ and gen_lvalue = function
   | A.ArrayElem(id, exlist) -> 
     get_id id ^ "[" ^ gen_expr_list exlist ^ "]"
 
-and gen_matrix_list exlistlist =
-  let exlistlistStr = 
-    List.fold_left 
-      (fun s exlist -> s ^ gen_expr_list exlist ^ "; ") "" exlistlist
-  in
-  (* get rid of the last 2 chars ', ' *)
-  if exlistlistStr = "" then ""
-  else
-    String.sub exlistlistStr 0 ((String.length exlistlistStr) - 2)
-  
-
-	
 let rec gen_range id = function
 	| A.Range(exStart, exEnd, exStep) -> 
     let exStart = gen_s_expr exStart in
@@ -633,17 +621,37 @@ let gen_s_param_list param_list =
     (fun param -> gen_s_param param) param_list
     
 (* decl *)
-let rec gen_s_decl env = function
-  (* update_env_var checks redeclaration error *)
+let rec check_matrix_decl = function
+  | A.DataType(_) -> ()
+  | A.ArrayType(t) -> check_matrix_decl t
+  | A.MatrixType(t) -> (
+    match t with
+    | A.DataType(mat_type) -> (
+      match mat_type with
+      (* only support 3 numerical types *)
+      | T.Int | T.Float | T.Complex -> ()
+      | _ -> failwith @@ 
+            "Unsupported matrix element declaration: " ^ T.str_of_type mat_type)
+    (* we shouldn't support float[][[]] *)
+    | _ -> failwith @@ 
+          "Invalid matrix declaration: " ^ A.str_of_datatype t
+    )
+  | A.NoneType -> failwith "INTERNAL NoneType encountered in check_matrix"
+  
+(* update_env_var checks redeclaration error *)
+let gen_s_decl env = function
   | A.AssigningDecl(typ, id, ex) -> 
+    let _ = check_matrix_decl typ in (* disallow certain bad matrices *)
     let env' = update_env_var env typ id in
-    (env', S.AssigningDecl(typ, id, S.BoolLit("TODO"))) (* TODO gen_s_expr *)
+    env', S.AssigningDecl(typ, id, S.BoolLit("TODO")) (* TODO gen_s_expr *)
+
   | A.PrimitiveDecl(typ, id) -> 
+    let _ = check_matrix_decl typ in (* disallow certain bad matrices *)
     let env' = update_env_var env typ id in
-    (env', S.PrimitiveDecl(typ, id))
+    env', S.PrimitiveDecl(typ, id)
 
 
-(* Main entry point: take AST and convert to SAST *)
+(********** Main entry point: AST -> SAST **********)
 (* return env, [stmt] *)
 let rec gen_sast env = function
   | [] -> (env, [])

@@ -109,10 +109,11 @@ let rec str_of_datatype = function
       (* only support 3 numerical types *)
       | T.Int | T.Float | T.Complex -> 
       "[|" ^ T.str_of_type matType ^ "|]"
-      | _ -> failwith "Non-numerical matrix type")
+      | _ -> failwith "INTERNAL non-numerical matrix type to str")
     (* we shouldn't support float[][[]] *)
     | _ -> 
-      failwith "Bad matrix type")
+      failwith "INTERNAL bad matrix type to str")
+  | NoneType -> failwith "INTERNAL NoneType in str_of_datatype"
 
 let str_of_binop = function
   Add -> "+"

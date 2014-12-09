@@ -14,9 +14,9 @@ type op_tag =
   | OpQuerySingleBit (* measure only a single bit, not a range *)
 
 type lvalue =
-  | Variable of A.datatype * A.ident
+  | Variable of A.ident
   | ArrayElem of A.datatype * A.ident * expr list
-(* TODO? add MatrixElem of A.ident * expr * A.datatype *)
+  | MatrixElem of T.vartype * A.ident * expr list
 
 and expr =
   | Binop of expr * A.binop * expr * op_tag
