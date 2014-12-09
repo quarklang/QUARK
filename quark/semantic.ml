@@ -623,27 +623,36 @@ and gen_s_matrix env exprs_list_list =
     (env, [], T.Void, 0) exprs_list_list in
   (env, List.rev matrix , matrix_type, row_length)
   
-(*
-let rec gen_range id = function
-	| A.Range(exStart, exEnd, exStep) -> 
-    let exStart = gen_s_expr exStart in
-    let exEnd = gen_s_expr exEnd in
-    let exStep = gen_s_expr exStep in
-    (* !!!! Needs to assign exStart, exEnd and exStep to compiled temp vars *)
-    (* Shouldn't change over iteration!!! *)
-    let exCmp = surr exEnd ^">"^ surr exStart ^" ? " in
-    let id = get_id id in
-      "(" ^id^ "=" ^exStart^ "; " ^
-      exCmp^ id^" < " ^surr exEnd^ " : " ^id^ " > " ^surr exEnd^ "; " ^
-      exCmp^ id^" += " ^surr exStep^ " : " ^id^ " -= " ^surr exStep^ ")"
-  | _ -> failwith "range fatal error"
-	
-let rec gen_iterator = function
-  | A.RangeIterator(id, rng) -> 
-    gen_range id rng
-  | A.ArrayIterator(id, ex) -> 
-    get_id id ^ " in " ^ gen_s_expr ex
-*)
+let gen_s_range env id = function
+	| A.Range(start_ex, end_ex, step_ex) -> 
+    let vtype = (get_env_var env id).v_type in
+    let idstr = get_id id in
+    match vtype with
+    | A.NoneType -> failwith @@ "For-iterator " ^idstr^ " undefined"
+    | A.DataType(T.Int) | A.DataType(T.Float) -> begin
+      let env, s_start_ex, start_type = gen_s_expr env start_ex in
+      let env, s_end_ex, end_type = gen_s_expr env end_ex in
+      let env, s_step_ex, step_type = gen_s_expr env step_ex in
+      match start_type, end_type, step_type with
+      | A.DataType(typ1), A.DataType(typ2), A.DataType(typ3) -> 
+        if not (typ1 = T.Float || typ1 = T.Int) ||
+           not (typ2 = T.Float || typ2 = T.Int) ||
+           not (typ3 = T.Float || typ3 = T.Int) then
+           failwith @@ "Unsupported range type: " ^ T.str_of_type typ1 ^ ", "
+               ^ T.str_of_type typ2 ^ ", " ^ T.str_of_type typ3
+        else
+           S.Range(s_start_ex, s_end_ex, s_step_ex)
+      | _ -> failwith @@ "Unsupported range type: " ^ A.str_of_datatype start_type ^ ", "
+               ^ A.str_of_datatype end_type ^ ", " ^ A.str_of_datatype step_type
+      end
+    | _ -> failwith @@ "Unsupported for-iterator " ^idstr^ ": " ^A.str_of_datatype vtype
+
+let gen_s_iter env = function
+  | A.RangeIterator(id, range) -> 
+    S.RangeIterator(get_id id, gen_s_range env id range)
+  | A.ArrayIterator(id, array_ex) -> 
+    failwith "INTERNAL todo"
+    
 
 let gen_s_param = function 
   | A.PrimitiveDecl(typ, id) -> 
@@ -749,16 +758,9 @@ let rec gen_sast env = function
               ^ A.str_of_datatype pred_type ^ " provided"
             
       | A.ForStatement(iter, stmt) -> 
-        (env, S.EmptyStatement)
-        (* begin
-          (* for (a in 1:5, b in 7:3:-1) *)
-          (* List.iter (fun iter -> 
-            print_endline @@ "for " ^ gen_iterator iter) iterList; *)
-          print_endline @@ "for " ^ gen_iterator iter;
-          print_endline "{ // start for";
-          gen_sast [stmt];
-          print_endline "} // end for";
-        end *)
+        let s_iter = gen_s_iter env iter in
+        let env, s_stmt = gen_sast env [stmt] in
+        env, S.ForStatement(s_iter, List.hd s_stmt)
             
       | A.CompoundStatement(stmt_list) -> 
         let env' = incr_env_depth env in

@@ -19,6 +19,8 @@ int a = 6;
 
     while true:
         a = 3;
+    for e in [b>>1 : 6^4]:
+        a = 2;
 
     % float a;
     float e = 4.5;
