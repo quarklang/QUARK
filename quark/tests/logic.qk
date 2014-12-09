@@ -1,0 +1,24 @@
+
+def void main:
+{
+    if 3 == 3:
+        print "3 == 3";
+
+    if 3 < 5:
+        print "3 < 5";
+
+    if 3 != 5:
+        print "3 != 5";
+
+    if true == false:
+        print "this should not print";
+
+    if true != false:
+        print "this should print";
+
+    if 2 >= 2:
+        print "2 >= 2";
+
+    if 1 <= 4:
+        print "1 <= 4";
+}
