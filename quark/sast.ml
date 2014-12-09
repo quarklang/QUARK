@@ -33,7 +33,7 @@ and expr =
   | QRegLit of expr * expr
   | ComplexLit of expr * expr
   | ArrayLit of A.datatype * expr list
-  | MatrixLit of T.vartype * expr list list
+  | MatrixLit of T.vartype * expr list list * int (* column dimension *)
   | Membership of A.datatype * expr * A.datatype * expr
   | FunctionCall of A.ident * expr list
   | Lval of lvalue

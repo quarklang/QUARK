@@ -294,14 +294,16 @@ let rec gen_s_expr env = function
   | A.ArrayLit(exprs) ->
     let env, s_exprs, elem_type = gen_s_array env exprs in
     let _tmp = A.ArrayType(elem_type) in
-    let _ = print_endline @@ "ARRAY " ^ (A.str_of_datatype _tmp) in
+    let _ = print_endline @@ "DEBUG ARRAY " ^ (A.str_of_datatype _tmp) in
     env, S.ArrayLit(elem_type, s_exprs), A.ArrayType(elem_type)
 
   | A.MatrixLit(exprs_list_list) ->
-    let env, s_matrix, elem_type = gen_s_matrix env exprs_list_list in
+    let env, s_matrix, elem_type, coldim = gen_s_matrix env exprs_list_list in
     let _tmp = A.MatrixType(A.DataType(elem_type)) in
-    let _ = print_endline @@ "MATRIX " ^ (A.str_of_datatype _tmp) in
-    env, S.MatrixLit(elem_type, s_matrix), A.MatrixType(A.DataType(elem_type))
+    let _ = print_endline @@ "DEBUG MATRIX " ^ (A.str_of_datatype _tmp) 
+        ^ " cols= " ^ string_of_int coldim ^ " rows= " ^ string_of_int (List.length exprs_list_list) 
+    in
+    env, S.MatrixLit(elem_type, s_matrix, coldim), A.MatrixType(A.DataType(elem_type))
   
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)
@@ -540,7 +542,7 @@ and gen_s_array env exprs =
   (env, List.rev s_exprs , array_type)
 
 and gen_s_matrix env exprs_list_list =
-  let env, matrix, matrix_type, _ = List.fold_left
+  let env, matrix, matrix_type, row_length = List.fold_left
     (fun (env, rows, curr_type, row_length) exprs -> 
         (* evaluate each row where each row is an expr list *)
         let env, exprs, row_type = gen_s_array env exprs in
@@ -554,12 +556,10 @@ and gen_s_matrix env exprs_list_list =
             | _ -> failwith @@ "Invalid matrix row type: " ^ A.str_of_datatype row_type
         in
         let exprs_length = List.length exprs in
-
         match curr_type with
         | T.Void -> 
             (* means this is the 1st row which means we now know the matrix type *)
             env, (exprs :: rows), prev_type, exprs_length
-
         | _ -> (
           let curr_type' = 
             (* the same length*)
@@ -580,7 +580,7 @@ and gen_s_matrix env exprs_list_list =
             in
           env, (exprs :: rows), curr_type', row_length ))
     (env, [], T.Void, 0) exprs_list_list in
-  (env, List.rev matrix , matrix_type)
+  (env, List.rev matrix , matrix_type, row_length)
   
 (*
 and gen_lvalue = function
