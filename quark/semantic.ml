@@ -33,6 +33,7 @@ type environment = {
     (* if "", we are not inside any function *)
     func_current: string; 
     depth: int;
+    is_returned: bool;
 }
 
 (************** DEBUG ONLY **************)
@@ -62,6 +63,7 @@ let debug_env env msg =
         debug_s_decl_list finfo.f_args ^ " => " ^ A.str_of_datatype finfo.f_return ^ ";")
       env.func_table;
     print_endline @@ "Current= " ^ env.func_current;
+    print_endline @@ "is_returned= " ^ string_of_bool env.is_returned;
     print_endline "}";
   end
 
@@ -103,6 +105,9 @@ let update_env_var env var_typ var_id =
 let incr_env_depth env = 
   { env with depth = env.depth + 1 }
 
+let set_env_returned env = 
+  { env with is_returned = true }
+
 (****** Environment func_table ******)
 let get_env_func env func_id =
   try
@@ -139,6 +144,7 @@ let update_env_func env return_type func_id s_param_list is_defined =
         (* if forward_decl, we don't have a func_current *)
         if is_defined then get_id func_id else ""; 
       depth = env.depth;
+      is_returned = not is_defined; (* if not forward decl, we need to return *)
     } in
    
   match finfo.f_return with
@@ -721,13 +727,22 @@ let rec gen_sast env = function
         let env' = update_env_func env' return_type func_id param_list true in
         let _ = debug_env env' "after FunctionDecl" in
         (* get the function declaration, then close 'func_current' *)
-        let function_decl = S.FunctionDecl(return_type, get_id func_id, s_param_list, 
-          snd_2 @@ gen_sast env' stmt_list) in
+        let env_after_decl, s_stmt_list = gen_sast env' stmt_list in
+        (* check if properly returned *)
+        let is_returned = env_after_decl.is_returned in
+        let _ = if is_returned then ()
+          else if return_type = A.DataType(T.Void) then ()
+          else failwith @@ "Function " ^ get_id func_id 
+              ^ " should have at least one return: " ^ A.str_of_datatype return_type
+        in
+        let function_decl = 
+          S.FunctionDecl(return_type, get_id func_id, s_param_list, s_stmt_list) in
         let env'' = { 
           var_table = env.var_table; 
           func_table = env'.func_table;
           func_current = "";
           depth = env.depth;
+          is_returned = true;
         } in
         let _ = debug_env env'' "closed after FuncDecl" in
         env'', function_decl
@@ -764,7 +779,7 @@ let rec gen_sast env = function
             
       | A.CompoundStatement(stmt_list) -> 
         let env' = incr_env_depth env in
-        (env, S.CompoundStatement(snd_2 @@ gen_sast env' stmt_list))
+        env, S.CompoundStatement(snd_2 @@ gen_sast env' stmt_list)
 
       | A.Declaration(dec) -> 
         let env', s_dec = gen_s_decl env dec in
@@ -776,22 +791,34 @@ let rec gen_sast env = function
         env', S.Expression(s_ex)
 
       | A.ReturnStatement(ex) -> 
-        (env, S.EmptyStatement)
+        if env.func_current = "" then
+          failwith @@ "Invalid return statement outside function definition"
+        else
+        env, S.EmptyStatement
         (* print_endline @@ "return " ^ gen_s_expr ex ^ ";" *)
+
+      | A.VoidReturnStatement -> 
+        if env.func_current = "" then
+          failwith @@ "Invalid return statement outside function definition"
+        else
+          let f_return = 
+            (get_env_func env (A.Ident(env.func_current))).f_return in
+          if f_return = A.DataType(T.Void) then
+            let env' = set_env_returned env in
+            env', S.VoidReturnStatement
+          else
+            failwith @@ "Function " ^env.func_current 
+              ^ " should return " ^ A.str_of_datatype f_return ^ ", not void"
 
       | A.EmptyStatement -> 
         env, S.EmptyStatement
 
-      | A.VoidReturnStatement -> 
-        env, S.EmptyStatement
-        (* print_endline "return; // void" *)
-
       | A.BreakStatement -> 
-        (env, S.EmptyStatement)
+        env, S.EmptyStatement
         (* print_endline "break; // control" *)
 
       | A.ContinueStatement -> 
-        (env, S.EmptyStatement)
+        env, S.EmptyStatement
         (* print_endline "continue; // control" *)
 
       | _ -> failwith "nothing for eval()"

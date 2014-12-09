@@ -7,7 +7,8 @@ let _ =
     var_table = StrMap.empty; 
     func_table = StrMap.empty;
     func_current = "";
-    depth = 0
+    depth = 0;
+    is_returned = true;
   }
   in
   (*TODO 
