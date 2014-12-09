@@ -129,14 +129,14 @@ let update_env_func env return_type func_id s_param_list is_defined =
   let errmsg_str = ": " ^ get_id func_id ^ "()" in
   let s_arg_types = 
     List.map (function
-        | S.PrimitiveDecl(typ, id) -> typ
+        | A.PrimitiveDecl(typ, id) -> typ
         | _ -> failwith @@ "Function parameter list declaration error" ^ errmsg_str
         ) s_param_list in
   (* add formal params to var scope. This is a lambda function *)
   let add_formal_var_lambda = 
     List.fold_left 
         (fun env -> function
-        | S.PrimitiveDecl(typ, id) -> 
+        | A.PrimitiveDecl(typ, id) -> 
           update_env_var env typ id
         | _ -> failwith @@ "Function parameter list declaration error" ^ errmsg_str) in
   (* utility function *)
@@ -455,10 +455,11 @@ let rec gen_s_expr env = function
     let s_lval, ltype = match lval with
     | A.Variable(id) -> 
       let vtype = (get_env_var env id).v_type in
+      let idstr = get_id id in
       if vtype = A.NoneType then
-        failwith @@ "Variable " ^ get_id id ^ " is undefined"
+        failwith @@ "Variable " ^ idstr ^ " is undefined"
       else
-        S.Variable(id), vtype
+        S.Variable(idstr), vtype
     | A.ArrayElem(id, ex_list) -> 
       let vtype = (get_env_var env id).v_type in
       let idstr = get_id id in
@@ -466,10 +467,11 @@ let rec gen_s_expr env = function
         failwith @@ "Array/Matrix " ^ idstr ^ " is undefined"
       else
         match vtype with
-        (* array *)
+        (* Array lvalue *)
         | A.ArrayType(elem_type) -> 
           failwith "TODO lval arraytype"
-        (* matrix *)
+
+        (* Matrix lvalue *)
         | A.MatrixType(elem_type) -> 
           let subscript_len = List.length ex_list in
           if subscript_len = 2 then
@@ -482,12 +484,14 @@ let rec gen_s_expr env = function
                 ex_list in
             match elem_type with
             | A.DataType(raw_elem_type) -> 
-              S.MatrixElem(raw_elem_type, id, s_ex_list), elem_type
+              S.MatrixElem(raw_elem_type, idstr, s_ex_list), elem_type
             | _ -> failwith @@ 
                 "INTERNAL bad matrix type should've been handled in S.decl: " ^idstr
           else
             failwith @@ "Subscript of matrix " ^idstr 
                 ^ " must have 2 args, but " ^ string_of_int subscript_len ^ " provided"
+                
+        (* bad lvalue *)
         | _ -> failwith @@ idstr ^ " is not an array/matrix"
     in
     env, S.Lval(s_lval), ltype
@@ -551,8 +555,7 @@ and gen_s_array env exprs =
             env, checked_expr :: checked_exprs_acc, A.DataType(T.Float)
           | _ when array_type = expr_type -> 
             env, checked_expr :: checked_exprs_acc, array_type
-          | _ ->  failwith @@ 
-            "Array element type conflict: " 
+          | _ ->  failwith @@ "Array element type conflict: " 
             ^ A.str_of_datatype array_type ^ " -.- " ^ A.str_of_datatype expr_type)
           )
     (env, [], A.NoneType) exprs in
@@ -581,7 +584,7 @@ and gen_s_matrix env exprs_list_list =
           let curr_type' = 
             (* the same length*)
             if row_length <> exprs_length
-            then failwith "All rows in a matrix must be the same length"
+            then failwith "All rows in a matrix must have the same length"
             else (
             (* ensure all rows have the same type and can only be complex, int or float *)
             match curr_type, prev_type with
@@ -623,7 +626,7 @@ let rec gen_iterator = function
 
 let gen_s_param = function 
   | A.PrimitiveDecl(typ, id) -> 
-    S.PrimitiveDecl(typ, id)
+    S.PrimitiveDecl(typ, get_id id)
   | _ -> failwith "Function parameter list declaration error"
 
 (* Used in A.FunctionDecl *)
@@ -654,12 +657,12 @@ let gen_s_decl env = function
   | A.AssigningDecl(typ, id, ex) -> 
     let _ = check_matrix_decl typ in (* disallow certain bad matrices *)
     let env' = update_env_var env typ id in
-    env', S.AssigningDecl(typ, id, S.BoolLit("TODO")) (* TODO gen_s_expr *)
+    env', S.AssigningDecl(typ, get_id id, S.BoolLit("TODO")) (* TODO gen_s_expr *)
 
   | A.PrimitiveDecl(typ, id) -> 
     let _ = check_matrix_decl typ in (* disallow certain bad matrices *)
     let env' = update_env_var env typ id in
-    env', S.PrimitiveDecl(typ, id)
+    env', S.PrimitiveDecl(typ, get_id id)
 
 
 (********** Main entry point: AST -> SAST **********)
@@ -674,10 +677,10 @@ let rec gen_sast env = function
         let _ = debug_env env "before FunctionDecl" in
         let s_param_list = gen_s_param_list param_list in
         let env' = incr_env_depth env in
-        let env' = update_env_func env' return_type func_id s_param_list true in
+        let env' = update_env_func env' return_type func_id param_list true in
         let _ = debug_env env' "after FunctionDecl" in
         (* get the function declaration, then close 'func_current' *)
-        let function_decl = S.FunctionDecl(return_type, func_id, s_param_list, 
+        let function_decl = S.FunctionDecl(return_type, get_id func_id, s_param_list, 
           snd_2 @@ gen_sast env' stmt_list) in
         let env'' = { 
           var_table = env.var_table; 
@@ -700,8 +703,8 @@ let rec gen_sast env = function
       
       | A.ForwardDecl(return_type, func_id, param_list) -> 
         let s_param_list = gen_s_param_list param_list in
-        let env' = update_env_func env return_type func_id s_param_list false in
-        (env', S.ForwardDecl(return_type, func_id, s_param_list))
+        let env' = update_env_func env return_type func_id param_list false in
+        (env', S.ForwardDecl(return_type, get_id func_id, s_param_list))
           (* print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
             (get_id funcId) ^ surr( gen_param_list paramList ) ^";\n"; *)
 

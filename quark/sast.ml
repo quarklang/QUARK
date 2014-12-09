@@ -14,9 +14,9 @@ type op_tag =
   | OpQuerySingleBit (* measure only a single bit, not a range *)
 
 type lvalue =
-  | Variable of A.ident
-  | ArrayElem of A.datatype * A.ident * expr list
-  | MatrixElem of T.vartype * A.ident * expr list
+  | Variable of string
+  | ArrayElem of A.datatype * string * expr list
+  | MatrixElem of T.vartype * string * expr list
 
 and expr =
   | Binop of expr * A.binop * expr * op_tag
@@ -35,19 +35,19 @@ and expr =
   | ArrayLit of A.datatype * expr list
   | MatrixLit of T.vartype * expr list list * int (* column dimension *)
   | Membership of A.datatype * expr * A.datatype * expr
-  | FunctionCall of A.ident * expr list
+  | FunctionCall of string * expr list
   | Lval of lvalue
 
 type decl =
-  | AssigningDecl of A.datatype * A.ident * expr
-  | PrimitiveDecl of A.datatype * A.ident
-  (* | ArrayDecl of A.datatype * A.ident * expr list *)
+  | AssigningDecl of A.datatype * string * expr
+  | PrimitiveDecl of A.datatype * string
+  (* | ArrayDecl of A.datatype * string * expr list *)
 
 type range = Range of expr * expr * expr
 
 type iterator =
-  | RangeIterator of A.ident * range
-  | ArrayIterator of A.ident * expr
+  | RangeIterator of string * range
+  | ArrayIterator of string * expr
 
 type statement =
   | CompoundStatement of statement list
@@ -57,8 +57,8 @@ type statement =
   | IfStatement of expr * statement * statement
   | WhileStatement of expr * statement
   | ForStatement of iterator * statement
-  | FunctionDecl of A.datatype * A.ident * decl list * statement list
-  | ForwardDecl of A.datatype * A.ident * decl list
+  | FunctionDecl of A.datatype * string * decl list * statement list
+  | ForwardDecl of A.datatype * string * decl list
   | ReturnStatement of expr
   | VoidReturnStatement
   | BreakStatement
