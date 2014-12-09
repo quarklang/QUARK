@@ -9,6 +9,7 @@ type op_tag =
   | CastFraction1 (* cast the first arg to fraction *)
   | CastFraction2 (* cast the second arg to fraction *)
   | OpConcat (* list concatenation *)
+  | OpQuerySingleBit (* measure only a single bit, not a range *)
 
 type lvalue =
   | Variable of A.datatype * A.ident
@@ -17,6 +18,7 @@ type lvalue =
 
 and expr =
   | Binop of expr * A.binop * expr * op_tag
+  | Queryop of expr * A.queryop * expr * expr * op_tag (* QuerySingleBit *)
   | AssignOp of A.datatype * lvalue * A.binop * A.datatype * expr
   | Unop of A.unop * A.datatype * expr
   | PostOp of A.datatype * lvalue * A.postop
