@@ -28,7 +28,7 @@ def int f1: string[][][] a, int[] b, fraction c
         a[i++, j--] = myfunc(3);
     }
 
-    for a in [:5:1], b in [7:2**3] : break;
+    for a in [:5:1] : break;
     for c in [1, 14 mod 3, 6+1, -3*2] : continue;
     
     [|1, i(2, 3); r10, r11; r20, r21|] + [|PI**2, i(2$1, 3$2)|]; % matrix addition

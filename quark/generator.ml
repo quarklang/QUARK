@@ -51,7 +51,7 @@ let gen_binop = function
 | SubEq -> "-="
 | MulEq -> "*="
 | DivEq -> "/="
-| AndEq -> "&="
+| BitAndEq -> "&="
 | _ -> failwith "unhandled binop"
 
 let gen_vartype = function
@@ -80,6 +80,7 @@ let rec gen_datatype = function
     (* we shouldn't support float[][[]] *)
     | _ -> 
       failwith "Bad matrix type")
+  | NoneType -> failwith "INTERNAL generator sees NoneType"
 
 
 let rec gen_expr = function
@@ -109,11 +110,17 @@ let rec gen_expr = function
   | Binop(ex1, op, ex2) -> 
     let ex1 = gen_expr ex1 in
     let ex2 = gen_expr ex2 in
+      ex1 ^" "^ gen_binop op ^" "^ ex2
+  
+  (* Query ops *)
+  | Queryop(ex1, op, ex2, ex3) -> 
+    "TODO"
+    (*
      (match op with
       | Query -> "measure_top(" ^ex1^ ", " ^ex2^ ", true)"
       | QueryUnreal -> "measure_top(" ^ex1^ ", " ^ex2^ ", false)"
-      | _ -> ex1 ^" "^ gen_binop op ^" "^ ex2)
-  
+      | _ -> ) *)
+    
   (* Unary ops *)
   | Unop(op, ex) -> 
     gen_unop op ^ gen_expr ex
@@ -130,18 +137,20 @@ let rec gen_expr = function
   | PostOp(lval, op) -> 
     gen_lvalue lval ^" "^ gen_postop op
     
+  (* Function calls *)
+  | FunctionCall(funcId, exlist) -> 
+    gen_id funcId ^ surr( gen_expr_list exlist )
+    
   (* Membership testing with keyword 'in' *)
   | Membership(exElem, exArray) -> 
+    failwith "Membership not yet supported"
     (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
-    (* Shouldn't change over calls!!! *)
+    (*
     let exElem = gen_expr exElem in
     let exArray = gen_expr exArray in
       "std::find(" ^surr exArray^ ".begin(), " ^surr exArray^ ".end(), " ^
       exElem^ ") != " ^surr exArray^ ".end()"
-    
-  (* Function calls *)
-  | FunctionCall(funcId, exlist) -> 
-    gen_id funcId ^ surr( gen_expr_list exlist )
+    *)
   
   | _ -> failwith "some expr not parsed"
 
@@ -201,9 +210,9 @@ let rec gen_range id = function
   | _ -> failwith "range fatal error"
 	
 let rec gen_iterator = function
-  | RangeIterator(id, rng) -> 
+  | RangeIterator(_, id, rng) -> 
     gen_range id rng
-  | ArrayIterator(id, ex) -> 
+  | ArrayIterator(_, id, ex) -> 
     gen_id id ^ " in " ^ gen_expr ex
 	
 let rec gen_decl = function
@@ -254,11 +263,12 @@ let rec eval stmts =
           print_endline "} // end while";
         end
             
-      | ForStatement(iterList, stmt) -> 
+      | ForStatement(iter, stmt) -> 
         begin
           (* for (a in 1:5, b in 7:3:-1) *)
-          List.iter (fun iter -> 
-            print_endline @@ "for " ^ gen_iterator iter) iterList;
+          (* List.iter (fun iter -> 
+            print_endline @@ "for " ^ gen_iterator iter) iterList; *)
+          print_endline @@ "for " ^ gen_iterator iter;
           print_endline "{ // start for";
           eval [stmt];
           print_endline "} // end for";
