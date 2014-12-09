@@ -894,7 +894,7 @@ let rec gen_sast env = function
       | A.EmptyStatement -> 
         env, S.EmptyStatement
 
-      | _ -> failwith "nothing for eval()"
+      | _ -> failwith "INTERNAL unhandled statement"
     in 
     let env_new, s_rest = gen_sast env_new rest in
     (env_new, (s_stmt :: s_rest))
