@@ -739,14 +739,14 @@ let rec gen_sast env = function
           failwith @@ "If predicate must be bool, but " 
               ^ A.str_of_datatype pred_type ^ " provided"
 				
-      | A.WhileStatement(ex, stmt) -> 
-        (env, S.EmptyStatement)
-        (* begin
-          print_endline @@ "while " ^ surr(gen_s_expr ex);
-          print_endline "{ // start while";
-          gen_sast [stmt];
-          print_endline "} // end while";
-        end *)
+      | A.WhileStatement(pred_ex, stmt) -> 
+        let env, s_pred_ex, pred_type = gen_s_expr env pred_ex in
+        if pred_type = A.DataType(T.Bool) then
+          let env, s_stmt = gen_sast env [stmt] in
+          env, S.WhileStatement(s_pred_ex, List.hd s_stmt)
+        else
+          failwith @@ "While predicate must be bool, but " 
+              ^ A.str_of_datatype pred_type ^ " provided"
             
       | A.ForStatement(iter, stmt) -> 
         (env, S.EmptyStatement)
