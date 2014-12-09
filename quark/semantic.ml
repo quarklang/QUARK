@@ -241,10 +241,15 @@ let rec gen_datatype = function
       failwith "Bad matrix type")
 *)
 
+(********* Helpers for gen_s_expr ********)
 (* Fraction, Qureg, Complex *)
 let compound_type_err_msg name type1 type2 =
   "Invalid " ^ name ^ " literal operands: " ^ 
   A.str_of_datatype type1 ^","^ A.str_of_datatype type2
+
+let is_matrix = function
+  | A.MatrixType(_) -> true
+  | _ -> false
 
 (* Main expr semantic checker entry *)
 (* return env', S.expr, type *)
@@ -303,7 +308,7 @@ let rec gen_s_expr env = function
   | A.Binop(expr1, op, expr2) -> 
     (* helper functions for Binop case *)
     let err_msg_helper func_str_of op type1 type2 =
-      "Incompatible types for " ^ A.str_of_binop op ^ ": " 
+      "Incompatible operands for binary op " ^ A.str_of_binop op ^ ": " 
       ^ func_str_of type1 ^ " -.- " ^ func_str_of type2 in
     let err_msg = err_msg_helper T.str_of_type in (* basic types *)
     let err_msg_arrmat = err_msg_helper A.str_of_datatype in (* array/matrix types *)
@@ -396,10 +401,6 @@ let rec gen_s_expr env = function
       
     (* At least one of the binop operand is an array/matrix *)
     | type1, type2 -> 
-      let is_matrix = function
-        | A.MatrixType(_) -> true
-        | _ -> false
-      in 
       let result_type, optag =
         match op with
         | A.Eq  | A.NotEq when type1 = type2 -> 
@@ -439,9 +440,50 @@ let rec gen_s_expr env = function
     
   (* Unary ops *)
   | A.Unop(op, ex) -> 
+    let env, s_ex, typ = gen_s_expr env ex in
+    let err_msg op t = "Incompatible operand for unary op " 
+        ^ A.str_of_unop op ^ ": " ^ A.str_of_datatype t in
+    let return_type = 
+      if is_matrix typ && op = A.Neg then 
+        typ (* matrix support negation *)
+      else
+      A.DataType(
+        let raw_type = match typ with
+          | A.DataType(t) -> t
+          | _ -> failwith @@ err_msg op typ 
+        in
+        match op with
+        | A.Neg -> (match raw_type with
+          | T.Int | T.Float | T.Fraction | T.Complex -> raw_type
+          | _ -> failwith @@ err_msg op typ)
+        | A.Not -> (match raw_type with
+          | T.Bool -> T.Bool
+          | _ -> failwith @@ err_msg op typ)
+        | A.BitNot -> (match raw_type with
+           (* ~fraction inverts the fraction *)
+          | T.Int | T.Fraction -> raw_type
+          | _ -> failwith @@ err_msg op typ)
+      )
+    in
+    env, S.Unop(op, s_ex, S.OpVerbatim), return_type
+  
+  (* Special assignment *)
+  | A.AssignOp(lval, op, ex) -> 
     env, S.IntLit("TODO"), A.DataType(T.Int)
       (*
-    gen_unop op ^ gen_s_expr ex
+    gen_lvalue lval ^" "^ gen_binop op ^" "^ gen_s_expr ex
+      *)
+
+  | A.PostOp(lval, op) -> 
+    env, S.IntLit("TODO"), A.DataType(T.Int)
+      (*
+    gen_lvalue lval ^" "^ gen_postop op
+      *)
+    
+  | A.Lval(lval) -> 
+    env, S.IntLit("TODO"), A.DataType(T.Int)
+      (*
+    gen_lvalue lval
       *)
   
   (* Assignment *)
@@ -450,24 +492,7 @@ let rec gen_s_expr env = function
       (*
     gen_lvalue lval ^ " = " ^ gen_s_expr ex
       *)
-  | A.Lval(lval) -> 
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
-    gen_lvalue lval
-      *)
-  
-  (* Special assignment *)
-  | A.AssignOp(lval, op, ex) -> 
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
-    gen_lvalue lval ^" "^ gen_binop op ^" "^ gen_s_expr ex
-      *)
-  | A.PostOp(lval, op) -> 
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
-    gen_lvalue lval ^" "^ gen_postop op
-      *)
-    
+
   (* Membership testing with keyword 'in' *)
   | A.Membership(exElem, exArray) -> 
     env, S.IntLit("TODO"), A.DataType(T.Int)

@@ -22,7 +22,7 @@ and expr =
   | Binop of expr * A.binop * expr * op_tag
   | Queryop of expr * A.queryop * expr * expr * op_tag (* QuerySingleBit *)
   | AssignOp of A.datatype * lvalue * A.binop * A.datatype * expr
-  | Unop of A.unop * A.datatype * expr
+  | Unop of A.unop * expr * op_tag
   | PostOp of A.datatype * lvalue * A.postop
   | Assign of A.datatype * lvalue * A.datatype * expr
   | IntLit of string
