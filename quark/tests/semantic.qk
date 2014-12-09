@@ -30,6 +30,11 @@ def int f1: int a, int b, string[][][] c
     mata[1,2]; 
     mata[1,2,3,4];
     mata[1,2,3,4,5,6];
+
+    int[][] intarr;
+    intarr[3, 4] ++;
+    float[[]][] fmatarr;
+    fmatarr[30, 2, 3] --;
 }
 
 qreg q;

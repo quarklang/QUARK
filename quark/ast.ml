@@ -147,3 +147,8 @@ let str_of_unop = function
 | Not -> "not"
 | BitNot -> "~"
 | _ -> failwith "INTERNAL unhandled unop"
+
+let str_of_postop = function
+| Inc -> "++"
+| Dec -> "--"
+| _ -> failwith "INTERNAL unhandled postop"

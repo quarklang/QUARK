@@ -22,8 +22,8 @@ and expr =
   | Binop of expr * A.binop * expr * op_tag
   | Queryop of expr * A.queryop * expr * expr * op_tag (* QuerySingleBit *)
   | Unop of A.unop * expr * op_tag
-  | PostOp of A.datatype * lvalue * A.postop
-  | Assign of A.datatype * lvalue * A.datatype * expr
+  | PostOp of lvalue * A.postop
+  | Assign of lvalue * expr
   | IntLit of string
   | BoolLit of string
   | FloatLit of string

@@ -490,9 +490,19 @@ let rec gen_s_expr env = function
     in
     gen_s_expr env (A.Assign(lval, A.Binop(A.Lval(lval), binop, ex)))
 
+  (* Post ++ and -- *)
   | A.PostOp(lval, op) -> 
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-    
+    let env, s_lval_ex, typ = gen_s_expr env (A.Lval(lval)) in
+      let s_lval = match s_lval_ex with
+      | S.Lval(s_lval) -> s_lval
+      | _ -> failwith "INTERNAL in postop: doesn't return S.Lval as expected"
+      in (
+      match typ with
+      | A.DataType(T.Int)  | A.DataType(T.Float) -> 
+        env, S.PostOp(s_lval, op), typ
+      | _ -> failwith @@ "Incompatible operand for post op " 
+          ^ A.str_of_postop op ^ ": " ^ A.str_of_datatype typ
+      )
   (* Assignment *)
   | A.Assign(lval, ex) -> 
     env, S.IntLit("TODO"), A.DataType(T.Int)
