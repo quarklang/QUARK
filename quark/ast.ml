@@ -108,7 +108,7 @@ let rec str_of_datatype = function
       (match matType with
       (* only support 3 numerical types *)
       | T.Int | T.Float | T.Complex -> 
-      "Matrix<" ^ T.str_of_type matType ^ ", Dynamic, Dynamic>"
+      "[|" ^ T.str_of_type matType ^ "|]"
       | _ -> failwith "Non-numerical matrix type")
     (* we shouldn't support float[][[]] *)
     | _ -> 

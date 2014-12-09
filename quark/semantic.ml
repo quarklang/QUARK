@@ -298,7 +298,8 @@ let rec gen_s_expr env = function
     let err_msg_helper func_str_of op type1 type2 =
       "Incompatible types for " ^ A.str_of_binop op ^ ": " 
       ^ func_str_of type1 ^ " -.- " ^ func_str_of type2 in
-    let err_msg = err_msg_helper T.str_of_type in
+    let err_msg = err_msg_helper T.str_of_type in (* basic types *)
+    let err_msg_arrmat = err_msg_helper A.str_of_datatype in (* array/matrix types *)
     
     (* check left and right children *)
     let env, s_expr1, ex_type1 = gen_s_expr env expr1 in
@@ -315,8 +316,8 @@ let rec gen_s_expr env = function
           | T.Int,   T.Float 
           | T.Float, T.Int -> T.Bool, S.OpVerbatim
           (* | T.Fraction, T.Fraction -> T.Bool *)
-          | t1, t2 -> failwith @@ err_msg op t1 t2 in
-
+          | t1, t2 -> failwith @@ err_msg op t1 t2
+      in
       let binop_math op type1 type2 = 
           let notmod = op <> A.Mod in
           let notmodpow = notmod && op <> A.Pow in
@@ -339,30 +340,27 @@ let rec gen_s_expr env = function
               T.Fraction, S.CastFraction2
           | T.Fraction, T.Fraction  when notmodpow ->
               T.Fraction, S.OpVerbatim
-          | t1, t2 -> failwith @@ err_msg op t1 t2 in
-
+          | t1, t2 -> failwith @@ err_msg op t1 t2
+      in
       let logic_basic op type1 type2 =
         match type1, type2 with
           | T.Bool, T.Bool -> T.Bool, S.OpVerbatim
-          | t1, t2 -> failwith @@ err_msg op t1 t2 in
-
+          | t1, t2 -> failwith @@ err_msg op t1 t2
+      in
       let logic_equal op type1 type2 = 
         match type1, type2 with
           | T.Float, T.Int
           | T.Int,   T.Float -> T.Bool, S.OpVerbatim
           | t1, t2 when t1 = t2 -> T.Bool, S.OpVerbatim
-          | t1, t2 -> failwith @@ err_msg op t1 t2 in
-
+          | t1, t2 -> failwith @@ err_msg op t1 t2
+      in
       let binop_bitwise op type1 type2 = 
         match type1, type2 with
           | T.Int, T.Int -> T.Int, S.OpVerbatim
-          | t1, t2 -> failwith @@ err_msg op t1 t2 in
-
-      let binop_query op type1 type2 = 
-        match type1, type2 with
-          | T.Int, T.Int -> T.Int, S.OpVerbatim
-          | t1, t2 -> failwith @@ err_msg op t1 t2 in
-
+          | T.String, T.String when op = A.BitAnd -> 
+              T.String, S.OpStringConcat
+          | t1, t2 -> failwith @@ err_msg op t1 t2
+      in
       let result_type, optag = 
         match op with 
           | A.Add         -> binop_math op type1 type2
@@ -384,17 +382,35 @@ let rec gen_s_expr env = function
           | A.BitXor      -> binop_bitwise op type1 type2
           | A.Lshift      -> binop_bitwise op type1 type2
           | A.Rshift      -> binop_bitwise op type1 type2
-          (* TODO
-          | A.Query
-          | A.QueryUnreal
-          *)
-          | _ -> failwith "TODO match op"
+          | _ -> failwith "INTERNAL unmatched binop"
       in
       env, S.Binop(s_expr1, op, s_expr2, optag), A.DataType(result_type)
       end
-    (* At least one of the operand is an array/matrix *)
-    | _ -> failwith "TODO"
-    end
+      
+    (* At least one of the binop operand is an array/matrix *)
+    | type1, type2 -> 
+      let is_matrix = function
+        | A.MatrixType(_) -> true
+        | _ -> false
+      in 
+      let result_type, optag =
+        match op with
+        | A.Eq  | A.NotEq when type1 = type2 -> 
+            A.DataType(T.Bool), S.OpVerbatim
+        | A.Add | A.Sub | A.Mul | A.Pow when type1 = type2 && is_matrix type1 -> 
+            (* matrix pow will be kronecker product *)
+            type1, S.OpMatrixMath (* matrix operations *)
+        | A.BitAnd when type1 = type2 -> 
+            type1, S.OpArrayConcat (* array/mat concatenation *)
+        | _ -> failwith @@ err_msg_arrmat op type1 type2
+      in
+      env, S.Binop(s_expr1, op, s_expr2, optag), result_type
+    end (* end of binop *)
+    
+  (* Query ops *)
+  | A.Queryop(qreg_ex, op, start_ex, start_end) -> 
+    env, S.IntLit("TODO"), A.DataType(T.Int)
+  
   (* Unary ops *)
   | A.Unop(op, ex) -> 
     env, S.IntLit("TODO"), A.DataType(T.Int)
@@ -445,7 +461,7 @@ let rec gen_s_expr env = function
     get_id funcId ^ surr( gen_expr_list exlist )
       *)
   
-  | _ -> failwith "some expr not parsed"
+  | _ -> failwith "INTERNAL some expr not properly checked"
 
 (* Helper: including fraction, complex and qreg *)
 and check_compound_literal env ex1 ex2 name =

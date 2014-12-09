@@ -8,7 +8,9 @@ type op_tag =
   | CastComplex2 (* cast the second arg to complex *)
   | CastFraction1 (* cast the first arg to fraction *)
   | CastFraction2 (* cast the second arg to fraction *)
-  | OpConcat (* list concatenation *)
+  | OpArrayConcat
+  | OpStringConcat
+  | OpMatrixMath (* same as OpVerbatim. conceptual purpose only. *)
   | OpQuerySingleBit (* measure only a single bit, not a range *)
 
 type lvalue =
