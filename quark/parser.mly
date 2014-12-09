@@ -125,7 +125,7 @@ expr:
   | lvalue MINUS_EQUALS expr { AssignOp($1, SubEq, $3) } 
   | lvalue TIMES_EQUALS expr { AssignOp($1, MulEq, $3) }
   | lvalue DIVIDE_EQUALS expr { AssignOp($1, DivEq, $3) }
-  | lvalue BITAND_EQUALS expr { AssignOp($1, AndEq, $3) }
+  | lvalue BITAND_EQUALS expr { AssignOp($1, BitAndEq, $3) }
 
   /* Post operation */
   | lvalue INCREMENT { PostOp($1, Inc) }

@@ -51,7 +51,7 @@ let gen_binop = function
 | SubEq -> "-="
 | MulEq -> "*="
 | DivEq -> "/="
-| AndEq -> "&="
+| BitAndEq -> "&="
 | _ -> failwith "unhandled binop"
 
 let gen_vartype = function

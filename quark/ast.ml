@@ -24,7 +24,7 @@ type binop =
   | SubEq
   | MulEq
   | DivEq
-  | AndEq
+  | BitAndEq
 
 type queryop =
   | Query
@@ -116,7 +116,7 @@ let rec str_of_datatype = function
   | NoneType -> failwith "INTERNAL NoneType in str_of_datatype"
 
 let str_of_binop = function
-  Add -> "+"
+| Add -> "+"
 | Sub -> "-"
 | Mul -> "*"
 | Div -> "/"
@@ -139,7 +139,7 @@ let str_of_binop = function
 | SubEq -> "-="
 | MulEq -> "*="
 | DivEq -> "/="
-| AndEq -> "&="
+| BitAndEq -> "&="
 | _ -> failwith "INTERNAL unhandled binop"
 
 let str_of_unop = function
