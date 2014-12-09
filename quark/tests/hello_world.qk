@@ -1,0 +1,4 @@
+def void main: 
+{
+    print "hello world";
+}
