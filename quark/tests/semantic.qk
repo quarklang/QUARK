@@ -3,19 +3,41 @@
 float a = 6;
 
 int f1: int c, int SDUI_9, string[][][] shit;
-void foo: int c, int b;
+string foo: int c, int b;
+
+def int test_scope: int a, int b
+{
+    for int c in [3:5]:
+        int a;
+    if true:
+        int a;
+    else
+    {
+        int a;
+        return a+2;
+    }
+    int e;
+}
 
 def int test_return: int a, int b
 {
     if true:
         1+1;
     else
+    {
         int i;
         for i in [3:4]:
         {
             while true:
-                return i(10);
+                return i;
         }
+        i >> 2;
+
+        for int j in [3:4]:
+            int c = 3;
+        int c;
+    }
+    int i;
 }
 
 def int f1: int a, int b, string[][][] c
@@ -72,13 +94,14 @@ return a + 1.4;
 
 qreg q;
 
-def void foo: int a, int b
+def string foo: int a, int b
 {
     f1(a, 4.5, [[["shit"]]]);
     int e;
     {
         {
             fraction e;
+            return "sfd";
         }
     }
 }

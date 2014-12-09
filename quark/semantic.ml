@@ -629,36 +629,6 @@ and gen_s_matrix env exprs_list_list =
     (env, [], T.Void, 0) exprs_list_list in
   (env, List.rev matrix , matrix_type, row_length)
   
-let gen_s_range env id = function
-	| A.Range(start_ex, end_ex, step_ex) -> 
-    let vtype = (get_env_var env id).v_type in
-    let idstr = get_id id in
-    match vtype with
-    | A.NoneType -> failwith @@ "For-iterator " ^idstr^ " undefined"
-    | A.DataType(T.Int) | A.DataType(T.Float) -> begin
-      let env, s_start_ex, start_type = gen_s_expr env start_ex in
-      let env, s_end_ex, end_type = gen_s_expr env end_ex in
-      let env, s_step_ex, step_type = gen_s_expr env step_ex in
-      match start_type, end_type, step_type with
-      | A.DataType(typ1), A.DataType(typ2), A.DataType(typ3) -> 
-        if not (typ1 = T.Float || typ1 = T.Int) ||
-           not (typ2 = T.Float || typ2 = T.Int) ||
-           not (typ3 = T.Float || typ3 = T.Int) then
-           failwith @@ "Unsupported range type: " ^ T.str_of_type typ1 ^ ", "
-               ^ T.str_of_type typ2 ^ ", " ^ T.str_of_type typ3
-        else
-           S.Range(s_start_ex, s_end_ex, s_step_ex)
-      | _ -> failwith @@ "Unsupported range type: " ^ A.str_of_datatype start_type ^ ", "
-               ^ A.str_of_datatype end_type ^ ", " ^ A.str_of_datatype step_type
-      end
-    | _ -> failwith @@ "Unsupported for-iterator " ^idstr^ ": " ^A.str_of_datatype vtype
-
-let gen_s_iter env = function
-  | A.RangeIterator(id, range) -> 
-    S.RangeIterator(get_id id, gen_s_range env id range)
-  | A.ArrayIterator(id, array_ex) -> 
-    failwith "INTERNAL todo"
-    
 
 let gen_s_param = function 
   | A.PrimitiveDecl(typ, id) -> 
@@ -712,6 +682,51 @@ let gen_s_decl env = function
     env', S.PrimitiveDecl(typ, idstr)
 
 
+(* for-loop iterator syntax *)  
+let gen_s_range env id = function
+	| A.Range(start_ex, end_ex, step_ex) -> 
+    let vtype = (get_env_var env id).v_type in
+    let idstr = get_id id in
+    match vtype with
+    | A.NoneType -> failwith @@ "For-iterator " ^idstr^ " undefined"
+    | A.DataType(T.Int) | A.DataType(T.Float) -> begin
+      let env, s_start_ex, start_type = gen_s_expr env start_ex in
+      let env, s_end_ex, end_type = gen_s_expr env end_ex in
+      let env, s_step_ex, step_type = gen_s_expr env step_ex in
+      match start_type, end_type, step_type with
+      | A.DataType(typ1), A.DataType(typ2), A.DataType(typ3) -> 
+        if not (typ1 = T.Float || typ1 = T.Int) ||
+           not (typ2 = T.Float || typ2 = T.Int) ||
+           not (typ3 = T.Float || typ3 = T.Int) then
+           failwith @@ "Unsupported range type: " ^ T.str_of_type typ1 ^ ", "
+               ^ T.str_of_type typ2 ^ ", " ^ T.str_of_type typ3
+        else
+           S.Range(s_start_ex, s_end_ex, s_step_ex)
+      | _ -> failwith @@ "Unsupported range type: " ^ A.str_of_datatype start_type ^ ", "
+               ^ A.str_of_datatype end_type ^ ", " ^ A.str_of_datatype step_type
+      end
+    | _ -> failwith @@ "Unsupported for-iterator " ^idstr^ ": " ^A.str_of_datatype vtype
+
+let gen_s_iter env = function
+  | A.RangeIterator(typ, id, range) -> (
+    (* if typ = NoneType, there's no new iterator variable defined in the loop *)
+    match typ with
+    | A.NoneType ->
+      env, S.RangeIterator(typ, get_id id, gen_s_range env id range)
+    | _ -> 
+      (* add the declared var to scope *)
+      let env', _ = gen_s_decl env (A.PrimitiveDecl(typ, id)) in
+      env', S.RangeIterator(typ, get_id id, gen_s_range env' id range)
+    )
+  | A.ArrayIterator(typ, id, array_ex) -> 
+    failwith "INTERNAL todo"
+    
+(* When if/while/for are followed by a non-compound single-line stmt, *)
+(* we need to go one scope deeper *)
+let handle_compound_env env = function
+  | A.CompoundStatement(_) -> env
+  | _ -> incr_env_depth env
+
 (********** Main entry point: AST -> SAST **********)
 (* return env, [stmt] *)
 let rec gen_sast env = function
@@ -754,27 +769,38 @@ let rec gen_sast env = function
 
       (* statements *)
       | A.IfStatement(pred_ex, stmt_if, stmt_else) -> 
-        let env, s_pred_ex, pred_type = gen_s_expr env pred_ex in
+        let env', s_pred_ex, pred_type = gen_s_expr env pred_ex in
         if pred_type = A.DataType(T.Bool) then
-          let env, s_stmt_if = gen_sast env [stmt_if] in
-          let env, s_stmt_else = gen_sast env [stmt_else] in
+          let env_if = handle_compound_env env' stmt_if in
+          let env_if, s_stmt_if = gen_sast env_if [stmt_if] in
+          let env_else = handle_compound_env env' stmt_else in
+          let env_else, s_stmt_else = gen_sast env_else [stmt_else] in
+          let env = 
+            if env_if.is_returned || env_else.is_returned 
+            then set_env_returned env else env in
           env, S.IfStatement(s_pred_ex, List.hd s_stmt_if, List.hd s_stmt_else)
         else
           failwith @@ "If predicate must be bool, but " 
               ^ A.str_of_datatype pred_type ^ " provided"
 				
       | A.WhileStatement(pred_ex, stmt) -> 
-        let env, s_pred_ex, pred_type = gen_s_expr env pred_ex in
+        let env' = handle_compound_env env stmt in
+        let env', s_pred_ex, pred_type = gen_s_expr env' pred_ex in
         if pred_type = A.DataType(T.Bool) then
-          let env, s_stmt = gen_sast env [stmt] in
+          let env', s_stmt = gen_sast env' [stmt] in
+          let env = 
+            if env'.is_returned then set_env_returned env else env in
           env, S.WhileStatement(s_pred_ex, List.hd s_stmt)
         else
           failwith @@ "While predicate must be bool, but " 
               ^ A.str_of_datatype pred_type ^ " provided"
             
       | A.ForStatement(iter, stmt) -> 
-        let s_iter = gen_s_iter env iter in
-        let env, s_stmt = gen_sast env [stmt] in
+        let env' = handle_compound_env env stmt in
+        let env', s_iter = gen_s_iter env' iter in
+        let env', s_stmt = gen_sast env' [stmt] in
+        let env = 
+          if env'.is_returned then set_env_returned env else env in
         env, S.ForStatement(s_iter, List.hd s_stmt)
             
       | A.CompoundStatement(stmt_list) -> 

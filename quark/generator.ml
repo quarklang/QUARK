@@ -210,9 +210,9 @@ let rec gen_range id = function
   | _ -> failwith "range fatal error"
 	
 let rec gen_iterator = function
-  | RangeIterator(id, rng) -> 
+  | RangeIterator(_, id, rng) -> 
     gen_range id rng
-  | ArrayIterator(id, ex) -> 
+  | ArrayIterator(_, id, ex) -> 
     gen_id id ^ " in " ^ gen_expr ex
 	
 let rec gen_decl = function
