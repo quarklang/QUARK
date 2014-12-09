@@ -25,6 +25,8 @@ type binop =
   | MulEq
   | DivEq
   | AndEq
+
+type queryop =
   | Query
   | QueryUnreal
 
@@ -52,6 +54,7 @@ type lvalue =
 and expr =
   | Binop of expr * binop * expr
   | AssignOp of lvalue * binop * expr
+  | Queryop of expr * queryop * expr * expr
   | Unop of unop * expr
   | PostOp of lvalue * postop
   | Assign of lvalue * expr

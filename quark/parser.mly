@@ -106,8 +106,12 @@ expr:
   | expr RSHIFT expr        { Binop($1, Rshift, $3) }
 
   /* Query */
-  | expr QUERY expr         { Binop($1, Query, $3) }
-  | expr QUERY_UNREAL expr  { Binop($1, QueryUnreal, $3) }
+  | expr QUERY expr         { Queryop($1, Query, IntLit("SINGLE"), $3) }
+  | expr QUERY_UNREAL expr  { Queryop($1, QueryUnreal, IntLit("SINGLE"), $3) }
+  | expr QUERY LSQUARE COLON expr RSQUARE { Queryop($1, Query, IntLit("0"), $5) }
+  | expr QUERY_UNREAL LSQUARE COLON expr RSQUARE  { Queryop($1, QueryUnreal, IntLit("0"), $5) }
+  | expr QUERY LSQUARE expr COLON expr RSQUARE         { Queryop($1, Query, $4, $6) }
+  | expr QUERY_UNREAL LSQUARE expr COLON expr RSQUARE  { Queryop($1, QueryUnreal, $4, $6) }
 
   /* Parenthesis */
   | LPAREN expr RPAREN { $2 }
