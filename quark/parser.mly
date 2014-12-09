@@ -26,7 +26,6 @@
 %left IN 
 %right QUERY QUERY_UNREAL
 
-%left DOLLAR
 %left FRACTION
 %left COMPLEX_SYM
 %left OR
@@ -39,6 +38,7 @@
 %left LSHIFT RSHIFT
 %left PLUS MINUS
 %left TIMES DIVIDE MODULO
+%left DOLLAR
 %left DEF
 
 %right NOT BITNOT POWER UMINUS
@@ -106,8 +106,12 @@ expr:
   | expr RSHIFT expr        { Binop($1, Rshift, $3) }
 
   /* Query */
-  | expr QUERY expr         { Binop($1, Query, $3) }
-  | expr QUERY_UNREAL expr  { Binop($1, QueryUnreal, $3) }
+  | expr QUERY expr         { Queryop($1, Query, $3, IntLit("QuerySingleBit")) }
+  | expr QUERY_UNREAL expr  { Queryop($1, QueryUnreal, $3, IntLit("QuerySingleBit")) }
+  | expr QUERY LSQUARE COLON expr RSQUARE { Queryop($1, Query, IntLit("0"), $5) }
+  | expr QUERY_UNREAL LSQUARE COLON expr RSQUARE  { Queryop($1, QueryUnreal, IntLit("0"), $5) }
+  | expr QUERY LSQUARE expr COLON expr RSQUARE         { Queryop($1, Query, $4, $6) }
+  | expr QUERY_UNREAL LSQUARE expr COLON expr RSQUARE  { Queryop($1, QueryUnreal, $4, $6) }
 
   /* Parenthesis */
   | LPAREN expr RPAREN { $2 }
@@ -121,7 +125,7 @@ expr:
   | lvalue MINUS_EQUALS expr { AssignOp($1, SubEq, $3) } 
   | lvalue TIMES_EQUALS expr { AssignOp($1, MulEq, $3) }
   | lvalue DIVIDE_EQUALS expr { AssignOp($1, DivEq, $3) }
-  | lvalue BITAND_EQUALS expr { AssignOp($1, AndEq, $3) }
+  | lvalue BITAND_EQUALS expr { AssignOp($1, BitAndEq, $3) }
 
   /* Post operation */
   | lvalue INCREMENT { PostOp($1, Inc) }
@@ -139,6 +143,7 @@ expr:
   | LSQUARE expr_list RSQUARE                   { ArrayLit($2) }
   | LMATRIX matrix_row_list RMATRIX             { MatrixLit($2) }
   | COMPLEX_SYM expr COMMA expr RPAREN          { ComplexLit($2, $4) }
+  | COMPLEX_SYM expr RPAREN                     { ComplexLit($2, FloatLit("0.0")) }
   | LQREG expr COMMA expr RQREG                 { QRegLit($2, $4) }
 
   /* function call */
@@ -165,7 +170,7 @@ statement:
       { IfStatement($2, $4, EmptyStatement) }
 
   | WHILE expr COLON statement { WhileStatement($2, $4) }
-  | FOR iterator_list COLON statement { ForStatement($2, $4) }
+  | FOR iterator COLON statement { ForStatement($2, $4) }
 
   | LCURLY statement_seq RCURLY { CompoundStatement($2) }
 
@@ -181,13 +186,14 @@ statement:
   | CONTINUE { ContinueStatement }
 
 
-iterator_list:
+/* iterator_list:
   | iterator COMMA iterator_list { $1 :: $3 }
-  | iterator { [$1] }
+  | iterator { [$1] } */
 
 iterator:
-  | ident IN LSQUARE range RSQUARE { RangeIterator($1, $4) }
-  | ident IN expr { ArrayIterator($1, $3) }
+  | ident IN LSQUARE range RSQUARE { RangeIterator(NoneType, $1, $4) }
+  | datatype ident IN LSQUARE range RSQUARE { RangeIterator($1, $2, $5) }
+  | datatype ident IN expr { ArrayIterator($1, $2, $4) }
 
 range:
   | expr COLON expr COLON expr { Range($1, $3, $5) }

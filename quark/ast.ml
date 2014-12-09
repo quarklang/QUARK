@@ -24,7 +24,9 @@ type binop =
   | SubEq
   | MulEq
   | DivEq
-  | AndEq
+  | BitAndEq
+
+type queryop =
   | Query
   | QueryUnreal
 
@@ -41,6 +43,7 @@ type datatype =
   | DataType of T.vartype
   | ArrayType of datatype
   | MatrixType of datatype
+  | NoneType (* if a symbol doesn't exist *)
 
 type ident = Ident of string
 
@@ -51,6 +54,7 @@ type lvalue =
 and expr =
   | Binop of expr * binop * expr
   | AssignOp of lvalue * binop * expr
+  | Queryop of expr * queryop * expr * expr
   | Unop of unop * expr
   | PostOp of lvalue * postop
   | Assign of lvalue * expr
@@ -68,14 +72,14 @@ and expr =
   | FunctionCall of ident * expr list
 
 type decl =
-  | AssigningDecl of datatype * ident * expr
   | PrimitiveDecl of datatype * ident
+  | AssigningDecl of datatype * ident * expr
 
 type range = Range of expr * expr * expr
 
 type iterator =
-  | RangeIterator of ident * range
-  | ArrayIterator of ident * expr
+  | RangeIterator of datatype * ident * range
+  | ArrayIterator of datatype * ident * expr
 
 type statement =
   | CompoundStatement of statement list
@@ -84,10 +88,67 @@ type statement =
   | EmptyStatement
   | IfStatement of expr * statement * statement
   | WhileStatement of expr * statement
-  | ForStatement of iterator list * statement
+  | ForStatement of iterator * statement
   | FunctionDecl of datatype * ident * decl list * statement list
   | ForwardDecl of datatype * ident * decl list
   | ReturnStatement of expr
   | VoidReturnStatement
   | BreakStatement
   | ContinueStatement
+
+
+let rec str_of_datatype = function
+	| DataType(t) -> 
+    T.str_of_type t
+	| ArrayType(t) -> 
+		str_of_datatype t ^ "[]"
+	| MatrixType(t) -> 
+   (match t with
+    | DataType(matType) -> 
+      (match matType with
+      (* only support 3 numerical types *)
+      | T.Int | T.Float | T.Complex -> 
+      "[|" ^ T.str_of_type matType ^ "|]"
+      | _ -> failwith "INTERNAL non-numerical matrix type to str")
+    (* we shouldn't support float[][[]] *)
+    | _ -> 
+      failwith "INTERNAL bad matrix type to str")
+  | NoneType -> failwith "INTERNAL NoneType in str_of_datatype"
+
+let str_of_binop = function
+| Add -> "+"
+| Sub -> "-"
+| Mul -> "*"
+| Div -> "/"
+| Mod -> "mod"
+| Pow -> "**"
+| Lshift -> "<<"
+| Rshift -> ">>"
+| Less -> "<"
+| LessEq -> "<="
+| Greater -> ">"
+| GreaterEq -> ">="
+| Eq -> "=="
+| NotEq -> "!="
+| BitAnd -> "&"
+| BitXor -> "^"
+| BitOr -> "|"
+| And -> "and"
+| Or -> "or"
+| AddEq -> "+="
+| SubEq -> "-="
+| MulEq -> "*="
+| DivEq -> "/="
+| BitAndEq -> "&="
+| _ -> failwith "INTERNAL unhandled binop"
+
+let str_of_unop = function
+| Neg -> "-"
+| Not -> "not"
+| BitNot -> "~"
+| _ -> failwith "INTERNAL unhandled unop"
+
+let str_of_postop = function
+| Inc -> "++"
+| Dec -> "--"
+| _ -> failwith "INTERNAL unhandled postop"
