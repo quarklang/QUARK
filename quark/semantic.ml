@@ -721,11 +721,13 @@ let gen_s_iter env = function
   | A.ArrayIterator(typ, id, array_ex) -> 
     failwith "INTERNAL todo"
     
+    
 (* When if/while/for are followed by a non-compound single-line stmt, *)
 (* we need to go one scope deeper *)
 let handle_compound_env env = function
   | A.CompoundStatement(_) -> env
   | _ -> incr_env_depth env
+
 
 (********** Main entry point: AST -> SAST **********)
 (* return env, [stmt] *)
@@ -796,7 +798,8 @@ let rec gen_sast env = function
               ^ A.str_of_datatype pred_type ^ " provided"
             
       | A.ForStatement(iter, stmt) -> 
-        let env' = handle_compound_env env stmt in
+        (* hack: unconditionally go one scope deeper *)
+        let env' = incr_env_depth env in
         let env', s_iter = gen_s_iter env' iter in
         let env', s_stmt = gen_sast env' [stmt] in
         let env = 

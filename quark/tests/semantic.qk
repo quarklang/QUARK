@@ -1,14 +1,12 @@
 % Test semantic checking
 
-float a = 6;
+float glob_a = 6;
 
 int f1: int c, int SDUI_9, string[][][] shit;
 string foo: int c, int b;
 
-def int test_scope: int a, int b
+def int test_scope: int aaa, int b
 {
-    for int c in [3:5]:
-        int a;
     if true:
         int a;
     else
@@ -16,7 +14,9 @@ def int test_scope: int a, int b
         int a;
         return a+2;
     }
-    int e;
+
+     for aaa in [3:5]:
+        glob_a;
 }
 
 def int test_return: int a, int b
