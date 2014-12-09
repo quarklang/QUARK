@@ -729,16 +729,15 @@ let rec gen_sast env = function
         env', S.ForwardDecl(return_type, get_id func_id, s_param_list)
 
       (* statements *)
-      | A.IfStatement(ex, stmtIf, stmtElse) -> 
-        env, S.EmptyStatement
-        (* begin
-          print_endline @@ "if " ^ surr(gen_s_expr ex);
-          print_endline "{ // start if";
-          gen_sast [stmtIf];
-          print_endline "else";
-          gen_sast [stmtElse];
-          print_endline "} // end if";
-        end *)
+      | A.IfStatement(pred_ex, stmt_if, stmt_else) -> 
+        let env, s_pred_ex, pred_type = gen_s_expr env pred_ex in
+        if pred_type = A.DataType(T.Bool) then
+          let env, s_stmt_if = gen_sast env [stmt_if] in
+          let env, s_stmt_else = gen_sast env [stmt_else] in
+          env, S.IfStatement(s_pred_ex, List.hd s_stmt_if, List.hd s_stmt_else)
+        else
+          failwith @@ "If predicate must be bool, but " 
+              ^ A.str_of_datatype pred_type ^ " provided"
 				
       | A.WhileStatement(ex, stmt) -> 
         (env, S.EmptyStatement)
