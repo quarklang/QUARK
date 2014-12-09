@@ -503,12 +503,25 @@ let rec gen_s_expr env = function
       | _ -> failwith @@ "Incompatible operand for post op " 
           ^ A.str_of_postop op ^ ": " ^ A.str_of_datatype typ
       )
+      
   (* Assignment *)
-  | A.Assign(lval, ex) -> 
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
-    gen_lvalue lval ^ " = " ^ gen_s_expr ex
-      *)
+  | A.Assign(lval, rhs_ex) -> 
+    let env, s_lval_ex, l_type = gen_s_expr env (A.Lval(lval)) in
+    let env, s_rhs_ex, r_type = gen_s_expr env rhs_ex in
+      let s_lval = match s_lval_ex with
+      | S.Lval(s_lval) -> s_lval
+      | _ -> failwith "INTERNAL in postop: doesn't return S.Lval as expected"
+      in
+      let return_type = if l_type = r_type then l_type
+        else
+        match l_type, r_type with
+        | A.DataType(T.Int), A.DataType(T.Float) -> A.DataType(T.Int)
+        | A.DataType(T.Float), A.DataType(T.Int) -> A.DataType(T.Float)
+        | _ -> failwith @@ "Assignment type mismatch: "
+            ^ A.str_of_datatype l_type ^" = "^ A.str_of_datatype r_type
+      in
+      let _ = print_endline @@ "DEBUG ASSIGN returns "^A.str_of_datatype return_type in
+      env, S.Assign(s_lval, s_rhs_ex), return_type
 
   (* Membership testing with keyword 'in' *)
   | A.Membership(exElem, exArray) -> 
