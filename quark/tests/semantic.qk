@@ -8,7 +8,7 @@ void foo: int c, int b;
 def int f1: int a, int b, string[][][] c
 {
     % float a;
-    float e = 5$(2-10);
+    float e = 4.5;
     5$43;
     <| 36, 32 |>;
     i(2);

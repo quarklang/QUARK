@@ -95,22 +95,13 @@ let update_env_var env var_typ var_id =
   match vinfo.v_type with
   | A.NoneType 
   | _ when vinfo.v_depth < env.depth ->  (* we can safely add the var if it's in the inner scope *)
-  {
-    var_table = update_var_table env var_typ var_id;
-    func_table = env.func_table;
-    func_current = env.func_current;
-    depth = env.depth;
-  }
-  | _ -> failwith @@ "Variable redeclaration: " ^ A.str_of_datatype var_typ ^ " " ^ get_id var_id
+    { env with var_table = update_var_table env var_typ var_id }
+  | _ -> failwith @@ "Variable redeclaration: " 
+      ^ A.str_of_datatype var_typ ^ " " ^ get_id var_id
 
 (* go one scope deeper *)
 let incr_env_depth env = 
-  {
-    var_table = env.var_table;
-    func_table = env.func_table;
-    func_current = env.func_current;
-    depth = env.depth + 1;
-  }
+  { env with depth = env.depth + 1 }
 
 (****** Environment func_table ******)
 let get_env_func env func_id =
@@ -730,16 +721,16 @@ let rec gen_sast env = function
           depth = env.depth;
         } in
         let _ = debug_env env'' "closed after FuncDecl" in
-        (env'', function_decl)
+        env'', function_decl
       
       | A.ForwardDecl(return_type, func_id, param_list) -> 
         let s_param_list = gen_s_param_list param_list in
         let env' = update_env_func env return_type func_id param_list false in
-        (env', S.ForwardDecl(return_type, get_id func_id, s_param_list))
+        env', S.ForwardDecl(return_type, get_id func_id, s_param_list)
 
       (* statements *)
       | A.IfStatement(ex, stmtIf, stmtElse) -> 
-        (env, S.EmptyStatement)
+        env, S.EmptyStatement
         (* begin
           print_endline @@ "if " ^ surr(gen_s_expr ex);
           print_endline "{ // start if";
@@ -777,21 +768,21 @@ let rec gen_sast env = function
       | A.Declaration(dec) -> 
         let env', s_dec = gen_s_decl env dec in
         let _ = debug_env env' "after decl" in
-        (env', S.Declaration(s_dec))
+        env', S.Declaration(s_dec)
 
       | A.Expression(ex) -> 
         let env', s_ex, _ = gen_s_expr env ex in
-        (env', S.Expression(s_ex))
+        env', S.Expression(s_ex)
 
       | A.ReturnStatement(ex) -> 
         (env, S.EmptyStatement)
         (* print_endline @@ "return " ^ gen_s_expr ex ^ ";" *)
 
       | A.EmptyStatement -> 
-        (env, S.EmptyStatement)
+        env, S.EmptyStatement
 
       | A.VoidReturnStatement -> 
-        (env, S.EmptyStatement)
+        env, S.EmptyStatement
         (* print_endline "return; // void" *)
 
       | A.BreakStatement -> 
