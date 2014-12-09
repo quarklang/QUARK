@@ -688,8 +688,16 @@ let gen_s_decl env = function
   | A.AssigningDecl(typ, id, ex) -> 
     let idstr = get_id id in
     let _ = check_matrix_decl idstr typ in (* disallow certain bad matrices *)
+    let env, s_ex, ex_type = gen_s_expr env ex in
+    let _ = match typ, ex_type with
+    | A.DataType(T.Int), A.DataType(T.Float)
+    | A.DataType(T.Float), A.DataType(T.Int) -> ()
+    | typ', ex_type' when typ' = ex_type' -> ()
+    | _ -> failwith @@ "Incompatible assignment: " 
+        ^ A.str_of_datatype typ ^" " ^idstr^ " = " ^ A.str_of_datatype ex_type
+    in
     let env' = update_env_var env typ id in
-    env', S.AssigningDecl(typ, idstr, S.BoolLit("TODO")) (* TODO gen_s_expr *)
+    env', S.AssigningDecl(typ, idstr, s_ex)
 
   | A.PrimitiveDecl(typ, id) -> 
     let idstr = get_id id in
@@ -723,23 +731,11 @@ let rec gen_sast env = function
         } in
         let _ = debug_env env'' "closed after FuncDecl" in
         (env'', function_decl)
-          
-        (*
-        let funcId = get_id funcId in
-          begin
-            print_endline @@ gen_datatype returnTyp ^ " " ^ 
-              funcId ^ surr( gen_param_list paramList );
-            print_endline @@ "{ // start " ^ funcId;
-            gen_sast stmtList;
-            print_endline @@ "} // end " ^ funcId ^ "\n";
-          end *)
       
       | A.ForwardDecl(return_type, func_id, param_list) -> 
         let s_param_list = gen_s_param_list param_list in
         let env' = update_env_func env return_type func_id param_list false in
         (env', S.ForwardDecl(return_type, get_id func_id, s_param_list))
-          (* print_endline @@ "*forward* " ^ gen_datatype returnTyp ^ " " ^ 
-            (get_id funcId) ^ surr( gen_param_list paramList ) ^";\n"; *)
 
       (* statements *)
       | A.IfStatement(ex, stmtIf, stmtElse) -> 
