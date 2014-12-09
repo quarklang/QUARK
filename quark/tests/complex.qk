@@ -1,0 +1,13 @@
+
+def void print_complex: complex x 
+{
+    print real(x);
+    print im(x);
+    
+}
+
+def void main:
+{
+    complex x = i(1.3, 2.6);
+    print_complex(x);   
+}
