@@ -12,9 +12,6 @@ let snd_3 = function _, x, _ -> x;;
 let trd_3 = function _, _, x -> x;;
 
 let get_id (A.Ident name) = name
-let get_raw_type = function 
-  | A.DataType(typ) -> typ
-  | _ -> failwith "shouldn't happen"
 
 (****** Environment definition ******)
 type func_info = {
@@ -244,15 +241,10 @@ let rec gen_datatype = function
       failwith "Bad matrix type")
 *)
 
-(* Helper: interchangeable int and float *)
-let check_int_float typ1 typ2 return_stuff error_msg =
-    match get_raw_type typ1, get_raw_type typ2 with
-    | T.Int, T.Int
-    | T.Float, T.Int
-    | T.Int, T.Float
-    | T.Float, T.Float -> return_stuff
-    | _ -> failwith error_msg
-
+(* Fraction, Qureg, Complex *)
+let compound_type_err_msg name type1 type2 =
+  "Invalid " ^ name ^ " literal operands: " ^ 
+  A.str_of_datatype type1 ^","^ A.str_of_datatype type2
 
 (* Main expr semantic checker entry *)
 (* return env', S.expr, type *)
@@ -265,19 +257,34 @@ let rec gen_s_expr env = function
 
   (* compound literals *)
   | A.FractionLit(num_ex, denom_ex) -> 
-    let env, s_num_ex, s_denom_ex, num_typ, denom_typ = 
-      check_compound_literal env num_ex denom_ex "fraction" in
-    env, S.FractionLit(num_typ, s_num_ex, denom_typ, s_denom_ex), A.DataType(T.Fraction)
-            
+    let env, s_num_ex, num_type = gen_s_expr env num_ex in
+    let env, s_denom_ex, denom_type = gen_s_expr env denom_ex in (
+    match num_type, denom_type with
+    | A.DataType(T.Int), A.DataType(T.Int) -> 
+      env, S.FractionLit(s_num_ex, s_denom_ex), A.DataType(T.Fraction)
+    | _ -> failwith @@ compound_type_err_msg "fraction" num_type denom_type
+    )            
+
   | A.QRegLit(qex1, qex2) -> 
-    let env, s_qex1, s_qex2, q1_typ, q2_typ = 
-      check_compound_literal env qex1 qex2 "qreg" in
-    env, S.QRegLit(q1_typ, s_qex1, q2_typ, s_qex2), A.DataType(T.QReg)
+    let env, s_qex1, q1_type = gen_s_expr env qex1 in
+    let env, s_qex2, q2_type = gen_s_expr env qex2 in (
+    match q1_type, q2_type with
+    | A.DataType(T.Int), A.DataType(T.Int) -> 
+      env, S.QRegLit(s_qex1, s_qex2), A.DataType(T.QReg)
+    | _ -> failwith @@ compound_type_err_msg "qreg" q1_type q2_type
+    )            
 
   | A.ComplexLit(real_ex, im_ex) -> 
-    let env, s_real_ex, s_im_ex, real_typ, im_typ = 
-      check_compound_literal env real_ex im_ex "complex" in
-    env, S.ComplexLit(real_typ, s_real_ex, im_typ, s_im_ex), A.DataType(T.Complex)
+    let env, s_real_ex, real_type = gen_s_expr env real_ex in
+    let env, s_im_ex, im_type = gen_s_expr env im_ex in (
+    match real_type, im_type with
+    | A.DataType(T.Int), A.DataType(T.Int)
+    | A.DataType(T.Int), A.DataType(T.Float)
+    | A.DataType(T.Float), A.DataType(T.Int)
+    | A.DataType(T.Float), A.DataType(T.Float) -> 
+      env, S.ComplexLit(s_real_ex, s_im_ex), A.DataType(T.Complex)
+    | _ -> failwith @@ compound_type_err_msg "complex" real_type im_type
+    )            
 
   | A.ArrayLit(exprs) ->
     let env, s_exprs, elem_type = gen_s_array env exprs in
@@ -482,15 +489,6 @@ let rec gen_s_expr env = function
   
   | _ -> failwith "INTERNAL some expr not properly checked"
 
-(* Helper: including fraction, complex and qreg *)
-and check_compound_literal env ex1 ex2 name =
-  let env, s_ex1, typ1 = gen_s_expr env ex1 in
-  let env, s_ex2, typ2 = gen_s_expr env ex2 in
-  check_int_float 
-    typ1 typ2
-    (env, s_ex1, s_ex2, get_raw_type typ1, get_raw_type typ2)
-    ("Invalid " ^ name ^ " operand type: (" ^ 
-          A.str_of_datatype typ1 ^ ", " ^ A.str_of_datatype typ2 ^ ")")
 
 and gen_s_array env exprs =
   let env, s_exprs, array_type = List.fold_left

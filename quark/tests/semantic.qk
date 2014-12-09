@@ -9,9 +9,9 @@ def int f1: int a, int b, string[][][] c
 {
     % float a;
     int e;
-    5$4.3;
-    <| 3.6, 32 |>;
-    i(2,3);
+    5$43;
+    <| 36, 32 |>;
+    i(2,3.7);
 
     [["shit","damn", "ad"], ["shit"]] & [["sdf"]];
 
@@ -24,7 +24,7 @@ def int f1: int a, int b, string[][][] c
     3 << 2;
     1 & (2 | 13);
 
-    <| 3, 2 |> ?' [2.3:"shit"];
+    <| 3, 2 |> ?' [2:10];
 }
 
 qreg q;

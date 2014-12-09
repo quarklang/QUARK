@@ -29,9 +29,9 @@ and expr =
   | BoolLit of string
   | FloatLit of string
   | StringLit of string
-  | FractionLit of T.vartype * expr * T.vartype * expr
-  | QRegLit of T.vartype * expr * T.vartype * expr
-  | ComplexLit of T.vartype * expr * T.vartype * expr
+  | FractionLit of expr * expr
+  | QRegLit of expr * expr
+  | ComplexLit of expr * expr
   | ArrayLit of A.datatype * expr list
   | MatrixLit of T.vartype * expr list list
   | Membership of A.datatype * expr * A.datatype * expr
