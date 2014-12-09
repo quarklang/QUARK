@@ -184,44 +184,6 @@ let update_env_func env return_type func_id s_param_list is_defined =
   | _ -> failwith @@ "Function redefinition" ^ errmsg_str
 
 
-
-let gen_unop = function
-  A.Neg -> "-"
-| A.Not -> "!"
-| A.BitNot -> "~"
-
-let gen_postop = function
-  A.Inc -> "++"
-| A.Dec -> "--"
-
-let gen_binop = function
-  A.Add -> "+"
-| A.Sub -> "-"
-| A.Mul -> "*"
-| A.Div -> "/"
-| A.Mod -> "%"
-| A.Pow -> "**"
-| A.Lshift -> "<<"
-| A.Rshift -> ">>"
-| A.Less -> "<"
-| A.LessEq -> "<="
-| A.Greater -> ">"
-| A.GreaterEq -> ">="
-| A.Eq -> "=="
-| A.NotEq -> "!="
-| A.BitAnd -> "&"
-| A.BitXor -> "^"
-| A.BitOr -> "|"
-| A.And -> "&&"
-| A.Or -> "||"
-| A.AddEq -> "+="
-| A.SubEq -> "-="
-| A.MulEq -> "*="
-| A.DivEq -> "/="
-| A.AndEq -> "&="
-| _ -> failwith "unhandled binop"
-
-
 (******* Helpers for gen_s_expr ******)
 (* Fraction, Qureg, Complex *)
 let compound_type_err_msg name type1 type2 =
@@ -515,19 +477,21 @@ let rec gen_s_expr env = function
         | _ -> failwith @@ idstr ^ " is not an array/matrix"
     in
     env, S.Lval(s_lval), ltype
-  
+    
   (* Special assignment *)
-  | A.AssignOp(lval, op, ex) -> 
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
-    gen_lvalue lval ^" "^ gen_binop op ^" "^ gen_s_expr ex
-      *)
+  | A.AssignOp(lval, op, ex) ->
+    let binop = match op with
+    | A.AddEq -> A.Add
+    | A.SubEq -> A.Sub
+    | A.MulEq -> A.Mul
+    | A.DivEq -> A.Div
+    | A.BitAndEq -> A.BitAnd
+    | _ -> failwith @@ "INTERNAL bad AssignOp: " ^ A.str_of_binop op
+    in
+    gen_s_expr env (A.Assign(lval, A.Binop(A.Lval(lval), binop, ex)))
 
   | A.PostOp(lval, op) -> 
     env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
-    gen_lvalue lval ^" "^ gen_postop op
-      *)
     
   (* Assignment *)
   | A.Assign(lval, ex) -> 
