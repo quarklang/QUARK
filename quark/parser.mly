@@ -106,8 +106,8 @@ expr:
   | expr RSHIFT expr        { Binop($1, Rshift, $3) }
 
   /* Query */
-  | expr QUERY expr         { Queryop($1, Query, IntLit("SINGLE"), $3) }
-  | expr QUERY_UNREAL expr  { Queryop($1, QueryUnreal, IntLit("SINGLE"), $3) }
+  | expr QUERY expr         { Queryop($1, Query, $3, IntLit("QuerySingleBit")) }
+  | expr QUERY_UNREAL expr  { Queryop($1, QueryUnreal, $3, IntLit("QuerySingleBit")) }
   | expr QUERY LSQUARE COLON expr RSQUARE { Queryop($1, Query, IntLit("0"), $5) }
   | expr QUERY_UNREAL LSQUARE COLON expr RSQUARE  { Queryop($1, QueryUnreal, IntLit("0"), $5) }
   | expr QUERY LSQUARE expr COLON expr RSQUARE         { Queryop($1, Query, $4, $6) }

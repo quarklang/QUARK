@@ -408,9 +408,28 @@ let rec gen_s_expr env = function
     end (* end of binop *)
     
   (* Query ops *)
-  | A.Queryop(qreg_ex, op, start_ex, start_end) -> 
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-  
+  | A.Queryop(qreg_ex, op, start_ex, end_ex) -> 
+    let env, s_qreg_ex, qreg_type = gen_s_expr env qreg_ex in
+    begin
+      match qreg_type with 
+      | A.DataType(T.QReg) ->
+        let env, s_start_ex, start_type = gen_s_expr env start_ex in
+        let env, s_end_ex, end_type = gen_s_expr env end_ex in
+        let optag = match s_end_ex with
+          (* dummy literal from parser *)
+        | S.IntLit("QuerySingleBit") -> S.OpQuerySingleBit
+        | _ -> S.OpVerbatim in (
+        match start_type, end_type with
+        | A.DataType(T.Int), A.DataType(T.Int) -> 
+          (* query check success *)
+          env, S.Queryop(s_qreg_ex, op, s_start_ex, s_end_ex, optag), A.DataType(T.Int)
+        | _ -> failwith @@ "Incompatible query args: " ^ A.str_of_datatype start_type 
+          ^ (if optag = S.OpVerbatim then ", " ^ A.str_of_datatype end_type else "")
+        )
+      | _ -> failwith @@ 
+          "Measurement must be queried on a qureg, not " ^ A.str_of_datatype qreg_type
+    end
+    
   (* Unary ops *)
   | A.Unop(op, ex) -> 
     env, S.IntLit("TODO"), A.DataType(T.Int)
