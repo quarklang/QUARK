@@ -1,0 +1,9 @@
+
+def void array_test: 
+{
+    int[] arr1 = [0, 1, 2, 3, 4, 5];
+    int x;
+
+    for x in len(arr1):
+        print x;
+}
