@@ -137,18 +137,20 @@ let rec gen_expr = function
   | PostOp(lval, op) -> 
     gen_lvalue lval ^" "^ gen_postop op
     
+  (* Function calls *)
+  | FunctionCall(funcId, exlist) -> 
+    gen_id funcId ^ surr( gen_expr_list exlist )
+    
   (* Membership testing with keyword 'in' *)
   | Membership(exElem, exArray) -> 
+    failwith "Membership not yet supported"
     (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
-    (* Shouldn't change over calls!!! *)
+    (*
     let exElem = gen_expr exElem in
     let exArray = gen_expr exArray in
       "std::find(" ^surr exArray^ ".begin(), " ^surr exArray^ ".end(), " ^
       exElem^ ") != " ^surr exArray^ ".end()"
-    
-  (* Function calls *)
-  | FunctionCall(funcId, exlist) -> 
-    gen_id funcId ^ surr( gen_expr_list exlist )
+    *)
   
   | _ -> failwith "some expr not parsed"
 

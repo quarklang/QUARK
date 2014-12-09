@@ -523,25 +523,21 @@ let rec gen_s_expr env = function
       let _ = print_endline @@ "DEBUG ASSIGN returns "^A.str_of_datatype return_type in
       env, S.Assign(s_lval, s_rhs_ex), return_type
 
-  (* Membership testing with keyword 'in' *)
-  | A.Membership(exElem, exArray) -> 
+  (* Function calls *)
+  | A.FunctionCall(func_id, ex_list) -> 
     env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
+  
+  (* Membership testing with keyword 'in' *)
+  | A.Membership(elem, array) -> 
+    failwith "Membership not yet supported"
     (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
-    (* Shouldn't change over calls!!! *)
+    (*
     let exElem = gen_s_expr exElem in
     let exArray = gen_s_expr exArray in
       "std::find(" ^surr exArray^ ".begin(), " ^surr exArray^ ".end(), " ^
       exElem^ ") != " ^surr exArray^ ".end()"
-      *)
+    *)
     
-  (* Function calls *)
-  | A.FunctionCall(funcId, exlist) -> 
-    env, S.IntLit("TODO"), A.DataType(T.Int)
-      (*
-    get_id funcId ^ surr( gen_expr_list exlist )
-      *)
-  
   | _ -> failwith "INTERNAL some expr not properly checked"
 
 
