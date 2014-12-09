@@ -794,8 +794,19 @@ let rec gen_sast env = function
         if env.func_current = "" then
           failwith @@ "Invalid return statement outside function definition"
         else
-        env, S.EmptyStatement
-        (* print_endline @@ "return " ^ gen_s_expr ex ^ ";" *)
+          let f_return = 
+            (get_env_func env (A.Ident(env.func_current))).f_return in
+          let _, s_ex, return_type = gen_s_expr env ex in
+          let s_ex = match f_return, return_type with
+          | A.DataType(T.Int), A.DataType(T.Float)
+          | A.DataType(T.Float), A.DataType(T.Int) -> s_ex
+          | f_return', return_type' when f_return' = return_type' -> s_ex
+          | _ -> failwith @@ "Function " ^env.func_current 
+              ^ " should return " ^ A.str_of_datatype f_return 
+              ^ ", not " ^ A.str_of_datatype return_type
+          in
+          let env' = set_env_returned env in
+          env', S.ReturnStatement(s_ex)
 
       | A.VoidReturnStatement -> 
         if env.func_current = "" then
@@ -814,11 +825,11 @@ let rec gen_sast env = function
         env, S.EmptyStatement
 
       | A.BreakStatement -> 
-        env, S.EmptyStatement
+        env, S.BreakStatement
         (* print_endline "break; // control" *)
 
       | A.ContinueStatement -> 
-        env, S.EmptyStatement
+        env, S.ContinueStatement
         (* print_endline "continue; // control" *)
 
       | _ -> failwith "nothing for eval()"

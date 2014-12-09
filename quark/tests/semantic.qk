@@ -7,7 +7,7 @@ void foo: int c, int b;
 
 def void fvoid: int a, int b
 {
-    return;
+return;
 }
 
 def int f1: int a, int b, string[][][] c
@@ -59,7 +59,7 @@ int a = 6;
     fmatarr[30, 2, 3] --;
     intarr[3] = [3,4,5];
     intarr[4,2] = 3.22;
-return a;
+return a + 1.4;
 }
 
 qreg q;
