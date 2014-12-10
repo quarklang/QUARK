@@ -112,15 +112,20 @@ let decr_env_depth env =
 let set_env_returned env = 
   { env with is_returned = true }
 
+
 (****** Environment func_table ******)
 let get_env_func env func_id =
+  let fid = get_id func_id in
   try
-    StrMap.find (get_id func_id) env.func_table
-  with Not_found -> { 
-    f_args = []; 
-    f_return = A.NoneType;
-    f_defined = false;
-  }
+    StrMap.find fid env.func_table
+  with Not_found -> 
+    (* look at the built-in functions *)
+    let arg_types, return_type = Builtin.find_builtin fid in
+    { 
+      f_args = arg_types; 
+      f_return = return_type;
+      f_defined = return_type <> A.NoneType;
+    }
   
 (* Used in A.FunctionDecl *)
 (* add all formal params to updated var_table *)
@@ -453,14 +458,14 @@ let rec gen_s_expr env = function
             if sub_dim = 0 then elem else
             match elem with
             | A.DataType(_) ->
-              failwith @@ "Bad subscript dimension for array: " ^idstr
+              failwith @@ "Invalid subscript dimension for array: " ^idstr
             | A.ArrayType(elem') ->
               get_array_lval_type (sub_dim - 1) elem'
               (* assume decl has already checked that matrix type is valid *)
             | A.MatrixType(A.DataType(raw_elem)) ->
               if sub_dim = 2 then A.DataType(raw_elem)
               else failwith @@ 
-                  "Bad subscript dimension for array that contains matrix: " ^idstr
+                  "Invalid subscript dimension for array that contains matrix: " ^idstr
             | _ -> failwith @@ "INTERNAL bad array type: " ^ idstr
           in
           let lval_type = get_array_lval_type (sub_dim - 1) elem_type in
@@ -544,7 +549,10 @@ let rec gen_s_expr env = function
             let _, s_ex, ex_type = gen_s_expr env ex in 
             match ex_type, f_arg with
             | A.DataType(T.Int), A.DataType(T.Float)
-            | A.DataType(T.Float), A.DataType(T.Int) -> s_ex
+            | A.DataType(T.Float), A.DataType(T.Int)
+               (* Array(None) means built-in function matches any array type *)
+            | A.ArrayType(_), A.ArrayType(A.NoneType)
+            | A.MatrixType(_), A.MatrixType(A.NoneType) -> s_ex
             | ex_type', f_arg' when ex_type' = f_arg' -> s_ex
             | _ -> failwith @@ "Incompatible args for function " ^fidstr^ ": "
                   ^ A.str_of_datatype ex_type ^ " given but " 
