@@ -266,7 +266,7 @@ let rec gen_s_expr env = function
     if size_type = A.DataType(T.Int) then
       env, S.ArrayCtor(elem_type, s_size_expr), A.ArrayType(elem_type)
     else
-      failwith @@ "Empty array constructor size must be int, but " 
+      failwith @@ "Array constructor size must be int, but " 
             ^ A.str_of_datatype size_type ^ " provided"
 
   | A.MatrixLit(exprs_list_list) ->
@@ -277,6 +277,26 @@ let rec gen_s_expr env = function
     in
     env, S.MatrixLit(elem_type, s_matrix, coldim), A.MatrixType(A.DataType(elem_type))
   
+  (* constructs a matrix with row, col dim *)
+  | A.MatrixCtor(elem_type, rowdim_ex, coldim_ex) -> (
+    match elem_type with
+    | A.DataType(t) -> 
+      if t = T.Int || t = T.Float || t = T.Complex then
+        let env, s_rowdim_ex, rowdim_type = gen_s_expr env rowdim_ex in
+        let env, s_coldim_ex, coldim_type = gen_s_expr env coldim_ex in
+        if rowdim_type = A.DataType(T.Int) && coldim_type = A.DataType(T.Int) then
+          env, S.MatrixCtor(t, s_rowdim_ex, s_coldim_ex), A.MatrixType(elem_type)
+        else
+          failwith @@ "Matrix constructor row/column dimensions must be int/int, but " 
+                ^ A.str_of_datatype rowdim_type ^ "/"
+                ^ A.str_of_datatype coldim_type ^ " provided"
+      else
+        failwith @@ 
+          "Non-numerical matrix constructor type: " ^ A.str_of_datatype elem_type
+    | _ -> failwith @@ 
+        "Invalid matrix constructor type: " ^ A.str_of_datatype elem_type
+    )
+
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)
   | A.Binop(expr1, op, expr2) -> 
@@ -694,8 +714,8 @@ let rec check_matrix_decl idstr typ =
       match mat_type with
       (* only support 3 numerical types *)
       | T.Int | T.Float | T.Complex -> ()
-      | _ -> failwith @@ 
-        "Unsupported matrix element declaration: " ^idstr^ " with " ^ T.str_of_type mat_type)
+      | _ -> failwith @@ "Non-numerical matrix declaration: " 
+            ^ idstr ^ " with " ^ T.str_of_type mat_type)
     (* we shouldn't support float[][[]] *)
     | _ -> failwith @@ 
       "Invalid matrix declaration: " ^idstr^ " with " ^ A.str_of_datatype t

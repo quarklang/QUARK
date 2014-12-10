@@ -143,6 +143,7 @@ expr:
   | LSQUARE expr_list RSQUARE                   { ArrayLit($2) }
   | datatype LSQUARE expr RSQUARE               { ArrayCtor($1, $3) }
   | LMATRIX matrix_row_list RMATRIX             { MatrixLit($2) }
+  | datatype LMATRIX expr COMMA expr RMATRIX { MatrixCtor($1, $3, $5) }
   | COMPLEX_SYM expr COMMA expr RPAREN          { ComplexLit($2, $4) }
   | COMPLEX_SYM expr RPAREN                     { ComplexLit($2, FloatLit("0.0")) }
   | LQREG expr COMMA expr RQREG                 { QRegLit($2, $4) }

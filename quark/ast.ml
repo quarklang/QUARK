@@ -67,6 +67,7 @@ and expr =
   | ArrayLit of expr list
   | ArrayCtor of datatype * expr
   | MatrixLit of expr list list
+  | MatrixCtor of datatype * expr * expr
   | ComplexLit of expr * expr
   | Lval of lvalue
   | Membership of expr * expr
