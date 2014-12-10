@@ -6,8 +6,8 @@ let wrap basic_type = A.DataType(basic_type)
 
 (* return arg_types[], return_type *)
 let find_builtin = function
-   (* print is special: it accepts any number of args *)
   | "print" -> [], wrap T.Void
+  | "print_line" -> [], wrap T.Void
    (* A.NoneType is a placeholder: len works with any array type *)
   | "len" -> [A.ArrayType(A.NoneType)], wrap T.Int
    (* size of a qureg *)
@@ -17,3 +17,8 @@ let find_builtin = function
    (* row dimension of a matrix *)
   | "rowdim" -> [A.MatrixType(A.NoneType)], wrap T.Int
   | _ -> [], A.NoneType
+
+ (* print is special: it accepts any number of args *)
+let is_variable_args = function
+  | "print" | "print_line" -> true
+  | _ -> false

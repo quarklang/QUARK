@@ -80,6 +80,7 @@ def int f1: int a, int b, string[][][] c
     float[[]][] matarr = [[| 1,2; 3.1, -2; -6, 7 |], [| 1,4,5,6. |]];
 
     coldim(matarr[0]);
+    print_line(matarr, matarr[0], matarr[0,1,2]);
 
     "dud" != "shittY";
     

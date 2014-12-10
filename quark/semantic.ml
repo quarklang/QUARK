@@ -538,6 +538,12 @@ let rec gen_s_expr env = function
   | A.FunctionCall(func_id, ex_list) -> 
     let finfo = get_env_func env func_id in
     let fidstr = get_id func_id in
+    if Builtin.is_variable_args fidstr then
+      (* 'print' built-in functions support any number of args *)
+      let s_ex_list = 
+        List.map (fun ex -> snd_3 @@ gen_s_expr env ex) ex_list in
+        env, S.FunctionCall(fidstr, s_ex_list), finfo.f_return
+    else
     if finfo.f_defined then
       let f_args = finfo.f_args in
       let farg_len = List.length f_args in 
