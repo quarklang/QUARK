@@ -17,4 +17,4 @@ let _ =
   let code = Generator.gen_code sast in
   let code = Generator.header_code ^ code in
   let _ = print_endline code in
-  output_string (open_out "old_output.cpp") code
+  output_string (open_out "output.cpp") code
