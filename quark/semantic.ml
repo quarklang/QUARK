@@ -230,7 +230,7 @@ let rec gen_s_expr env = function
     let env, s_qex2, q2_type = gen_s_expr env qex2 in (
     match q1_type, q2_type with
     | A.DataType(T.Int), A.DataType(T.Int) -> 
-      env, S.QRegLit(s_qex1, s_qex2), A.DataType(T.QReg)
+      env, S.QRegLit(s_qex1, s_qex2), A.DataType(T.Qreg)
     | _ -> failwith @@ compound_type_err_msg "qreg" q1_type q2_type
     )            
 
@@ -377,7 +377,7 @@ let rec gen_s_expr env = function
     let env, s_qreg_ex, qreg_type = gen_s_expr env qreg_ex in
     begin
       match qreg_type with 
-      | A.DataType(T.QReg) ->
+      | A.DataType(T.Qreg) ->
         let env, s_start_ex, start_type = gen_s_expr env start_ex in
         let env, s_end_ex, end_type = gen_s_expr env end_ex in
         let optag = match s_end_ex with

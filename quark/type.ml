@@ -4,7 +4,7 @@ type vartype =
   | Bool
   | Fraction
   | Complex
-  | QReg
+  | Qreg
   | String
   | Void
 
@@ -14,6 +14,6 @@ let str_of_type = function
   | Bool -> "bool"
   | Fraction -> "fraction"
   | Complex -> "complex"
-  | QReg -> "qreg"
+  | Qreg -> "qreg"
   | String -> "string"
   | Void -> "void"

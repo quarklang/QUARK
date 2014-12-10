@@ -59,7 +59,7 @@ vartype:
   | FLOAT    { Float }
   | BOOLEAN  { Bool }
   | STRING   { String }
-  | QREG     { QReg }
+  | QREG     { Qreg }
   | FRACTION { Fraction }
   | COMPLEX  { Complex }
   | VOID     { Void }
