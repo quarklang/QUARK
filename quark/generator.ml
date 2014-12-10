@@ -1,8 +1,6 @@
-open SAST
 module A = Ast
+module S = Sast
 module T = Type
-
-module StrMap = Map.Make(String)
 
 (* utilities *)
 let fst_2 = function x, _ -> x;;
@@ -11,194 +9,9 @@ let fst_3 = function x, _, _ -> x;;
 let snd_3 = function _, x, _ -> x;;
 let trd_3 = function _, _, x -> x;;
 
-let get_id (A.Ident name) = name
-
-(****** Environment definition ******)
-type func_info = {
-  f_args: A.datatype list;
-  f_return: A.datatype;
-  f_defined: bool; (* for forward declaration *)
-}
-
-type var_info = {
-  v_type: A.datatype;
-  v_depth: int; (* how deep in scope *)
-}
-
-(* map string ident name to datatype or function info *)
-type environment = {
-    var_table: var_info StrMap.t;
-    func_table: func_info StrMap.t;
-    (* current function name waiting for 'return' *)
-    (* if "", we are not inside any function *)
-    func_current: string; 
-    depth: int;
-    is_returned: bool;
-    in_loop: bool;  (* check break/continue validity *)
-}
-
-(************** DEBUG ONLY **************)
-(* print out the func decl param list *)
-let debug_s_decl_list f_args =
-  let paramStr = 
-    List.fold_left 
-      (fun s typ -> s ^ (A.str_of_datatype typ) ^ ", ") "" f_args
-  in
-  if paramStr = "" then ""
-  else
-    String.sub paramStr 0 ((String.length paramStr) - 2)
-  
-(* print out the func decl param list *)
-let debug_env env msg =
-  begin
-    print_endline @@ "ENV " ^ msg ^ "{";
-    print_string "Var= ";
-    StrMap.iter 
-      (fun key vinfo -> print_string @@ 
-      key ^ ": " ^ A.str_of_datatype vinfo.v_type ^ "(" ^ string_of_int vinfo.v_depth ^ "); ")
-      env.var_table;
-    print_string "\nFunc= ";
-    StrMap.iter 
-      (fun key finfo -> print_endline @@ 
-        key ^ "(" ^ string_of_bool finfo.f_defined ^ "): " ^ 
-        debug_s_decl_list finfo.f_args ^ " => " ^ A.str_of_datatype finfo.f_return ^ ";")
-      env.func_table;
-    print_endline @@ "Current= " ^ env.func_current;
-    print_endline @@ "is_returned= " ^ string_of_bool env.is_returned;
-    print_endline "}";
-  end
-
-(****** Environment var_table ******)
-(* return updated var_table field (keep env.depth) *)
-let update_var_table env var_typ var_id =
-  StrMap.add (get_id var_id)
-    {
-      v_type = var_typ;
-      v_depth = env.depth
-    }
-    env.var_table
-  
-(* if doesn't exist, return NoneType *)
-let get_env_var env var_id =
-  let id = get_id var_id in
-  try
-    StrMap.find id env.var_table
-  with Not_found -> 
-    (* if the identifier appears as a func_id, then error! *)
-    if StrMap.mem id env.func_table then
-      failwith @@ "A function is confused with a variable: " ^ id
-    else
-      { 
-        v_type = A.NoneType; 
-        v_depth = -1
-      }
-
-let update_env_var env var_typ var_id =
-  let vinfo = get_env_var env var_id in
-  match vinfo.v_type with
-  | A.NoneType 
-  | _ when vinfo.v_depth < env.depth ->  (* we can safely add the var if it's in the inner scope *)
-    { env with var_table = update_var_table env var_typ var_id }
-  | _ -> failwith @@ "Variable redeclaration: " 
-      ^ A.str_of_datatype var_typ ^ " " ^ get_id var_id
-
-(* go one scope deeper *)
-let incr_env_depth env = 
-  { env with depth = env.depth + 1 }
-(* go one scope shallower *)
-let decr_env_depth env = 
-  { env with depth = env.depth - 1 }
-
-let set_env_returned env = 
-  { env with is_returned = true }
-
-(****** Environment func_table ******)
-let get_env_func env func_id =
-  try
-    StrMap.find (get_id func_id) env.func_table
-  with Not_found -> { 
-    f_args = []; 
-    f_return = A.NoneType;
-    f_defined = false;
-  }
-  
-(* Used in A.FunctionDecl *)
-(* add all formal params to updated var_table *)
-let update_env_func env return_type func_id s_param_list is_defined =
-  let finfo = get_env_func env func_id in
-  let errmsg_str = ": " ^ get_id func_id ^ "()" in
-  let s_arg_types = 
-    List.map (function
-        | A.PrimitiveDecl(typ, id) -> typ
-        | _ -> failwith @@ "Function parameter list declaration error" ^ errmsg_str
-        ) s_param_list in
-  (* add formal params to var scope. This is a lambda function *)
-  let add_formal_var_lambda = 
-    List.fold_left 
-        (fun env -> function
-        | A.PrimitiveDecl(typ, id) -> 
-          update_env_var env typ id
-        | _ -> failwith @@ "Function parameter list declaration error" ^ errmsg_str) in
-  (* utility function *)
-  let add_new_func_table_to_env func_table' =
-    { 
-      var_table = env.var_table;
-      func_table = StrMap.add (get_id func_id) func_table' env.func_table;
-      func_current = 
-        (* if forward_decl, we don't have a func_current *)
-        if is_defined then get_id func_id else ""; 
-      depth = env.depth;
-      is_returned = not is_defined; (* if not forward decl, we need to return *)
-      in_loop = false;
-    } in
-   
-  match finfo.f_return with
-  | A.NoneType -> begin
-    let func_table' = { 
-      (* only keep the formal param types *)
-      f_args = s_arg_types; 
-      f_return = return_type;
-      f_defined = is_defined
-    } in
-    let env' = add_new_func_table_to_env func_table' in
-    if is_defined then
-      (* add the formal param idents to scope *)
-      add_formal_var_lambda env' s_param_list
-    else
-      (* simply forward decl, don't add stuff to scope *)
-      env'
-    end
-  | _ when not finfo.f_defined ->
-    if is_defined then
-      (* check param list and return type, should be the same *)
-      if finfo.f_return = return_type && finfo.f_args = s_arg_types then
-        let func_table' = { 
-          f_args = finfo.f_args; 
-          f_return = finfo.f_return;
-          f_defined = true
-        } in
-        let env' = add_new_func_table_to_env func_table' in
-        add_formal_var_lambda env' s_param_list
-      else
-        failwith @@ "Incompatible forward declaration" ^ errmsg_str
-    else
-      failwith @@ "Function forward redeclaration" ^ errmsg_str
-  | _ -> failwith @@ "Function redefinition" ^ errmsg_str
-
-
-(******* Helpers for gen_s_expr ******)
-(* Fraction, Qureg, Complex *)
-let compound_type_err_msg name type1 type2 =
-  "Invalid " ^ name ^ " literal operands: " ^ 
-  A.str_of_datatype type1 ^","^ A.str_of_datatype type2
-
-let is_matrix = function
-  | A.MatrixType(_) -> true
-  | _ -> false
-
 
 (********* Main expr semantic checker entry *********)
-(* return env', S.expr, type *)
+(*
 let rec gen_s_expr env = function
   (* simple literals *)
   | A.IntLit(i) -> env, S.IntLit(i), A.DataType(T.Int)
@@ -751,150 +564,52 @@ let handle_compound_env env = function
   | _ -> incr_env_depth env
 
 
+*)
 (********** Main entry point: SAST -> string **********)
 (* return env, [stmt] *)
 let rec gen_code = function
   | [] -> ""
   | stmt :: rest ->
-    let env_new, s_stmt =
+    let stmt_code =
       match stmt with
 			(* top level statements *)
-      | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
-        let _ = debug_env env "before FunctionDecl" in
-        let s_param_list = gen_s_param_list param_list in
-        let env' = incr_env_depth env in
-        let env' = update_env_func env' return_type func_id param_list true in
-        let _ = debug_env env' "after FunctionDecl" in
-        (* get the function declaration, then close 'func_current' *)
-        let env_after_decl, s_stmt_list = gen_sast env' stmt_list in
-        (* check if properly returned *)
-        let is_returned = env_after_decl.is_returned in
-        let _ = if is_returned then ()
-          else if return_type = A.DataType(T.Void) then ()
-          else failwith @@ "Function " ^ get_id func_id 
-              ^ " should have at least one return: " ^ A.str_of_datatype return_type
-        in
-        let function_decl = 
-          S.FunctionDecl(return_type, get_id func_id, s_param_list, s_stmt_list) in
-        let env'' = { 
-          var_table = env.var_table; 
-          func_table = env'.func_table;
-          func_current = "";
-          depth = env.depth;
-          is_returned = true;
-          in_loop = false;
-        } in
-        let _ = debug_env env'' "closed after FuncDecl" in
-        env'', function_decl
+      | S.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
+        ""
       
-      | A.ForwardDecl(return_type, func_id, param_list) -> 
-        let s_param_list = gen_s_param_list param_list in
-        let env' = update_env_func env return_type func_id param_list false in
-        env', S.ForwardDecl(return_type, get_id func_id, s_param_list)
+      | S.ForwardDecl(return_type, func_id, param_list) -> 
+        ""
 
       (* statements *)
-      | A.IfStatement(pred_ex, stmt_if, stmt_else) -> 
-        let env', s_pred_ex, pred_type = gen_s_expr env pred_ex in
-        if pred_type = A.DataType(T.Bool) then
-          let env_if = handle_compound_env env' stmt_if in
-          let env_if, s_stmt_if = gen_sast env_if [stmt_if] in
-          let env_else = handle_compound_env env' stmt_else in
-          let env_else, s_stmt_else = gen_sast env_else [stmt_else] in
-          let env = 
-            if env_if.is_returned || env_else.is_returned 
-            then set_env_returned env else env in
-          env, S.IfStatement(s_pred_ex, List.hd s_stmt_if, List.hd s_stmt_else)
-        else
-          failwith @@ "If predicate must be bool, but " 
-              ^ A.str_of_datatype pred_type ^ " provided"
+      | S.IfStatement(pred_ex, stmt_if, stmt_else) -> 
+        ""
 				
-      | A.WhileStatement(pred_ex, stmt) -> 
-        let env', s_pred_ex, pred_type = gen_s_expr env pred_ex in
-        let env' = handle_compound_env env' stmt in
-        if pred_type = A.DataType(T.Bool) then
-          let env' = { env' with in_loop = true } in
-          let env', s_stmt = gen_sast env' [stmt] in
-          let env = 
-            if env'.is_returned then set_env_returned env else env in
-          env, S.WhileStatement(s_pred_ex, List.hd s_stmt)
-        else
-          failwith @@ "While predicate must be bool, but " 
-              ^ A.str_of_datatype pred_type ^ " provided"
+      | S.WhileStatement(pred_ex, stmt) -> 
+        ""
             
-      | A.ForStatement(iter, stmt) -> 
-        (* hack: first go one scope deeper, then go back to ensure that*)
-        (* the iterator variable is in the right scope *)
-        let env' = incr_env_depth env in
-        let env', s_iter = gen_s_iter env' iter in
-        let env' = decr_env_depth env' in
-        let env' = handle_compound_env env' stmt in
-        let env' = { env' with in_loop = true } in
-        let env', s_stmt = gen_sast env' [stmt] in
-        let env = 
-          if env'.is_returned then set_env_returned env else env in
-        env, S.ForStatement(s_iter, List.hd s_stmt)
-            
-      | A.CompoundStatement(stmt_list) -> 
-        let env' = incr_env_depth env in
-        let env', s_stmt_list = gen_sast env' stmt_list in
-        let env = 
-          if env'.is_returned then set_env_returned env else env in
-        env, S.CompoundStatement(s_stmt_list)
+      | S.CompoundStatement(stmt_list) -> 
+        ""
 
-      | A.Declaration(dec) -> 
-        let env', s_dec = gen_s_decl env dec in
-        let _ = debug_env env' "after decl" in
-        env', S.Declaration(s_dec)
+      | S.Declaration(dec) -> 
+        ""
 
-      | A.Expression(ex) -> 
-        let env', s_ex, _ = gen_s_expr env ex in
-        env', S.Expression(s_ex)
+      | S.Expression(ex) -> 
+        ""
 
-      | A.ReturnStatement(ex) -> 
-        if env.func_current = "" then
-          failwith @@ "Invalid return statement outside function definition"
-        else
-          let f_return = 
-            (get_env_func env (A.Ident(env.func_current))).f_return in
-          let _, s_ex, return_type = gen_s_expr env ex in
-          let s_ex = match f_return, return_type with
-          | A.DataType(T.Int), A.DataType(T.Float)
-          | A.DataType(T.Float), A.DataType(T.Int) -> s_ex
-          | f_return', return_type' when f_return' = return_type' -> s_ex
-          | _ -> failwith @@ "Function " ^env.func_current 
-              ^ " should return " ^ A.str_of_datatype f_return 
-              ^ ", not " ^ A.str_of_datatype return_type
-          in
-          let env' = set_env_returned env in
-          env', S.ReturnStatement(s_ex)
+      | S.ReturnStatement(ex) -> 
+        ""
 
-      | A.VoidReturnStatement -> 
-        if env.func_current = "" then
-          failwith @@ "Invalid return statement outside function definition"
-        else
-          let f_return = 
-            (get_env_func env (A.Ident(env.func_current))).f_return in
-          if f_return = A.DataType(T.Void) then
-            let env' = set_env_returned env in
-            env', S.VoidReturnStatement
-          else
-            failwith @@ "Function " ^env.func_current 
-              ^ " should return " ^ A.str_of_datatype f_return ^ ", not void"
+      | S.VoidReturnStatement -> 
+        ""
 
-      | A.BreakStatement -> 
-        if env.in_loop then
-          env, S.BreakStatement
-        else failwith "Invalid break statement outside a loop"
+      | S.BreakStatement -> 
+        ""
 
-      | A.ContinueStatement -> 
-        if env.in_loop then
-          env, S.ContinueStatement
-        else failwith "Invalid continue statement outside a loop"
+      | S.ContinueStatement -> 
+        ""
 
-      | A.EmptyStatement -> 
-        env, S.EmptyStatement
+      | S.EmptyStatement -> 
+        ""
 
       | _ -> failwith "INTERNAL unhandled statement"
     in 
-    let env_new, s_rest = gen_sast env_new rest in
-    (env_new, (s_stmt :: s_rest))
+    stmt_code ^ "\n" ^ gen_code rest
