@@ -4,6 +4,9 @@ module T = Type
 
 module StrMap = Map.Make(String)
 
+(* debug printout flag *)
+let _DEBUG_ENABLE = false
+
 (* utilities *)
 let fst_2 = function x, _ -> x;;
 let snd_2 = function _, x -> x;;
@@ -50,6 +53,7 @@ let debug_s_decl_list f_args =
   
 (* print out the func decl param list *)
 let debug_env env msg =
+  if _DEBUG_ENABLE then
   begin
     print_endline @@ "ENV " ^ msg ^ "{";
     print_string "Var= ";
@@ -67,6 +71,10 @@ let debug_env env msg =
     print_endline @@ "is_returned= " ^ string_of_bool env.is_returned;
     print_endline "}";
   end
+
+let debug_print msg = 
+  if _DEBUG_ENABLE then print_endline @@ "DEBUG " ^ msg
+
 
 (****** Environment var_table ******)
 (* return updated var_table field (keep env.depth) *)
@@ -248,14 +256,14 @@ let rec gen_s_expr env = function
 
   | A.ArrayLit(exprs) ->
     let env, s_exprs, elem_type = gen_s_array env exprs in
-    let _tmp = A.ArrayType(elem_type) in
-    let _ = print_endline @@ "DEBUG ARRAY " ^ (A.str_of_datatype _tmp) in
+    let _DEBUG_tmp = A.ArrayType(elem_type) in
+    let _ = debug_print @@ "ARRAY " ^ (A.str_of_datatype _DEBUG_tmp) in
     env, S.ArrayLit(elem_type, s_exprs), A.ArrayType(elem_type)
 
   | A.MatrixLit(exprs_list_list) ->
     let env, s_matrix, elem_type, coldim = gen_s_matrix env exprs_list_list in
-    let _tmp = A.MatrixType(A.DataType(elem_type)) in
-    let _ = print_endline @@ "DEBUG MATRIX " ^ (A.str_of_datatype _tmp) 
+    let _DEBUG_tmp = A.MatrixType(A.DataType(elem_type)) in
+    let _ = debug_print @@ "MATRIX " ^ (A.str_of_datatype _DEBUG_tmp) 
         ^ " cols= " ^ string_of_int coldim ^ " rows= " ^ string_of_int (List.length exprs_list_list) 
     in
     env, S.MatrixLit(elem_type, s_matrix, coldim), A.MatrixType(A.DataType(elem_type))
@@ -469,7 +477,7 @@ let rec gen_s_expr env = function
             | _ -> failwith @@ "INTERNAL bad array type: " ^ idstr
           in
           let lval_type = get_array_lval_type (sub_dim - 1) elem_type in
-          let _ = print_endline @@ "DEBUG LVALUE "^idstr^" -> "^A.str_of_datatype lval_type in
+          let _ = debug_print @@ "LVALUE "^idstr^" -> "^A.str_of_datatype lval_type in
           S.ArrayElem(idstr, s_ex_list), lval_type
 
         (* Matrix lvalue *)
@@ -531,7 +539,7 @@ let rec gen_s_expr env = function
         | _ -> failwith @@ "Assignment type mismatch: "
             ^ A.str_of_datatype l_type ^" = "^ A.str_of_datatype r_type
       in
-      let _ = print_endline @@ "DEBUG ASSIGN returns "^A.str_of_datatype return_type in
+      let _ = debug_print @@ "ASSIGN returns "^A.str_of_datatype return_type in
       env, S.Assign(s_lval, s_rhs_ex), return_type
 
   (* Function calls *)
