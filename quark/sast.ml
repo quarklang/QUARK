@@ -32,7 +32,7 @@ and expr =
   | QRegLit of expr * expr
   | ComplexLit of expr * expr
   | ArrayLit of A.datatype * expr list
-  | ArrayEmpty of A.datatype * expr (* int expr of empty size *)
+  | ArrayCtor of A.datatype * expr (* int expr of empty size *)
   | MatrixLit of T.vartype * expr list * int (* column dimension. Flattened *)
   | FunctionCall of string * expr list
   | Lval of lvalue

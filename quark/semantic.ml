@@ -260,11 +260,11 @@ let rec gen_s_expr env = function
     let _ = debug_print @@ "ARRAY " ^ (A.str_of_datatype _DEBUG_tmp) in
     env, S.ArrayLit(elem_type, s_exprs), A.ArrayType(elem_type)
     
-  (* create and use an empty array *)
-  | A.ArrayEmpty(elem_type, size_expr) -> 
+  (* constructs an array with size *)
+  | A.ArrayCtor(elem_type, size_expr) -> 
     let env, s_size_expr, size_type = gen_s_expr env size_expr in
     if size_type = A.DataType(T.Int) then
-      env, S.ArrayEmpty(elem_type, s_size_expr), A.ArrayType(elem_type)
+      env, S.ArrayCtor(elem_type, s_size_expr), A.ArrayType(elem_type)
     else
       failwith @@ "Empty array constructor size must be int, but " 
             ^ A.str_of_datatype size_type ^ " provided"
