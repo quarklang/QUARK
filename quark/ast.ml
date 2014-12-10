@@ -102,17 +102,19 @@ let rec str_of_datatype = function
     T.str_of_type t
 	| ArrayType(t) -> 
 		str_of_datatype t ^ "[]"
-	| MatrixType(t) -> 
-   (match t with
-    | DataType(matType) -> 
-      (match matType with
+	| MatrixType(t) -> (
+    match t with
+    | DataType(matType) -> ( 
+      match matType with
       (* only support 3 numerical types *)
       | T.Int | T.Float | T.Complex -> 
       "[|" ^ T.str_of_type matType ^ "|]"
-      | _ -> failwith "INTERNAL non-numerical matrix type to str")
+      | _ -> failwith "INTERNAL non-numerical matrix type to str"
+      )
     (* we shouldn't support float[][[]] *)
     | _ -> 
-      failwith "INTERNAL bad matrix type to str")
+      failwith "INTERNAL bad matrix type to str"
+    )
   | NoneType -> failwith "INTERNAL NoneType in str_of_datatype"
 
 let str_of_binop = function

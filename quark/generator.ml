@@ -2,12 +2,60 @@ module A = Ast
 module S = Sast
 module T = Type
 
-(* utilities *)
-let fst_2 = function x, _ -> x;;
-let snd_2 = function _, x -> x;;
-let fst_3 = function x, _, _ -> x;;
-let snd_3 = function _, x, _ -> x;;
-let trd_3 = function _, _, x -> x;;
+let header_code =
+ "#include \"qureg.h\"\n" ^
+ "#include \"qumat.h\"\n" ^
+ "#include \"qugate.h\"\n" ^
+ "using namespace Qumat;\n" ^
+ "using namespace Qugate;\n"
+
+(* surround with parenthesis *)
+let surr str = "(" ^ str ^ ")"
+
+(* subtle differences from Ast print *)
+let gen_binop = function
+  | A.Mod -> "%"
+  | A.Pow -> "pow"
+  | A.And -> "&&"
+  | A.Or -> "||"
+  | other -> A.str_of_binop other
+
+let gen_unop = function
+  | A.Not -> "!"
+  | other -> A.str_of_unop other
+
+let gen_postop = A.str_of_postop
+
+let gen_basictype = function
+  | T.Int -> "int"
+  | T.Float -> "float"
+  | T.Bool -> "bool"
+  | T.Fraction -> "Frac"
+  | T.Complex -> "complex<float>"
+  | T.QReg -> "Qureg"
+  | T.String -> "string"
+  | T.Void -> "void"
+
+let rec gen_datatype = function
+	| A.DataType(t) -> 
+    gen_basictype t
+	| A.ArrayType(t) -> 
+		"vector<" ^ gen_datatype t ^ ">"
+	| A.MatrixType(t) -> (
+    match t with
+    | A.DataType(matType) -> (
+      match matType with
+      (* only support 3 numerical types *)
+      | T.Int | T.Float | T.Complex -> 
+      "Matrix<" ^ gen_basictype matType ^ ", Dynamic, Dynamic>"
+      | _ -> failwith 
+        "INTERNAL non-numerical matrix in codegen gen_datatype"
+      )
+    (* we shouldn't support float[][[]] *)
+    | _ -> 
+      failwith "INTERNAL bad matrix type to str"
+    )
+  | A.NoneType -> failwith "INTERNAL NoneType in codegen gen_datatype"
 
 
 (********* Main expr semantic checker entry *********)
@@ -566,7 +614,6 @@ let handle_compound_env env = function
 
 *)
 (********** Main entry point: SAST -> string **********)
-(* return env, [stmt] *)
 let rec gen_code = function
   | [] -> ""
   | stmt :: rest ->
