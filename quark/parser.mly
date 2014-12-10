@@ -67,7 +67,7 @@ vartype:
 datatype:
   | vartype { DataType($1) }
   | datatype LSQUARE RSQUARE { ArrayType($1) }
-  | datatype LSQUARE LSQUARE RSQUARE RSQUARE { MatrixType($1) }
+  | datatype LMATRIX RSQUARE { MatrixType($1) } /* int[|] */
 
 /* Variables that can be assigned a value */
 lvalue:
