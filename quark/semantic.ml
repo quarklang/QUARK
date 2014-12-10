@@ -196,6 +196,10 @@ let is_matrix = function
   | A.MatrixType(_) -> true
   | _ -> false
 
+(* flatten a matrix (list list) into row major 1D list *)
+let flatten_matrix = List.fold_left
+  (fun row acc -> acc @ row ) []
+
 
 (********* Main expr semantic checker entry *********)
 (* return env', S.expr, type *)
@@ -631,8 +635,10 @@ and gen_s_matrix env exprs_list_list =
             )
             in
           env, (exprs :: rows), curr_type', row_length ))
-    (env, [], T.Void, 0) exprs_list_list in
-  (env, List.rev matrix , matrix_type, row_length)
+    (env, [], T.Void, 0) exprs_list_list 
+  in
+  let matrix = flatten_matrix (List.rev matrix) in
+  env, matrix , matrix_type, row_length
   
 
 let gen_s_param = function 
@@ -644,7 +650,8 @@ let gen_s_param = function
 let gen_s_param_list param_list =
   List.map 
     (fun param -> gen_s_param param) param_list
-    
+   
+     
 (* decl *)
 let rec check_matrix_decl idstr typ =
   match typ with
@@ -663,6 +670,7 @@ let rec check_matrix_decl idstr typ =
       "Invalid matrix declaration: " ^idstr^ " with " ^ A.str_of_datatype t
     )
   | A.NoneType -> failwith "INTERNAL NoneType encountered in check_matrix"
+  
   
 (* update_env_var checks redeclaration error *)
 let gen_s_decl env = function
