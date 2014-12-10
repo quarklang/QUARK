@@ -65,6 +65,7 @@ and expr =
   | FloatLit of string
   | StringLit of string
   | ArrayLit of expr list
+  | ArrayEmpty of datatype * expr
   | MatrixLit of expr list list
   | ComplexLit of expr * expr
   | Lval of lvalue

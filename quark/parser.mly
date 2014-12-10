@@ -141,6 +141,7 @@ expr:
   | expr DOLLAR expr                            { FractionLit($1, $3) }
   | STRING_LITERAL                              { StringLit($1) }
   | LSQUARE expr_list RSQUARE                   { ArrayLit($2) }
+  | datatype LSQUARE expr RSQUARE               { ArrayEmpty($1, $3) }
   | LMATRIX matrix_row_list RMATRIX             { MatrixLit($2) }
   | COMPLEX_SYM expr COMMA expr RPAREN          { ComplexLit($2, $4) }
   | COMPLEX_SYM expr RPAREN                     { ComplexLit($2, FloatLit("0.0")) }
