@@ -57,6 +57,11 @@ let rec gen_datatype = function
     )
   | A.NoneType -> failwith "INTERNAL NoneType in codegen gen_datatype"
 
+(******* Utilities *******)
+(* handles "2, 3, 4, " -> "2, 3, 4" *)
+let trim_last str =
+  String.sub str 0 ((String.length str) - 2)
+
 
 (********* Main expr semantic checker entry *********)
 (*
@@ -495,16 +500,6 @@ and gen_s_matrix env exprs_list_list =
     (env, [], T.Void, 0) exprs_list_list in
   (env, List.rev matrix , matrix_type, row_length)
   
-
-let gen_s_param = function 
-  | A.PrimitiveDecl(typ, id) -> 
-    S.PrimitiveDecl(typ, get_id id)
-  | _ -> failwith "Function parameter list declaration error"
-
-(* Used in A.FunctionDecl *)
-let gen_s_param_list param_list =
-  List.map 
-    (fun param -> gen_s_param param) param_list
     
 (* decl *)
 let rec check_matrix_decl idstr typ =
@@ -611,8 +606,20 @@ let handle_compound_env env = function
   | A.CompoundStatement(_) -> env
   | _ -> incr_env_depth env
 
-
 *)
+
+
+(* Used in A.FunctionDecl *)
+let gen_param_list param_list =
+  List.fold_left 
+    (fun accstr param -> accstr ^
+      ((function 
+      | S.PrimitiveDecl(typ, id) -> gen_datatype typ ^ " " ^ id
+      | _ -> failwith "INTERNAL codegen gen_param_list"
+      ) param) ^ ", "
+    ) "" param_list
+    
+    
 (********** Main entry point: SAST -> string **********)
 let rec gen_code = function
   | [] -> ""
@@ -621,7 +628,12 @@ let rec gen_code = function
       match stmt with
 			(* top level statements *)
       | S.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
-        ""
+        let param_list_code = gen_param_list param_list in
+        let stmt_list_code = gen_code stmt_list in
+        gen_datatype return_type ^ " " ^ func_id ^ "(" 
+        ^ trim_last param_list_code ^ ")\n"
+        ^ "{\n" ^ stmt_list_code 
+        ^ "} // end " ^ func_id ^ "()\n"
       
       | S.ForwardDecl(return_type, func_id, param_list) -> 
         ""
@@ -631,6 +643,9 @@ let rec gen_code = function
         ""
 				
       | S.WhileStatement(pred_ex, stmt) -> 
+        ""
+        
+      | S.ForStatement(iter, stmt) -> 
         ""
             
       | S.CompoundStatement(stmt_list) -> 
@@ -645,18 +660,14 @@ let rec gen_code = function
       | S.ReturnStatement(ex) -> 
         ""
 
-      | S.VoidReturnStatement -> 
-        ""
+      | S.VoidReturnStatement -> "return;"
 
-      | S.BreakStatement -> 
-        ""
+      | S.BreakStatement -> "break;"
 
-      | S.ContinueStatement -> 
-        ""
+      | S.ContinueStatement -> "continue;"
 
-      | S.EmptyStatement -> 
-        ""
+      | S.EmptyStatement -> ";"
 
-      | _ -> failwith "INTERNAL unhandled statement"
+      | _ -> failwith "INTERNAL codegen unhandled statement"
     in 
     stmt_code ^ "\n" ^ gen_code rest

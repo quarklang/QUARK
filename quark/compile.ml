@@ -15,4 +15,6 @@ let _ =
   in
   let _, sast = Semantic.gen_sast env ast in
   let code = Generator.gen_code sast in
+  let code = Generator.header_code ^ code in
+  let _ = print_endline code in
   output_string (open_out "old_output.cpp") code
