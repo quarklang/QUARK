@@ -218,6 +218,10 @@ let is_matrix = function
   | A.MatrixType(_) -> true
   | _ -> false
 
+let is_lvalue = function
+  | A.Lval(_) -> true
+  | _ -> false
+
 (* flatten a matrix (list list) into row major 1D list *)
 let flatten_matrix = List.fold_left
   (fun acc row -> acc @ row ) []
@@ -428,9 +432,8 @@ let rec gen_s_expr env = function
       match qreg_type with 
       | A.DataType(T.Qreg) ->
         (* we disallow measurement on an rvalue, e.g. a qureg literal *)
-        let _ = match qreg_ex with
-        | A.Lval(_) -> () (* good *)
-        | _ -> failwith "Measurement query on a Qreg must be made on an lvalue type"
+        let _ = if not (is_lvalue qreg_ex) then
+            failwith "Measurement query on a Qreg must be made on lvalue type"
         in
         let env, s_start_ex, start_type = gen_s_expr env start_ex in
         let env, s_end_ex, end_type = gen_s_expr env end_ex in
@@ -620,7 +623,13 @@ let rec gen_s_expr env = function
                (* Array(None) means built-in function matches any array type *)
             | A.ArrayType(_), A.ArrayType(A.NoneType)
             | A.MatrixType(_), A.MatrixType(A.NoneType) -> s_ex
-            | ex_type', f_arg' when ex_type' = f_arg' -> s_ex
+            | ex_type', f_arg' when ex_type' = f_arg' -> 
+              if ex_type = A.DataType(T.Qreg) then
+                (* disallow non-lvalue qureg to be used as function parameter *)
+                if is_lvalue ex then s_ex
+                else failwith @@
+                  "Qreg parameter to function "^fidstr^"() must be lvalue type"
+              else s_ex
             | _ -> failwith @@ "Incompatible args for function " ^fidstr^ ": "
                   ^ A.str_of_datatype ex_type ^ " given but " 
                   ^ A.str_of_datatype f_arg ^ " expected"   
