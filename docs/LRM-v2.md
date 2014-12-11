@@ -80,7 +80,9 @@ The following identifiers are reserved for use as keywords, and may not be used 
 
 **Colon** -- Colons are used to denote slicing in arrays and within a function declaration. In a function declaration, formal arguments appear between the colon and a left curly brace. 
 
-**Dollar Sign** -- Dollar sign separates the numerator value from the denominator value in a fraction data type.
+**Dollar Sign** -- The dollar sign separates the numerator value from the denominator value in a fraction data type.
+
+**Comma** -- Commas have several use cases. Commas are used to separate formal arguments in a function declaration, elements in arrays and matrices, and the size and initial state of a `qreg`.
 
 ###Escape Sequences
 Certain characters within strings need to be preceded by a backslash. These characters and the sequences to produce them in a string are:
@@ -115,10 +117,24 @@ An integer is a 64-bit signed integer.
 A float is a 64-bit signed floating-point number.
 
 ####fraction
-A fraction is denoted by a numerical number (numerator) separated by `$` and another numerical number (denominator).
+A fraction is denoted by two `int` types separated by `$`. 
 
 ####complex
+A complex type is generated from two `int` or `float` values; if given a mix of `int` and `float` types, QUARK will implicitly type cast. A complex type can also be generated with one numerical value, which will be assigned to the real part of a complex number; imaginary will default to 0. The real and imaginary parts of a complex number can be accessed by `real` and `im` accessors.
 
+```ocaml
+complex cnum = i(3.0, 1);
+real(cnum); % 3.0
+im(cnum); % 1
+complex cnum2 = i(9) % this gives us i(9, 0)
+```
+
+####qreg
+A qreg type represents a quantum register. A qreg accepts two `int` types. The left value denotes the initial size of a quantum register, and the right value denotes the initial bit.
+
+```
+qreg q = <| nbit+1, 1 |>;
+```
 
 ####bool
 A boolean value is denoted using the literals `true` or `false`.

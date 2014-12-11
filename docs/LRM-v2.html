@@ -63,6 +63,7 @@
 <li><a href="#float">float</a></li>
 <li><a href="#fraction">fraction</a></li>
 <li><a href="#complex">complex</a></li>
+<li><a href="#qreg">qreg</a></li>
 <li><a href="#bool">bool</a></li>
 <li><a href="#string">string</a></li>
 <li><a href="#matrix">matrix</a></li>
@@ -177,7 +178,9 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
 
 <p><strong>Colon</strong> – Colons are used to denote slicing in arrays and within a function declaration. In a function declaration, formal arguments appear between the colon and a left curly brace. </p>
 
-<p><strong>Dollar Sign</strong> – Dollar sign separates the numerator value from the denominator value in a fraction data type.</p>
+<p><strong>Dollar Sign</strong> – The dollar sign separates the numerator value from the denominator value in a fraction data type.</p>
+
+<p><strong>Comma</strong> – Commas have several use cases. Commas are used to separate formal arguments in a function declaration, elements in arrays and matrices, and the size and initial state of a <code>qreg</code>.</p>
 
 <h3 id="escape-sequences">Escape Sequences</h3>
 
@@ -245,9 +248,26 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
 
 <h4 id="fraction">fraction</h4>
 
-<p>A fraction is denoted by a numerical number (numerator) separated by <code>$</code> and another numerical number (denominator).</p>
+<p>A fraction is denoted by two <code>int</code> types separated by <code>$</code>. </p>
 
 <h4 id="complex">complex</h4>
+
+<p>A complex type is generated from two <code>int</code> or <code>float</code> values; if given a mix of <code>int</code> and <code>float</code> types, QUARK will implicitly type cast. A complex type can also be generated with one numerical value, which will be assigned to the real part of a complex number; imaginary will default to 0. The real and imaginary parts of a complex number can be accessed by <code>real</code> and <code>im</code> accessors.</p>
+
+
+
+<pre class="prettyprint"><code class="language-ocaml hljs ">complex cnum = i(<span class="hljs-number">3.0</span>, <span class="hljs-number">1</span>);
+real(cnum); % <span class="hljs-number">3.0</span>
+im(cnum); % <span class="hljs-number">1</span>
+complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span class="hljs-number">9</span>, <span class="hljs-number">0</span>)</code></pre>
+
+<h4 id="qreg">qreg</h4>
+
+<p>A qreg type represents a quantum register. A qreg accepts two <code>int</code> types. The left value denotes the initial size of a quantum register, and the right value denotes the initial bit.</p>
+
+
+
+<pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">qreg q </span>=<span class="hljs-string"> &lt;| nbit+1, 1 |&gt;;</span></code></pre>
 
 <h4 id="bool">bool</h4>
 
