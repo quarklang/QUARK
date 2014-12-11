@@ -134,27 +134,27 @@ let rec gen_expr = function
       two_arg "complex<float>" ex_code "0.0" in
     let cast_fraction ex_code = 
       two_arg "Frac" ex_code "1" in
-    let put_space code1 op code2 =
-      code1 ^" "^ gen_binop op ^" "^ code2
+    let parenthize code1 op code2 =
+      surr @@ code1 ^" "^ gen_binop op ^" "^ code2
     in begin
     match optag with
     | S.OpVerbatim -> 
       if op = A.Pow then (* special: not infix! *)
         two_arg "pow" expr1_code expr2_code
       else
-        put_space expr1_code op expr2_code
+        parenthize expr1_code op expr2_code
     | S.CastComplex1 -> 
-      put_space (cast_complex expr1_code) op expr2_code
+      parenthize (cast_complex expr1_code) op expr2_code
     | S.CastComplex2 -> 
-      put_space expr1_code op (cast_complex expr2_code)      
+      parenthize expr1_code op (cast_complex expr2_code)      
     | S.CastFraction1 -> 
-      put_space (cast_fraction expr1_code) op expr2_code
+      parenthize (cast_fraction expr1_code) op expr2_code
     | S.CastFraction2 -> 
-      put_space expr1_code op (cast_fraction expr2_code)
+      parenthize expr1_code op (cast_fraction expr2_code)
     | S.OpArrayConcat ->  
       two_arg "concat_vector" expr1_code expr2_code
     | S.OpStringConcat -> 
-      put_space expr1_code A.Add expr2_code
+      parenthize expr1_code A.Add expr2_code
     | S.OpMatrixKronecker -> 
       two_arg "kronecker_mat" expr1_code expr2_code
     | _ -> fail_unhandle "optag in binop"
@@ -179,7 +179,7 @@ let rec gen_expr = function
   | S.Unop(op, ex, optag) -> 
     let ex_code = gen_expr ex in begin
     match optag with
-    | S.OpVerbatim -> (gen_unop op) ^ ex_code
+    | S.OpVerbatim -> surr @@ (gen_unop op) ^ ex_code
     | _ -> fail_unhandle "optag in unop"
     end
   
@@ -201,11 +201,11 @@ let rec gen_expr = function
     
   (* Post ++ and -- *)
   | S.PostOp(lval, op) -> 
-    gen_expr (S.Lval(lval)) ^" "^ gen_postop op
+    surr @@ gen_expr (S.Lval(lval)) ^" "^ gen_postop op
       
   (* Assignment *)
   | S.Assign(lval, rhs_ex) -> 
-    gen_expr (S.Lval(lval)) ^" = "^ gen_expr rhs_ex
+    surr @@ gen_expr (S.Lval(lval)) ^" = "^ gen_expr rhs_ex
 
   (* Function calls *)
   | S.FunctionCall(func_id, ex_list) -> 
@@ -320,7 +320,7 @@ let rec gen_code = function
         gen_datatype return_type ^ " " ^ func_id ^ "(" 
         ^ trim_last param_list_code ^ ")\n"
         ^ "{\n" ^ stmt_list_code 
-        ^ "} // end " ^ func_id ^ "()\n"
+        ^ "\n} // end " ^ func_id ^ "()\n"
       
       | S.ForwardDecl(return_type, func_id, param_list) -> 
         let param_list_code = gen_param_list param_list in
@@ -329,7 +329,10 @@ let rec gen_code = function
 
       (* statements *)
       | S.IfStatement(pred_ex, stmt_if, stmt_else) -> 
-        ""
+        let code_if = handle_compound stmt_if in
+        let code_else = handle_compound stmt_else in
+        "if (" ^ gen_expr pred_ex ^")" ^
+        code_if ^ "\nelse " ^ code_else ^ "// end if"
 				
       | S.WhileStatement(pred_ex, stmt) -> 
         ""
@@ -339,7 +342,7 @@ let rec gen_code = function
             
       | S.CompoundStatement(stmt_list) -> 
         let stmt_list_code = gen_code stmt_list in
-        "{\n" ^ stmt_list_code ^ "} // end compound"
+        "{\n" ^ stmt_list_code ^ "\n}"
 
       | S.Declaration(dec) ->
         let code =
@@ -364,4 +367,12 @@ let rec gen_code = function
 
       | _ -> failwith "INTERNAL codegen unhandled statement"
     in 
-    stmt_code ^ "\n" ^ gen_code rest
+    let new_line = if List.length rest = 0 then "" else "\n" in
+    stmt_code ^ new_line ^ gen_code rest
+
+and 
+(* if/for/while make a stmt a compound if it isn't *)
+handle_compound stmt =
+  match stmt with
+  | S.CompoundStatement(_) -> gen_code [stmt]
+  | _ -> gen_code [S.CompoundStatement([stmt])]
