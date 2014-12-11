@@ -11,11 +11,14 @@ let find_builtin = function
    (* A.NoneType is a placeholder: len works with any array type *)
   | "len" -> [A.ArrayType(A.NoneType)], wrap T.Int
    (* size of a qureg *)
-  | "qsize" -> [A.DataType(T.Qreg)], wrap T.Int
+  | "qsize" -> [wrap T.Qreg], wrap T.Int
    (* column dimension of a matrix *)
   | "coldim" -> [A.MatrixType(A.NoneType)], wrap T.Int
    (* row dimension of a matrix *)
   | "rowdim" -> [A.MatrixType(A.NoneType)], wrap T.Int
+   (* fraction numerator/denominator *)
+  | "num" -> [wrap T.Fraction], wrap T.Int
+  | "denom" -> [wrap T.Fraction], wrap T.Int
   | _ -> [], A.NoneType
 
  (* print is special: it accepts any number of args *)

@@ -766,14 +766,14 @@ let gen_s_range env id = function
       let env, s_end_ex, end_type = gen_s_expr env end_ex in
       let env, s_step_ex, step_type = gen_s_expr env step_ex in
       match start_type, end_type, step_type with
-      | A.DataType(typ1), A.DataType(typ2), A.DataType(typ3) -> 
-        if not (typ1 = T.Float || typ1 = T.Int) ||
-           not (typ2 = T.Float || typ2 = T.Int) ||
-           not (typ3 = T.Float || typ3 = T.Int) then
-           failwith @@ "Unsupported range type: " ^ T.str_of_type typ1 ^ ", "
-               ^ T.str_of_type typ2 ^ ", " ^ T.str_of_type typ3
+      | A.DataType(start_raw_typ), A.DataType(end_raw_typ), A.DataType(step_raw_typ) -> 
+        if not (start_raw_typ = T.Float || start_raw_typ = T.Int) ||
+           not (end_raw_typ = T.Float || end_raw_typ = T.Int) ||
+           not (step_raw_typ = T.Float || step_raw_typ = T.Int) then
+           failwith @@ "Unsupported range type: " ^ T.str_of_type start_raw_typ ^ ", "
+               ^ T.str_of_type end_raw_typ ^ ", " ^ T.str_of_type step_raw_typ
         else
-           S.Range(s_start_ex, s_end_ex, s_step_ex)
+           S.Range(start_raw_typ, s_start_ex, end_raw_typ, s_end_ex, step_raw_typ, s_step_ex)
       | _ -> failwith @@ "Unsupported range type: " ^ A.str_of_datatype start_type ^ ", "
                ^ A.str_of_datatype end_type ^ ", " ^ A.str_of_datatype step_type
       end

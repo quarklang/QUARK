@@ -293,7 +293,7 @@ let rec gen_code = function
             ^ code_for ^ " // end for-array" 
         | S.RangeIterator(typ, id, range) -> (
           match range with
-          | S.Range(start_ex, end_ex, step_ex) -> 
+          | S.Range(start_typ, start_ex, end_typ, end_ex, step_typ, step_ex) -> 
             let init = if typ = A.NoneType then id 
                      else gen_datatype typ ^" "^ id in
             let start_code = gen_expr start_ex in
