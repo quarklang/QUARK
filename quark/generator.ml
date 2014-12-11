@@ -106,16 +106,21 @@ let rec gen_expr = function
     two_arg "complex<float>" (gen_expr real_ex) (gen_expr im_ex)
 
   | S.ArrayLit(arr_type, ex_list) ->
-    array_arg (gen_datatype arr_type) (to_code_list ex_list)
+    array_arg (gen_datatype arr_type) (ex_to_code_list ex_list)
 
   | S.ArrayCtor(arr_type, dim) ->
     gen_datatype arr_type ^"("^ gen_expr dim ^")"
 
   | S.MatrixLit(elem_type, ex_list, coldim) ->
-    "MATRIX TODO"
+    (* we flatten the matrix to be a vector *)
+    let flattened = gen_expr 
+        (S.ArrayLit( A.ArrayType(elem_type), ex_list))
+    in
+    (* a utility function from quarklang.h *)
+    two_arg "matrix_literal" (string_of_int coldim) flattened
   
   | S.MatrixCtor(mat_type, rowdim, coldim) ->
-    two_arg (gen_datatype mat_type ^ "::Zeros")
+    two_arg (gen_datatype mat_type ^ "::Zero")
         (gen_expr rowdim) (gen_expr coldim)
 
   (* Binary ops *)
@@ -190,7 +195,7 @@ let rec gen_expr = function
       id ^ subscripts
     | S.MatrixElem(id, ex_list) -> 
       (* hackish: Eigen lib access matrix elem just like funcall *)
-      more_arg id (to_code_list ex_list)
+      more_arg id (ex_to_code_list ex_list)
     end
     
   (* Post ++ and -- *)
@@ -203,7 +208,7 @@ let rec gen_expr = function
 
   (* Function calls *)
   | S.FunctionCall(func_id, ex_list) -> 
-    more_arg func_id (to_code_list ex_list)
+    more_arg func_id (ex_to_code_list ex_list)
   
   (* Membership testing with keyword 'in' *)
   | S.Membership(elem, array) -> 
@@ -219,7 +224,7 @@ let rec gen_expr = function
   | _ -> fail_unhandle "expr"
 
 (* helper: expr_list -> code(string)_list *)
-and to_code_list ex_list =
+and ex_to_code_list ex_list =
   List.map (fun ex -> gen_expr ex) ex_list
 
 (*
