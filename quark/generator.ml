@@ -286,13 +286,6 @@ let gen_s_iter env = function
     in
     env', S.ArrayIterator(typ, idstr, s_array_ex)
     
-    
-(* When if/while/for are followed by a non-compound single-line stmt, *)
-(* we need to go one scope deeper *)
-let handle_compound_env env = function
-  | A.CompoundStatement(_) -> env
-  | _ -> incr_env_depth env
-
 *)
 
 
@@ -335,7 +328,9 @@ let rec gen_code = function
         code_if ^ "\nelse " ^ code_else ^ "// end if"
 				
       | S.WhileStatement(pred_ex, stmt) -> 
-        ""
+        let code_while = handle_compound stmt in
+        "while (" ^ gen_expr pred_ex ^")" ^
+        code_while ^ "// end while"
         
       | S.ForStatement(iter, stmt) -> 
         ""
