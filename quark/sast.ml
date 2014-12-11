@@ -10,7 +10,7 @@ type op_tag =
   | CastFraction2 (* cast the second arg to fraction *)
   | OpArrayConcat
   | OpStringConcat
-  | OpMatrixMath (* same as OpVerbatim. conceptual purpose only. *)
+  | OpMatrixKronecker
   | OpQuerySingleBit (* measure only a single bit, not a range *)
 
 type lvalue =

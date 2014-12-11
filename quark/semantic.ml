@@ -402,8 +402,7 @@ let rec gen_s_expr env = function
         | A.Eq  | A.NotEq when type1 = type2 -> 
             A.DataType(T.Bool), S.OpVerbatim
         | A.Add | A.Sub | A.Mul | A.Pow when type1 = type2 && is_matrix type1 -> 
-            (* matrix pow will be kronecker product *)
-            type1, S.OpMatrixMath (* matrix operations *)
+            type1, if op = A.Pow then S.OpMatrixKronecker else S.OpVerbatim
         | A.BitAnd when type1 = type2 -> 
             type1, S.OpArrayConcat (* array/mat concatenation *)
         | _ -> failwith @@ err_msg_arrmat op type1 type2
