@@ -239,66 +239,6 @@ let rec gen_expr = function
 and ex_to_code_list ex_list =
   List.map (fun ex -> gen_expr ex) ex_list
 
-(*
-
-(* for-loop iterator syntax *)  
-let gen_s_range env id = function
-	| A.Range(start_ex, end_ex, step_ex) -> 
-    let vtype = (get_env_var env id).v_type in
-    let idstr = get_id id in
-    match vtype with
-    | A.NoneType -> failwith @@ "For-iterator " ^idstr^ " undefined"
-    | A.DataType(T.Int) | A.DataType(T.Float) -> begin
-      let s_start_ex, start_type = gen_expr start_ex in
-      let s_end_ex, end_type = gen_expr end_ex in
-      let s_step_ex, step_type = gen_expr step_ex in
-      match start_type, end_type, step_type with
-      | A.DataType(typ1), A.DataType(typ2), A.DataType(typ3) -> 
-        if not (typ1 = T.Float || typ1 = T.Int) ||
-           not (typ2 = T.Float || typ2 = T.Int) ||
-           not (typ3 = T.Float || typ3 = T.Int) then
-           failwith @@ "Unsupported range type: " ^ T.str_of_type typ1 ^ ", "
-               ^ T.str_of_type typ2 ^ ", " ^ T.str_of_type typ3
-        else
-           S.Range(s_start_ex, s_end_ex, s_step_ex)
-      | _ -> failwith @@ "Unsupported range type: " ^ A.str_of_datatype start_type ^ ", "
-               ^ A.str_of_datatype end_type ^ ", " ^ A.str_of_datatype step_type
-      end
-    | _ -> failwith @@ "Unsupported for-iterator " ^idstr^ ": " ^A.str_of_datatype vtype
-
-let gen_s_iter env = function
-  | A.RangeIterator(typ, id, range) -> (
-    (* if typ = NoneType, there's no new iterator variable defined in the loop *)
-    match typ with
-    | A.NoneType ->
-      S.RangeIterator(typ, get_id id, gen_s_range env id range)
-    | _ -> 
-      (* add the declared var to scope *)
-      let env', _ = gen_s_decl env (A.PrimitiveDecl(typ, id)) in
-      env', S.RangeIterator(typ, get_id id, gen_s_range env' id range)
-    )
-
-  | A.ArrayIterator(typ, id, array_ex) -> 
-    let idstr = get_id id in
-    let env', s_array_ex, array_type = gen_expr array_ex in
-    let env', _ = gen_s_decl env (A.PrimitiveDecl(typ, id)) in
-    let elem_type = match array_type with 
-      | A.ArrayType(elem_type) -> elem_type
-      | _ -> failwith @@ 
-        "Array-style for-loop must have array type, not " ^ A.str_of_datatype array_type
-    in
-    (* check iterator variable and list consistency *)
-    let _ = match typ, elem_type with
-      | A.DataType(T.Int), A.DataType(T.Float)
-      | A.DataType(T.Float), A.DataType(T.Int) -> ()
-      | typ', elem_type' when typ' = elem_type' -> ()
-      | _ -> failwith @@ "For-loop has incompatible types: " ^ A.str_of_datatype typ 
-          ^" "^idstr^ " but " ^ A.str_of_datatype elem_type ^ " expected"
-    in
-    env', S.ArrayIterator(typ, idstr, s_array_ex)
-    
-*)
-
 
 (* Used in A.FunctionDecl *)
 let gen_param_list param_list =
@@ -322,21 +262,21 @@ let rec gen_code = function
         let param_list_code = gen_param_list param_list in
         let stmt_list_code = gen_code stmt_list in
         gen_datatype return_type ^ " " ^ func_id ^ "(" 
-        ^ trim_last param_list_code ^ ")\n"
-        ^ "{\n" ^ stmt_list_code 
-        ^ "\n} // end " ^ func_id ^ "()\n"
+          ^ trim_last param_list_code ^ ")\n"
+          ^ "{\n" ^ stmt_list_code 
+          ^ "\n} // end " ^ func_id ^ "()\n"
       
       | S.ForwardDecl(return_type, func_id, param_list) -> 
         let param_list_code = gen_param_list param_list in
         gen_datatype return_type ^ " " ^ func_id ^ "(" 
-        ^ trim_last param_list_code ^ ");\n"
+          ^ trim_last param_list_code ^ ");\n"
 
       (* statements *)
       | S.IfStatement(pred_ex, stmt_if, stmt_else) -> 
         let code_if = handle_compound stmt_if in
         let code_else = handle_compound stmt_else in
         "if (" ^ gen_expr pred_ex ^")" ^
-        code_if ^ "\nelse " ^ code_else ^ "// end if"
+          code_if ^ "\nelse " ^ code_else ^ "// end if"
 				
       | S.WhileStatement(pred_ex, stmt) -> 
         let code_while = handle_compound stmt in
@@ -344,8 +284,29 @@ let rec gen_code = function
         code_while ^ "// end while"
         
       | S.ForStatement(iter, stmt) -> 
-        ""
-            
+        let code_for = handle_compound stmt in
+        begin
+        match iter with
+        | S.ArrayIterator(typ, id, array_ex) -> 
+          let array_code = gen_expr array_ex in
+          "for (" ^ gen_datatype typ ^" "^ id ^" : "^ array_code ^")"
+            ^ code_for ^ " // end for-array" 
+        | S.RangeIterator(typ, id, range) -> (
+          match range with
+          | S.Range(start_ex, end_ex, step_ex) -> 
+            let init = if typ = A.NoneType then id 
+                     else gen_datatype typ ^" "^ id in
+            let start_code = gen_expr start_ex in
+            let end_code = gen_expr end_ex in
+            let step_code = gen_expr step_ex in
+            "for (" ^ init ^ " = " ^ start_code ^ "; "
+              ^ id ^ " < " ^ end_code ^ "; "
+              ^ id ^ " += " ^ step_code ^ ")" 
+              ^ code_for ^ " // end for-range" 
+          | _ -> fail_unhandle "RangeIterator"
+          )
+        end
+
       | S.CompoundStatement(stmt_list) -> 
         let stmt_list_code = gen_code stmt_list in
         "{\n" ^ stmt_list_code ^ "\n}"
