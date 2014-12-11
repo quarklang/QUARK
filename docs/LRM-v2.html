@@ -62,14 +62,15 @@
 <li><a href="#int">int</a></li>
 <li><a href="#float">float</a></li>
 <li><a href="#fraction">fraction</a></li>
-<li><a href="#complex">complex</a></li>
-<li><a href="#qreg">qreg</a></li>
 <li><a href="#bool">bool</a></li>
+<li><a href="#complex">complex</a></li>
 <li><a href="#string">string</a></li>
+<li><a href="#qreg">qreg</a></li>
 <li><a href="#matrix">matrix</a></li>
 <li><a href="#array">array</a></li>
 </ul>
 </li>
+<li><a href="#declarations">Declarations</a></li>
 <li><a href="#iterators">Iterators</a></li>
 </ul>
 </li>
@@ -90,13 +91,9 @@
 
 <h2 id="reference-manual">Reference Manual</h2>
 
-
-
 <h3 id="grammar-notation">Grammar Notation</h3>
 
 <p>FILL OUT LATER</p>
-
-
 
 <h3 id="lexical-conventions">Lexical Conventions</h3>
 
@@ -168,6 +165,8 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
   or</p>
 </blockquote>
 
+
+
 <h3 id="punctuation">Punctuation</h3>
 
 <p><strong>Parenthesis</strong> – Expressions can include expressions inside parenthesis. Parenthesis can also indicate a function call.</p>
@@ -181,6 +180,8 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
 <p><strong>Dollar Sign</strong> – The dollar sign separates the numerator value from the denominator value in a fraction data type.</p>
 
 <p><strong>Comma</strong> – Commas have several use cases. Commas are used to separate formal arguments in a function declaration, elements in arrays and matrices, and the size and initial state of a <code>qreg</code>.</p>
+
+
 
 <h3 id="escape-sequences">Escape Sequences</h3>
 
@@ -236,23 +237,35 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
 
 <p>Additionally, the aggregate data type of array is available to the user.</p>
 
+
+
 <h4 id="int">int</h4>
 
-<p>An integer is a 64-bit signed integer.</p>
+<p>An <code>int</code> is a 64-bit signed integer.</p>
+
+
 
 <h4 id="float">float</h4>
 
-<p>A float is a 64-bit signed floating-point number.</p>
+<p>A <code>float</code> is a 64-bit signed floating-point number.</p>
 
 
 
 <h4 id="fraction">fraction</h4>
 
-<p>A fraction is denoted by two <code>int</code> types separated by <code>$</code>. </p>
+<p>A <code>fraction</code> is denoted by two <code>int</code> types separated by <code>$</code>. </p>
+
+
+
+<h4 id="bool">bool</h4>
+
+<p>A <code>bool</code> value is denoted using the literals <code>true</code> or <code>false</code>.</p>
+
+
 
 <h4 id="complex">complex</h4>
 
-<p>A complex type is generated from two <code>int</code> or <code>float</code> values; if given a mix of <code>int</code> and <code>float</code> types, QUARK will implicitly type cast. A complex type can also be generated with one numerical value, which will be assigned to the real part of a complex number; imaginary will default to 0. The real and imaginary parts of a complex number can be accessed by <code>real</code> and <code>im</code> accessors.</p>
+<p>A <code>complex</code> type is generated from two <code>int</code> or <code>float</code> values; if given a mix of <code>int</code> and <code>float</code> types, QUARK will implicitly type cast. A <code>complex</code> type can also be generated with one numerical value, which will be assigned to the real part of a complex number; imaginary will default to 0. The real and imaginary parts of a complex number can be accessed by <code>real</code> and <code>im</code> accessors.</p>
 
 
 
@@ -261,31 +274,46 @@ real(cnum); % <span class="hljs-number">3.0</span>
 im(cnum); % <span class="hljs-number">1</span>
 complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span class="hljs-number">9</span>, <span class="hljs-number">0</span>)</code></pre>
 
-<h4 id="qreg">qreg</h4>
 
-<p>A qreg type represents a quantum register. A qreg accepts two <code>int</code> types. The left value denotes the initial size of a quantum register, and the right value denotes the initial bit.</p>
-
-
-
-<pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">qreg q </span>=<span class="hljs-string"> &lt;| nbit+1, 1 |&gt;;</span></code></pre>
-
-<h4 id="bool">bool</h4>
-
-<p>A boolean value is denoted using the literals <code>true</code> or <code>false</code>.</p>
 
 <h4 id="string">string</h4>
 
-<p>A string is a sequence of characters. String literals are placed between double quotations.</p>
+<p>A <code>string</code> is a sequence of characters. String literals are placed between double quotations.</p>
+
+<h4 id="qreg">qreg</h4>
+
+<p>A <code>qreg</code> type represents a quantum register. A <code>qreg</code> accepts two <code>int</code> types. The left value denotes the initial size of a quantum register, and the right value denotes the initial bit.</p>
+
+
+
+<pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">qreg q </span>=<span class="hljs-string"> &lt;| 1, 1 |&gt;;</span></code></pre>
 
 
 
 <h4 id="matrix">matrix</h4>
 
-<p>QUARK allows you to create matrices; a matrix uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only <code>int</code>, <code>float</code>, or <code>complex</code>.</p>
+<p>QUARK allows you to create matrices; a <code>matrix</code> uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only <code>int</code>, <code>float</code>, or <code>complex</code>.</p>
 
 <p><code>[| r00, r01; r10, r11; r20, r21 |]</code></p>
 
+
+
 <h4 id="array">array</h4>
+
+<p>QUARK allows arrays of any of the above data types. Arrays are fixed size and can be accessed with an integer such as:</p>
+
+
+
+<pre class="prettyprint"><code class=" hljs css"><span class="hljs-tag">arr</span><span class="hljs-attr_selector">[0]</span>; </code></pre>
+
+<p>or</p>
+
+<pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">int i </span>=<span class="hljs-string"> 0;
+arr[i];</span></code></pre>
+
+
+
+<h3 id="declarations">Declarations</h3>
 
 <h3 id="iterators">Iterators</h3>
 

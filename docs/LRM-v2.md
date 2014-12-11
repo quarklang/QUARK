@@ -111,16 +111,19 @@ The data types available in QUARK are:
 Additionally, the aggregate data type of array is available to the user.
 
 ####int
-An integer is a 64-bit signed integer.
+An `int` is a 64-bit signed integer.
 
 ####float
-A float is a 64-bit signed floating-point number.
+A `float` is a 64-bit signed floating-point number.
 
 ####fraction
-A fraction is denoted by two `int` types separated by `$`. 
+A `fraction` is denoted by two `int` types separated by `$`. 
+
+####bool
+A `bool` value is denoted using the literals `true` or `false`.
 
 ####complex
-A complex type is generated from two `int` or `float` values; if given a mix of `int` and `float` types, QUARK will implicitly type cast. A complex type can also be generated with one numerical value, which will be assigned to the real part of a complex number; imaginary will default to 0. The real and imaginary parts of a complex number can be accessed by `real` and `im` accessors.
+A `complex` type is generated from two `int` or `float` values; if given a mix of `int` and `float` types, QUARK will implicitly type cast. A `complex` type can also be generated with one numerical value, which will be assigned to the real part of a complex number; imaginary will default to 0. The real and imaginary parts of a complex number can be accessed by `real` and `im` accessors.
 
 ```ocaml
 complex cnum = i(3.0, 1);
@@ -129,26 +132,33 @@ im(cnum); % 1
 complex cnum2 = i(9) % this gives us i(9, 0)
 ```
 
-####qreg
-A qreg type represents a quantum register. A qreg accepts two `int` types. The left value denotes the initial size of a quantum register, and the right value denotes the initial bit.
-
-```
-qreg q = <| nbit+1, 1 |>;
-```
-
-####bool
-A boolean value is denoted using the literals `true` or `false`.
-
 ####string
-A string is a sequence of characters. String literals are placed between double quotations.
+A `string` is a sequence of characters. String literals are placed between double quotations.
+
+####qreg
+A `qreg` type represents a quantum register. A `qreg` accepts two `int` types. The left value denotes the initial size of a quantum register, and the right value denotes the initial bit.
+
+```
+qreg q = <| 1, 1 |>;
+```
 
 ####matrix
-QUARK allows you to create matrices; a matrix uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only `int`, `float`, or `complex`.
+QUARK allows you to create matrices; a `matrix` uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only `int`, `float`, or `complex`.
 
 `[| r00, r01; r10, r11; r20, r21 |]`
 
 ####array
+QUARK allows arrays of any of the above data types. Arrays are fixed size and can be accessed with an integer such as:
+```
+arr[0]; 
+```
+or
+```
+int i = 0;
+arr[i];
+```
 
+###Declarations
 
 ###Iterators
 for i in [1:10]
