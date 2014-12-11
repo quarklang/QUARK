@@ -17,9 +17,12 @@ def int foo: int c, string d, fraction[][] dudud
 
 int oracle_foo: int a;
 
+int mygate: qreg q, bool b;
+
 def int main:
 {
     qreg q = <| 10, 2 |>;
+    % hadamard(<|10, 2|>);
     apply_oracle(q, "oracle_foo", 2);
     fraction[10];
     complex[|] c = complex[| 10, 11 |];

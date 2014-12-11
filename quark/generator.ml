@@ -275,7 +275,11 @@ let gen_param_list param_list =
   List.fold_left 
     (fun accstr param -> accstr ^
       ((function 
-      | S.PrimitiveDecl(typ, id) -> gen_datatype typ ^ " " ^ id
+      | S.PrimitiveDecl(typ, id) -> 
+        let type_code = if typ = A.DataType(T.Qreg)
+        then "const Qureg&" else gen_datatype typ 
+        in
+        type_code ^ " " ^ id
       | _ -> fail_unhandle "gen_param_list"
       ) param) ^ ", "
     ) "" param_list
