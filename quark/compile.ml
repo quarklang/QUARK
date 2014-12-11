@@ -1,3 +1,4 @@
+
 open Semantic
 
 let _ =
@@ -12,11 +13,8 @@ let _ =
     in_loop = false;
   }
   in
-  (*TODO 
-  let sast = Semantic.check_program ast in
-  let c_sast = gen_pretty_c sast in
-  let code = gen_program c_sast in
-  let outfile = open_out "output.cpp" in
-  output_string outfile code
-  *)
-  gen_sast env ast
+  let _, sast = Semantic.gen_sast env ast in
+  let code = Generator.gen_code sast in
+  let code = Generator.header_code ^ code in
+  let _ = print_endline code in
+  output_string (open_out "output.cpp") code

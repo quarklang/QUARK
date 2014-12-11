@@ -10,7 +10,7 @@ type op_tag =
   | CastFraction2 (* cast the second arg to fraction *)
   | OpArrayConcat
   | OpStringConcat
-  | OpMatrixMath (* same as OpVerbatim. conceptual purpose only. *)
+  | OpMatrixKronecker
   | OpQuerySingleBit (* measure only a single bit, not a range *)
 
 type lvalue =
@@ -32,7 +32,9 @@ and expr =
   | QRegLit of expr * expr
   | ComplexLit of expr * expr
   | ArrayLit of A.datatype * expr list
-  | MatrixLit of T.vartype * expr list list * int (* column dimension *)
+  | ArrayCtor of A.datatype * expr (* int size of new array *)
+  | MatrixLit of A.datatype * expr list * int (* column dimension. Flattened *)
+  | MatrixCtor of A.datatype * expr * expr (* int, int of new Matrix::Zeros() *)
   | FunctionCall of string * expr list
   | Lval of lvalue
   | Membership of expr * expr (* not yet supported *)
@@ -41,7 +43,7 @@ type decl =
   | AssigningDecl of A.datatype * string * expr
   | PrimitiveDecl of A.datatype * string
 
-type range = Range of expr * expr * expr
+type range = Range of A.datatype * expr * expr * expr
 
 type iterator =
     (* first datatype in RangeIterator might be NoneType *)
