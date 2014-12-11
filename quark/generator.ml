@@ -218,10 +218,7 @@ let rec gen_expr = function
           fun acc ex -> acc ^delim^ gen_expr ex
         ) "cout" ex_list
         in
-        if func_id = "print" then (* print with newline *)
-          cout_code ^ " << endl"
-        else (* get rid of the last redundant " << " *)
-          String.sub cout_code 0 ((String.length cout_code) - (String.length delim))
+        cout_code ^ if func_id = "print" then " << endl" else ""
     else
     more_arg func_id (ex_to_code_list ex_list)
   

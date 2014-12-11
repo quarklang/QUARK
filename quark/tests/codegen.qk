@@ -2,7 +2,7 @@ int foo: int a, string b, fraction[][] c;
 
 def int foo: int c, string d, fraction[][] dudud
 {
-    print((1+2) * (3+4));
+    print(dudud);
     if not (d == "shit"):
     {
         return -1;
@@ -37,6 +37,9 @@ def int main:
     int[|] m = int[| 3, 4 |];
     m[3-2, 8 mod 6] = 6;
     print(m);
-    print(foo(3, "shit", [[2$3], [4$3]]));
+    fraction[][] farr = [[2$3], [4$3]];
+    farr[0,0] = 5$19;
+    print_noline(farr, "  ");
+    print(foo(3, "shit", farr));
     return 0;
 }
