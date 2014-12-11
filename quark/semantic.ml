@@ -454,9 +454,15 @@ let rec gen_s_expr env = function
     let env, s_ex, typ = gen_s_expr env ex in
     let err_msg op t = "Incompatible operand for unary op " 
         ^ A.str_of_unop op ^ ": " ^ A.str_of_datatype t in
-    let return_type = 
-      if is_matrix typ && op = A.Neg then 
-        typ (* matrix support negation *)
+    let return_type, optag = 
+      if is_matrix typ then 
+        (* matrix support negation and transposition *)
+        let optag = match op with
+        | A.Neg -> S.OpVerbatim
+        | A.Transpose -> S.OpMatrixTranspose
+        | _ -> failwith @@ err_msg op typ
+        in
+        typ, optag 
       else
       A.DataType(
         let raw_type = match typ with
@@ -474,9 +480,10 @@ let rec gen_s_expr env = function
            (* ~fraction inverts the fraction *)
           | T.Int | T.Fraction -> raw_type
           | _ -> failwith @@ err_msg op typ)
-      )
+        | _ -> failwith @@ err_msg op typ
+      ), S.OpVerbatim
     in
-    env, S.Unop(op, s_ex, S.OpVerbatim), return_type
+    env, S.Unop(op, s_ex, optag), return_type
   
   | A.Lval(lval) -> 
     let s_lval, ltype = match lval with

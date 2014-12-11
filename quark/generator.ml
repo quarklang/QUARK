@@ -23,6 +23,7 @@ let gen_binop = function
 
 let gen_unop = function
   | A.Not -> "!"
+  | A.Transpose -> ".adjoint()"
   | other -> A.str_of_unop other
 
 let gen_postop = A.str_of_postop
@@ -199,6 +200,8 @@ let rec gen_expr = function
     let ex_code = gen_expr ex in begin
     match optag with
     | S.OpVerbatim -> surr @@ (gen_unop op) ^ ex_code
+      (* blablamat.adjoint() *)
+    | S.OpMatrixTranspose -> surr @@ (surr ex_code) ^ (gen_unop op)
     | _ -> fail_unhandle "optag in unop"
     end
   
