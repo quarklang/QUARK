@@ -193,37 +193,9 @@ let rec gen_expr = function
 
   (* Function calls *)
   | S.FunctionCall(func_id, ex_list) -> 
-    "FUNCALL_TODO"
-    (*
-    let finfo = get_env_func env func_id in
-    let fidstr = get_id func_id in
-    if finfo.f_defined then
-      let f_args = finfo.f_args in
-      let farg_len = List.length f_args in 
-      let actual_len = List.length ex_list in
-      if farg_len = actual_len then
-        let s_ex_list = List.map2 (
-          fun ex f_arg -> 
-            (* check ex type must agree with expected arg type *)
-            let _, s_ex, ex_type = gen_expr ex in 
-            match ex_type, f_arg with
-            | A.DataType(T.Int), A.DataType(T.Float)
-            | A.DataType(T.Float), A.DataType(T.Int) -> s_ex
-            | ex_type', f_arg' when ex_type' = f_arg' -> s_ex
-            | _ -> failwith @@ "Incompatible args for function " ^fidstr^ ": "
-                  ^ A.str_of_datatype ex_type ^ " given but " 
-                  ^ A.str_of_datatype f_arg ^ " expected"   
-          ) ex_list f_args
-        in
-        S.FunctionCall(fidstr, s_ex_list), finfo.f_return
-      else
-        failwith @@ "Function " ^fidstr^ " requires " ^ string_of_int farg_len
-            ^ " arg but " ^ string_of_int actual_len ^ " provided"
-    else
-      failwith @@ if finfo.f_return = A.NoneType then
-        "Function " ^ fidstr ^ " is undefined" else
-        "Only forward declaration, no actual definition is found for " ^ fidstr
-    *)
+    let code_list = 
+      List.map (fun ex -> gen_expr ex) ex_list in
+    more_arg func_id code_list
   
   (* Membership testing with keyword 'in' *)
   | S.Membership(elem, array) -> 
