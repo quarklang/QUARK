@@ -91,9 +91,13 @@
 
 <h2 id="reference-manual">Reference Manual</h2>
 
+
+
 <h3 id="grammar-notation">Grammar Notation</h3>
 
 <p>FILL OUT LATER</p>
+
+
 
 <h3 id="lexical-conventions">Lexical Conventions</h3>
 
@@ -280,6 +284,8 @@ complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span cl
 
 <p>A <code>string</code> is a sequence of characters. String literals are placed between double quotations.</p>
 
+
+
 <h4 id="qreg">qreg</h4>
 
 <p>A <code>qreg</code> type represents a quantum register. A <code>qreg</code> accepts two <code>int</code> types. The left value denotes the initial size of a quantum register, and the right value denotes the initial bit.</p>
@@ -300,13 +306,13 @@ complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span cl
 
 <h4 id="array">array</h4>
 
-<p>QUARK allows arrays of any of the above data types. Arrays are fixed size and can be accessed with an integer such as:</p>
-
-
+<p>QUARK allows arrays of any of the above data types. Arrays are variable length and are arbitrarily dimensional. Array indices can be accessed with an integer such as:</p>
 
 <pre class="prettyprint"><code class=" hljs css"><span class="hljs-tag">arr</span><span class="hljs-attr_selector">[0]</span>; </code></pre>
 
 <p>or</p>
+
+
 
 <pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">int i </span>=<span class="hljs-string"> 0;
 arr[i];</span></code></pre>
@@ -314,6 +320,8 @@ arr[i];</span></code></pre>
 
 
 <h3 id="declarations">Declarations</h3>
+
+
 
 <h3 id="iterators">Iterators</h3>
 

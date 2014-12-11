@@ -148,7 +148,7 @@ QUARK allows you to create matrices; a `matrix` uses a special bracket notation 
 `[| r00, r01; r10, r11; r20, r21 |]`
 
 ####array
-QUARK allows arrays of any of the above data types. Arrays are fixed size and can be accessed with an integer such as:
+QUARK allows arrays of any of the above data types. Arrays are variable length and are arbitrarily dimensional. Array indices can be accessed with an integer such as:
 ```
 arr[0]; 
 ```
