@@ -33,9 +33,9 @@ let gen_basictype = function
   | T.Float -> "float"
   | T.Bool -> "bool"
   | T.Fraction -> "Frac"
-  | T.Complex -> "complex<float>"
+  | T.Complex -> "std::complex<float>"
   | T.Qreg -> "Qureg"
-  | T.String -> "string"
+  | T.String -> "std::string"
   | T.Void -> "void"
 
 let rec gen_datatype = function
@@ -114,7 +114,8 @@ let rec gen_expr = function
   | S.IntLit(i) -> i
   | S.BoolLit(b) -> b
   | S.FloatLit(f) -> f
-  | S.StringLit(s) -> "string(\"" ^ s ^ "\")"
+  | S.StringLit(s) -> 
+    gen_basictype T.String ^ "(\"" ^ s ^ "\")"
 
   (* compound literals *)
   | S.FractionLit(num_ex, denom_ex) -> 
@@ -124,7 +125,7 @@ let rec gen_expr = function
     two_arg "Qureg::create<true>" (gen_expr qex1) (gen_expr qex2)
 
   | S.ComplexLit(real_ex, im_ex) -> 
-    two_arg "complex<float>" (gen_expr real_ex) (gen_expr im_ex)
+    two_arg (gen_basictype T.Complex) (gen_expr real_ex) (gen_expr im_ex)
 
   | S.ArrayLit(arr_type, ex_list) ->
     array_arg (gen_datatype arr_type) (ex_to_code_list ex_list)
@@ -243,8 +244,19 @@ let rec gen_expr = function
         "std::cout << std::boolalpha << std::setprecision(6)" ex_list 
         in
         cout_code ^ if func_id = "print" then " << std::endl" else ""
-    else
-    more_arg func_id (ex_to_code_list ex_list)
+
+    else if func_id = "apply_oracle" then
+      let code_list = ex_to_code_list ex_list in
+      (* de-string arg #2, which is actually a function parameter *)
+      let arg2 = List.nth code_list 1 in
+      let str_type_len = String.length (gen_basictype T.String) in
+      let arg2 = String.sub arg2 
+          (str_type_len+2) ((String.length arg2) - (str_type_len+4)) in
+      let code_list = [List.nth code_list 0; arg2; List.nth code_list 2] in
+      more_arg func_id code_list
+      
+    else (* non-special cases *)
+      more_arg func_id (ex_to_code_list ex_list)
   
   (* Membership testing with keyword 'in' *)
   | S.Membership(elem, array) -> 

@@ -604,7 +604,7 @@ let rec gen_s_expr env = function
       let s_ex_list = 
         List.map (fun ex -> snd_3 @@ gen_s_expr env ex) ex_list in
         env, S.FunctionCall(fidstr, s_ex_list), finfo.f_return
-    else
+    else (* non-special cases *)
     if finfo.f_defined then
       let f_args = finfo.f_args in
       let farg_len = List.length f_args in 
@@ -625,6 +625,19 @@ let rec gen_s_expr env = function
                   ^ A.str_of_datatype ex_type ^ " given but " 
                   ^ A.str_of_datatype f_arg ^ " expected"   
           ) ex_list f_args
+        in
+        (* check apply_oracle: arg#2(string) must represent a function(int) returns int *)
+        let _ = if fidstr = "apply_oracle" then
+          let oracle_ex = List.nth ex_list 1 in
+          let oracle_id = match oracle_ex with
+          | A.StringLit(id) -> id
+          | _ -> failwith "Arg #2 of built-in apply_oracle() must be a string literal"
+          in
+          let oracle_finfo = get_env_func env (A.Ident(oracle_id)) in
+          if oracle_finfo.f_args <> [A.DataType(T.Int)]
+            || oracle_finfo.f_return <> A.DataType(T.Int) then
+            failwith @@ "Arg #2 of built-in apply_oracle(): user-defined function " 
+              ^ oracle_id ^" must have signature 'int " ^ oracle_id ^ "(int)'"
         in
         env, S.FunctionCall(fidstr, s_ex_list), finfo.f_return
       else

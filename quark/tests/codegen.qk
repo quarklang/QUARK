@@ -15,9 +15,12 @@ def int foo: int c, string d, fraction[][] dudud
     }
 }
 
+int oracle_foo: int a;
+
 def int main:
 {
     qreg q = <| 10, 2 |>;
+    apply_oracle(q, "oracle_foo", 2);
     fraction[10];
     complex[|] c = complex[| 10, 11 |];
     print(rowdim(c), " -> ", c);
@@ -62,4 +65,9 @@ def int main:
     print_noline(farr, "  ");
     print(foo(3, "shit", farr));
     return 0;
+}
+
+def int oracle_foo: int a
+{
+    return 2;
 }
