@@ -189,25 +189,7 @@ let rec gen_expr = function
       
   (* Assignment *)
   | S.Assign(lval, rhs_ex) -> 
-    "ASSIGN_TODO"
-    (*
-    let s_lval_ex, l_type = gen_expr (A.Lval(lval)) in
-    let s_rhs_ex, r_type = gen_expr rhs_ex in
-      let s_lval = match s_lval_ex with
-      | S.Lval(s_lval) -> s_lval
-      | _ -> failwith "INTERNAL in postop: doesn't return S.Lval as expected"
-      in
-      let return_type = if l_type = r_type then l_type
-        else
-        match l_type, r_type with
-        | A.DataType(T.Int), A.DataType(T.Float) -> A.DataType(T.Int)
-        | A.DataType(T.Float), A.DataType(T.Int) -> A.DataType(T.Float)
-        | _ -> failwith @@ "Assignment type mismatch: "
-            ^ A.str_of_datatype l_type ^" = "^ A.str_of_datatype r_type
-      in
-      let _ = print_endline @@ "DEBUG ASSIGN returns "^A.str_of_datatype return_type in
-      S.Assign(s_lval, s_rhs_ex), return_type
-     *)
+    gen_expr (S.Lval(lval)) ^" = "^ gen_expr rhs_ex
 
   (* Function calls *)
   | S.FunctionCall(func_id, ex_list) -> 
