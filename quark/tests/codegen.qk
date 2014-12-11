@@ -2,8 +2,8 @@ int foo: int a, string b, fraction[][] c;
 
 def int foo: int c, string d, fraction[][] dudud
 {
-    fraction dud;
-    print(dud in dudud);
+    fraction[] dud;
+    print("good bool ", dud in dudud);
     print(dudud);
     if not (d == "shit"):
     {

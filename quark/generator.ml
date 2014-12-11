@@ -235,22 +235,18 @@ let rec gen_expr = function
         let delim = " << " in
         let cout_code = List.fold_left (
           fun acc ex -> acc ^delim^ gen_expr ex
-        ) "cout" ex_list
+        ) 
+        (* C++ prints 'true/false' instead of '1/0' *)
+        "std::cout << std::boolalpha << std::setprecision(6)" ex_list 
         in
-        cout_code ^ if func_id = "print" then " << endl" else ""
+        cout_code ^ if func_id = "print" then " << std::endl" else ""
     else
     more_arg func_id (ex_to_code_list ex_list)
   
   (* Membership testing with keyword 'in' *)
   | S.Membership(elem, array) -> 
-    failwith "Membership not yet supported"
-    (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
-    (*
-    let exElem = gen_expr exElem in
-    let exArray = gen_expr exArray in
-      "std::find(" ^surr exArray^ ".begin(), " ^surr exArray^ ".end(), " ^
-      exElem^ ") != " ^surr exArray^ ".end()"
-    *)
+    (* from quarklang.h *)
+    two_arg "membership_in" (gen_expr elem) (gen_expr array)
     
   | _ -> fail_unhandle "expr"
 
