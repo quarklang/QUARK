@@ -6,6 +6,7 @@ let header_code =
  "#include \"qureg.h\"\n" ^
  "#include \"qumat.h\"\n" ^
  "#include \"qugate.h\"\n" ^
+ "#include \"quarklang.h\"\n\n" ^
  "using namespace Qumat;\n" ^
  "using namespace Qugate;\n\n"
 
@@ -340,13 +341,14 @@ let rec gen_code = function
         let stmt_list_code = gen_code stmt_list in
         "{\n" ^ stmt_list_code ^ "} // end compound"
 
-      | S.Declaration(dec) -> begin
-        match dec with
-        | S.AssigningDecl(typ, id, ex) -> 
-          gen_datatype typ ^" "^ id ^" = "^ gen_expr ex
-        | S.PrimitiveDecl(typ, id) -> 
-          gen_datatype typ ^" "^ id
-        end
+      | S.Declaration(dec) ->
+        let code =
+          match dec with
+          | S.AssigningDecl(typ, id, ex) -> 
+            gen_datatype typ ^" "^ id ^" = "^ gen_expr ex
+          | S.PrimitiveDecl(typ, id) -> 
+            gen_datatype typ ^" "^ id
+        in code ^ "; "
 
       | S.Expression(ex) -> (gen_expr ex) ^ ";"
 
