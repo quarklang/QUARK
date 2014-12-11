@@ -22,9 +22,21 @@ let find_builtin = function
    (* fraction numerator/denominator *)
   | "num" -> [wrap T.Fraction], wrap T.Int
   | "denom" -> [wrap T.Fraction], wrap T.Int
+    (* 2nd arg must be a defined function *)
+  | "apply_oracle" -> [wrap T.Qreg; wrap T.String; wrap T.Int], wrap T.Void
   | _ -> [], A.NoneType
 
- (* print is special: it accepts any number of args *)
+(* print is special: it accepts any number of args *)
 let is_print = function
   | "print" | "print_noline" -> true
   | _ -> false
+
+(* User not allowed to override certain built-in funtions*)
+(* because otherwise will cause trouble in codegen  *)
+let overridable func = 
+  match func with
+  | "print" | "print_noline"
+  | "apply_oracle" -> 
+    failwith @@ "Built-in function " ^func^ "() not overridable"
+  | _ -> ()
+                       

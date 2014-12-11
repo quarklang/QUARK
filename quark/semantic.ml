@@ -852,6 +852,9 @@ let rec gen_sast env = function
       | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
         let _ = debug_env env "before FunctionDecl" in
         let s_param_list = gen_s_param_list param_list in
+        let fidstr = get_id func_id in
+        (* check: mustn't override certain built-in functions *)
+        let _ = Builtin.overridable fidstr in
         let env' = incr_env_depth env in
         let env' = update_env_func env' return_type func_id param_list true in
         let _ = debug_env env' "after FunctionDecl" in
@@ -861,7 +864,7 @@ let rec gen_sast env = function
         let is_returned = env_after_decl.is_returned in
         let _ = if is_returned then ()
           else if return_type = A.DataType(T.Void) then ()
-          else failwith @@ "Function " ^ get_id func_id 
+          else failwith @@ "Function " ^ fidstr 
               ^ " should have at least one return: " ^ A.str_of_datatype return_type
         in
         let function_decl = 
@@ -878,9 +881,12 @@ let rec gen_sast env = function
         env'', function_decl
       
       | A.ForwardDecl(return_type, func_id, param_list) -> 
+        let fidstr = get_id func_id in
+        (* check: mustn't override certain built-in functions *)
+        let _ = Builtin.overridable fidstr in
         let s_param_list = gen_s_param_list param_list in
         let env' = update_env_func env return_type func_id param_list false in
-        env', S.ForwardDecl(return_type, get_id func_id, s_param_list)
+        env', S.ForwardDecl(return_type, fidstr, s_param_list)
 
       (* statements *)
       | A.IfStatement(pred_ex, stmt_if, stmt_else) -> 
