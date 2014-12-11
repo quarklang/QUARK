@@ -59,7 +59,7 @@ vartype:
   | FLOAT    { Float }
   | BOOLEAN  { Bool }
   | STRING   { String }
-  | QREG     { QReg }
+  | QREG     { Qreg }
   | FRACTION { Fraction }
   | COMPLEX  { Complex }
   | VOID     { Void }
@@ -67,7 +67,7 @@ vartype:
 datatype:
   | vartype { DataType($1) }
   | datatype LSQUARE RSQUARE { ArrayType($1) }
-  | datatype LSQUARE LSQUARE RSQUARE RSQUARE { MatrixType($1) }
+  | datatype LMATRIX RSQUARE { MatrixType($1) } /* int[|] */
 
 /* Variables that can be assigned a value */
 lvalue:
@@ -141,7 +141,9 @@ expr:
   | expr DOLLAR expr                            { FractionLit($1, $3) }
   | STRING_LITERAL                              { StringLit($1) }
   | LSQUARE expr_list RSQUARE                   { ArrayLit($2) }
+  | datatype LSQUARE expr RSQUARE               { ArrayCtor($1, $3) }
   | LMATRIX matrix_row_list RMATRIX             { MatrixLit($2) }
+  | datatype LMATRIX expr COMMA expr RMATRIX { MatrixCtor($1, $3, $5) }
   | COMPLEX_SYM expr COMMA expr RPAREN          { ComplexLit($2, $4) }
   | COMPLEX_SYM expr RPAREN                     { ComplexLit($2, FloatLit("0.0")) }
   | LQREG expr COMMA expr RQREG                 { QRegLit($2, $4) }

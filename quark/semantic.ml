@@ -4,6 +4,9 @@ module T = Type
 
 module StrMap = Map.Make(String)
 
+(* debug printout flag *)
+let _DEBUG_ENABLE = false
+
 (* utilities *)
 let fst_2 = function x, _ -> x;;
 let snd_2 = function _, x -> x;;
@@ -11,7 +14,16 @@ let fst_3 = function x, _, _ -> x;;
 let snd_3 = function _, x, _ -> x;;
 let trd_3 = function _, _, x -> x;;
 
-let get_id (A.Ident name) = name
+let get_id (A.Ident name) = 
+  (* reserved prefix *)
+  let forbid = Builtin.forbidden_prefix in
+  let forbid_len = String.length forbid in
+  if String.length name < forbid_len then name
+  else
+    if String.sub name 0 forbid_len = forbid
+    then failwith @@ "Identifier name cannot start with "
+        ^ "the reserved prefix " ^forbid^ ": " ^ name
+    else name
 
 (****** Environment definition ******)
 type func_info = {
@@ -50,6 +62,7 @@ let debug_s_decl_list f_args =
   
 (* print out the func decl param list *)
 let debug_env env msg =
+  if _DEBUG_ENABLE then
   begin
     print_endline @@ "ENV " ^ msg ^ "{";
     print_string "Var= ";
@@ -67,6 +80,10 @@ let debug_env env msg =
     print_endline @@ "is_returned= " ^ string_of_bool env.is_returned;
     print_endline "}";
   end
+
+let debug_print msg = 
+  if _DEBUG_ENABLE then print_endline @@ "DEBUG " ^ msg
+
 
 (****** Environment var_table ******)
 (* return updated var_table field (keep env.depth) *)
@@ -112,15 +129,20 @@ let decr_env_depth env =
 let set_env_returned env = 
   { env with is_returned = true }
 
+
 (****** Environment func_table ******)
 let get_env_func env func_id =
+  let fid = get_id func_id in
   try
-    StrMap.find (get_id func_id) env.func_table
-  with Not_found -> { 
-    f_args = []; 
-    f_return = A.NoneType;
-    f_defined = false;
-  }
+    StrMap.find fid env.func_table
+  with Not_found -> 
+    (* look at the built-in functions *)
+    let arg_types, return_type = Builtin.find_builtin fid in
+    { 
+      f_args = arg_types; 
+      f_return = return_type;
+      f_defined = return_type <> A.NoneType;
+    }
   
 (* Used in A.FunctionDecl *)
 (* add all formal params to updated var_table *)
@@ -196,6 +218,10 @@ let is_matrix = function
   | A.MatrixType(_) -> true
   | _ -> false
 
+(* flatten a matrix (list list) into row major 1D list *)
+let flatten_matrix = List.fold_left
+  (fun acc row -> acc @ row ) []
+
 
 (********* Main expr semantic checker entry *********)
 (* return env', S.expr, type *)
@@ -221,7 +247,7 @@ let rec gen_s_expr env = function
     let env, s_qex2, q2_type = gen_s_expr env qex2 in (
     match q1_type, q2_type with
     | A.DataType(T.Int), A.DataType(T.Int) -> 
-      env, S.QRegLit(s_qex1, s_qex2), A.DataType(T.QReg)
+      env, S.QRegLit(s_qex1, s_qex2), A.DataType(T.Qreg)
     | _ -> failwith @@ compound_type_err_msg "qreg" q1_type q2_type
     )            
 
@@ -239,18 +265,49 @@ let rec gen_s_expr env = function
 
   | A.ArrayLit(exprs) ->
     let env, s_exprs, elem_type = gen_s_array env exprs in
-    let _tmp = A.ArrayType(elem_type) in
-    let _ = print_endline @@ "DEBUG ARRAY " ^ (A.str_of_datatype _tmp) in
-    env, S.ArrayLit(elem_type, s_exprs), A.ArrayType(elem_type)
+    let arr_type = A.ArrayType(elem_type) in
+    let _ = debug_print @@ "ARRAY " ^ (A.str_of_datatype arr_type) in
+    env, S.ArrayLit(arr_type, s_exprs), arr_type
+    
+  (* constructs an array with size *)
+  | A.ArrayCtor(elem_type, size_expr) -> 
+    let env, s_size_expr, size_type = gen_s_expr env size_expr in
+    if size_type = A.DataType(T.Int) then
+      let arr_type = A.ArrayType(elem_type) in
+      env, S.ArrayCtor(arr_type, s_size_expr), arr_type
+    else
+      failwith @@ "Array constructor size must be int, but " 
+            ^ A.str_of_datatype size_type ^ " provided"
 
   | A.MatrixLit(exprs_list_list) ->
     let env, s_matrix, elem_type, coldim = gen_s_matrix env exprs_list_list in
-    let _tmp = A.MatrixType(A.DataType(elem_type)) in
-    let _ = print_endline @@ "DEBUG MATRIX " ^ (A.str_of_datatype _tmp) 
+    let elem_type = A.DataType(elem_type) in
+    let _ = debug_print @@ "MATRIX " ^ A.str_of_datatype (A.MatrixType(elem_type)) 
         ^ " cols= " ^ string_of_int coldim ^ " rows= " ^ string_of_int (List.length exprs_list_list) 
     in
-    env, S.MatrixLit(elem_type, s_matrix, coldim), A.MatrixType(A.DataType(elem_type))
+    env, S.MatrixLit(elem_type, s_matrix, coldim), A.MatrixType(elem_type)
   
+  (* constructs a matrix with row, col dim *)
+  | A.MatrixCtor(elem_type, rowdim_ex, coldim_ex) -> (
+    match elem_type with
+    | A.DataType(t) -> 
+      if t = T.Int || t = T.Float || t = T.Complex then
+        let env, s_rowdim_ex, rowdim_type = gen_s_expr env rowdim_ex in
+        let env, s_coldim_ex, coldim_type = gen_s_expr env coldim_ex in
+        if rowdim_type = A.DataType(T.Int) && coldim_type = A.DataType(T.Int) then
+          let mat_type = A.MatrixType(elem_type) in
+          env, S.MatrixCtor(mat_type, s_rowdim_ex, s_coldim_ex), mat_type
+        else
+          failwith @@ "Matrix constructor row/column dimensions must be int/int, but " 
+                ^ A.str_of_datatype rowdim_type ^ "/"
+                ^ A.str_of_datatype coldim_type ^ " provided"
+      else
+        failwith @@ 
+          "Non-numerical matrix constructor type: " ^ A.str_of_datatype elem_type
+    | _ -> failwith @@ 
+        "Invalid matrix constructor type: " ^ A.str_of_datatype elem_type
+    )
+
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)
   | A.Binop(expr1, op, expr2) -> 
@@ -288,9 +345,11 @@ let rec gen_s_expr env = function
               T.Float, S.OpVerbatim
           | T.Int,   T.Int -> 
               T.Int, S.OpVerbatim
-          | T.Float, T.Complex when notmod -> 
+          | T.Float, T.Complex
+          | T.Int, T.Complex when notmod -> 
               T.Complex, S.CastComplex1
-          | T.Complex, T.Float when notmod -> 
+          | T.Complex, T.Float
+          | T.Complex, T.Int when notmod -> 
               T.Complex, S.CastComplex2
           | T.Complex, T.Complex when notmod -> 
               T.Complex, S.OpVerbatim
@@ -354,8 +413,7 @@ let rec gen_s_expr env = function
         | A.Eq  | A.NotEq when type1 = type2 -> 
             A.DataType(T.Bool), S.OpVerbatim
         | A.Add | A.Sub | A.Mul | A.Pow when type1 = type2 && is_matrix type1 -> 
-            (* matrix pow will be kronecker product *)
-            type1, S.OpMatrixMath (* matrix operations *)
+            type1, if op = A.Pow then S.OpMatrixKronecker else S.OpVerbatim
         | A.BitAnd when type1 = type2 -> 
             type1, S.OpArrayConcat (* array/mat concatenation *)
         | _ -> failwith @@ err_msg_arrmat op type1 type2
@@ -368,7 +426,12 @@ let rec gen_s_expr env = function
     let env, s_qreg_ex, qreg_type = gen_s_expr env qreg_ex in
     begin
       match qreg_type with 
-      | A.DataType(T.QReg) ->
+      | A.DataType(T.Qreg) ->
+        (* we disallow measurement on an rvalue, e.g. a qureg literal *)
+        let _ = match qreg_ex with
+        | A.Lval(_) -> () (* good *)
+        | _ -> failwith "Measurement query on a Qreg must be made on an lvalue type"
+        in
         let env, s_start_ex, start_type = gen_s_expr env start_ex in
         let env, s_end_ex, end_type = gen_s_expr env end_ex in
         let optag = match s_end_ex with
@@ -449,18 +512,18 @@ let rec gen_s_expr env = function
             if sub_dim = 0 then elem else
             match elem with
             | A.DataType(_) ->
-              failwith @@ "Bad subscript dimension for array: " ^idstr
+              failwith @@ "Invalid subscript dimension for array: " ^idstr
             | A.ArrayType(elem') ->
               get_array_lval_type (sub_dim - 1) elem'
               (* assume decl has already checked that matrix type is valid *)
             | A.MatrixType(A.DataType(raw_elem)) ->
               if sub_dim = 2 then A.DataType(raw_elem)
               else failwith @@ 
-                  "Bad subscript dimension for array that contains matrix: " ^idstr
+                  "Invalid subscript dimension for array that contains matrix: " ^idstr
             | _ -> failwith @@ "INTERNAL bad array type: " ^ idstr
           in
           let lval_type = get_array_lval_type (sub_dim - 1) elem_type in
-          let _ = print_endline @@ "DEBUG LVALUE "^idstr^" -> "^A.str_of_datatype lval_type in
+          let _ = debug_print @@ "LVALUE "^idstr^" -> "^A.str_of_datatype lval_type in
           S.ArrayElem(idstr, s_ex_list), lval_type
 
         (* Matrix lvalue *)
@@ -522,13 +585,19 @@ let rec gen_s_expr env = function
         | _ -> failwith @@ "Assignment type mismatch: "
             ^ A.str_of_datatype l_type ^" = "^ A.str_of_datatype r_type
       in
-      let _ = print_endline @@ "DEBUG ASSIGN returns "^A.str_of_datatype return_type in
+      let _ = debug_print @@ "ASSIGN returns "^A.str_of_datatype return_type in
       env, S.Assign(s_lval, s_rhs_ex), return_type
 
   (* Function calls *)
   | A.FunctionCall(func_id, ex_list) -> 
     let finfo = get_env_func env func_id in
     let fidstr = get_id func_id in
+    if Builtin.is_print fidstr then
+      (* 'print' built-in functions support any number of args *)
+      let s_ex_list = 
+        List.map (fun ex -> snd_3 @@ gen_s_expr env ex) ex_list in
+        env, S.FunctionCall(fidstr, s_ex_list), finfo.f_return
+    else
     if finfo.f_defined then
       let f_args = finfo.f_args in
       let farg_len = List.length f_args in 
@@ -540,7 +609,10 @@ let rec gen_s_expr env = function
             let _, s_ex, ex_type = gen_s_expr env ex in 
             match ex_type, f_arg with
             | A.DataType(T.Int), A.DataType(T.Float)
-            | A.DataType(T.Float), A.DataType(T.Int) -> s_ex
+            | A.DataType(T.Float), A.DataType(T.Int)
+               (* Array(None) means built-in function matches any array type *)
+            | A.ArrayType(_), A.ArrayType(A.NoneType)
+            | A.MatrixType(_), A.MatrixType(A.NoneType) -> s_ex
             | ex_type', f_arg' when ex_type' = f_arg' -> s_ex
             | _ -> failwith @@ "Incompatible args for function " ^fidstr^ ": "
                   ^ A.str_of_datatype ex_type ^ " given but " 
@@ -631,8 +703,10 @@ and gen_s_matrix env exprs_list_list =
             )
             in
           env, (exprs :: rows), curr_type', row_length ))
-    (env, [], T.Void, 0) exprs_list_list in
-  (env, List.rev matrix , matrix_type, row_length)
+    (env, [], T.Void, 0) exprs_list_list 
+  in
+  let matrix = flatten_matrix (List.rev matrix) in
+  env, matrix , matrix_type, row_length
   
 
 let gen_s_param = function 
@@ -644,7 +718,8 @@ let gen_s_param = function
 let gen_s_param_list param_list =
   List.map 
     (fun param -> gen_s_param param) param_list
-    
+   
+     
 (* decl *)
 let rec check_matrix_decl idstr typ =
   match typ with
@@ -656,13 +731,14 @@ let rec check_matrix_decl idstr typ =
       match mat_type with
       (* only support 3 numerical types *)
       | T.Int | T.Float | T.Complex -> ()
-      | _ -> failwith @@ 
-        "Unsupported matrix element declaration: " ^idstr^ " with " ^ T.str_of_type mat_type)
+      | _ -> failwith @@ "Non-numerical matrix declaration: " 
+            ^ idstr ^ " with " ^ T.str_of_type mat_type)
     (* we shouldn't support float[][[]] *)
     | _ -> failwith @@ 
       "Invalid matrix declaration: " ^idstr^ " with " ^ A.str_of_datatype t
     )
   | A.NoneType -> failwith "INTERNAL NoneType encountered in check_matrix"
+  
   
 (* update_env_var checks redeclaration error *)
 let gen_s_decl env = function
@@ -699,14 +775,14 @@ let gen_s_range env id = function
       let env, s_end_ex, end_type = gen_s_expr env end_ex in
       let env, s_step_ex, step_type = gen_s_expr env step_ex in
       match start_type, end_type, step_type with
-      | A.DataType(typ1), A.DataType(typ2), A.DataType(typ3) -> 
-        if not (typ1 = T.Float || typ1 = T.Int) ||
-           not (typ2 = T.Float || typ2 = T.Int) ||
-           not (typ3 = T.Float || typ3 = T.Int) then
-           failwith @@ "Unsupported range type: " ^ T.str_of_type typ1 ^ ", "
-               ^ T.str_of_type typ2 ^ ", " ^ T.str_of_type typ3
+      | A.DataType(start_raw_typ), A.DataType(end_raw_typ), A.DataType(step_raw_typ) -> 
+        if not (start_raw_typ = T.Float || start_raw_typ = T.Int) ||
+           not (end_raw_typ = T.Float || end_raw_typ = T.Int) ||
+           not (step_raw_typ = T.Float || step_raw_typ = T.Int) then
+           failwith @@ "Unsupported range type: " ^ T.str_of_type start_raw_typ ^ ", "
+               ^ T.str_of_type end_raw_typ ^ ", " ^ T.str_of_type step_raw_typ
         else
-           S.Range(s_start_ex, s_end_ex, s_step_ex)
+           S.Range(vtype, s_start_ex, s_end_ex, s_step_ex)
       | _ -> failwith @@ "Unsupported range type: " ^ A.str_of_datatype start_type ^ ", "
                ^ A.str_of_datatype end_type ^ ", " ^ A.str_of_datatype step_type
       end
@@ -894,7 +970,7 @@ let rec gen_sast env = function
       | A.EmptyStatement -> 
         env, S.EmptyStatement
 
-      | _ -> failwith "nothing for eval()"
+      | _ -> failwith "INTERNAL unhandled statement"
     in 
     let env_new, s_rest = gen_sast env_new rest in
     (env_new, (s_stmt :: s_rest))
