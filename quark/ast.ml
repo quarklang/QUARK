@@ -65,7 +65,9 @@ and expr =
   | FloatLit of string
   | StringLit of string
   | ArrayLit of expr list
+  | ArrayCtor of datatype * expr
   | MatrixLit of expr list list
+  | MatrixCtor of datatype * expr * expr
   | ComplexLit of expr * expr
   | Lval of lvalue
   | Membership of expr * expr
@@ -102,18 +104,21 @@ let rec str_of_datatype = function
     T.str_of_type t
 	| ArrayType(t) -> 
 		str_of_datatype t ^ "[]"
-	| MatrixType(t) -> 
-   (match t with
-    | DataType(matType) -> 
-      (match matType with
+	| MatrixType(t) -> (
+    match t with
+    | DataType(elem_type) -> ( 
+      match elem_type with
       (* only support 3 numerical types *)
       | T.Int | T.Float | T.Complex -> 
-      "[|" ^ T.str_of_type matType ^ "|]"
-      | _ -> failwith "INTERNAL non-numerical matrix type to str")
+      "[|" ^ T.str_of_type elem_type ^ "|]"
+      | _ -> failwith "INTERNAL non-numerical matrix type to str"
+      )
+    | NoneType -> "[|AnyType|]"
     (* we shouldn't support float[][[]] *)
     | _ -> 
-      failwith "INTERNAL bad matrix type to str")
-  | NoneType -> failwith "INTERNAL NoneType in str_of_datatype"
+      failwith "INTERNAL bad matrix type to str"
+    )
+  | NoneType -> "AnyType"
 
 let str_of_binop = function
 | Add -> "+"
