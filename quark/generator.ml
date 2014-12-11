@@ -228,112 +228,6 @@ and ex_to_code_list ex_list =
   List.map (fun ex -> gen_expr ex) ex_list
 
 (*
-and gen_s_array env exprs =
-  let s_exprs, array_type = List.fold_left
-    (* evaluate each expression in the list *)
-    (fun (checked_exprs_acc, prev_type) unchecked_expr ->
-        let checked_expr, expr_type = gen_expr unchecked_expr in
-        match prev_type with
-        | A.NoneType ->
-          (* means we're seeing the 1st expr in the array and now know array type *)
-          checked_expr :: checked_exprs_acc, expr_type
-        | array_type -> (
-          (* ensure all elems in array are the same type *)
-          match array_type, expr_type with (* <> for != *)
-          | A.DataType(T.Int), A.DataType(T.Float)
-          | A.DataType(T.Float), A.DataType(T.Int) -> 
-            checked_expr :: checked_exprs_acc, A.DataType(T.Float)
-          | _ when array_type = expr_type -> 
-            checked_expr :: checked_exprs_acc, array_type
-          | _ ->  failwith @@ "Array element type conflict: " 
-            ^ A.str_of_datatype array_type ^ " -.- " ^ A.str_of_datatype expr_type)
-          )
-    ([], A.NoneType) exprs in
-  (List.rev s_exprs , array_type)
-
-and gen_s_matrix env exprs_list_list =
-  let matrix, matrix_type, row_length = List.fold_left
-    (fun (rows, curr_type, row_length) exprs -> 
-        (* evaluate each row where each row is an expr list *)
-        let exprs, row_type = gen_s_array env exprs in
-        let prev_type = 
-            match row_type with 
-            | A.DataType(prev_type) -> (
-              match prev_type with
-              | T.Int  | T.Float  | T.Complex -> prev_type
-              | _ -> failwith @@ "Matrix element type unsupported: " ^ T.str_of_type prev_type
-              )
-            | _ -> failwith @@ "Invalid matrix row type: " ^ A.str_of_datatype row_type
-        in
-        let exprs_length = List.length exprs in
-        match curr_type with
-        | T.Void -> 
-            (* means this is the 1st row which means we now know the matrix type *)
-            (exprs :: rows), prev_type, exprs_length
-        | _ -> (
-          let curr_type' = 
-            (* the same length*)
-            if row_length <> exprs_length
-            then failwith "All rows in a matrix must have the same length"
-            else (
-            (* ensure all rows have the same type and can only be complex, int or float *)
-            match curr_type, prev_type with
-            | T.Float, T.Int
-            | T.Int, T.Float
-            | T.Float, T.Float -> T.Float
-            | T.Int, T.Int -> T.Int
-            | T.Complex, T.Complex -> T.Complex
-            | _ ->  failwith @@ 
-              "Array element type conflict: " 
-              ^ T.str_of_type curr_type ^ " -.- " ^ T.str_of_type prev_type
-            )
-            in
-          (exprs :: rows), curr_type', row_length ))
-    ([], T.Void, 0) exprs_list_list in
-  (List.rev matrix , matrix_type, row_length)
-  
-    
-(* decl *)
-let rec check_matrix_decl idstr typ =
-  match typ with
-  | A.DataType(_) -> ()
-  | A.ArrayType(t) -> check_matrix_decl idstr t
-  | A.MatrixType(t) -> (
-    match t with
-    | A.DataType(mat_type) -> (
-      match mat_type with
-      (* only support 3 numerical types *)
-      | T.Int | T.Float | T.Complex -> ()
-      | _ -> failwith @@ 
-        "Unsupported matrix element declaration: " ^idstr^ " with " ^ T.str_of_type mat_type)
-    (* we shouldn't support float[][[]] *)
-    | _ -> failwith @@ 
-      "Invalid matrix declaration: " ^idstr^ " with " ^ A.str_of_datatype t
-    )
-  | A.NoneType -> failwith "INTERNAL NoneType encountered in check_matrix"
-  
-(* update_env_var checks redeclaration error *)
-let gen_s_decl env = function
-  | A.AssigningDecl(typ, id, ex) -> 
-    let idstr = get_id id in
-    let _ = check_matrix_decl idstr typ in (* disallow certain bad matrices *)
-    let s_ex, ex_type = gen_expr ex in
-    let _ = match typ, ex_type with
-    | A.DataType(T.Int), A.DataType(T.Float)
-    | A.DataType(T.Float), A.DataType(T.Int) -> ()
-    | typ', ex_type' when typ' = ex_type' -> ()
-    | _ -> failwith @@ "Incompatible assignment: " 
-        ^ A.str_of_datatype typ ^" " ^idstr^ " = " ^ A.str_of_datatype ex_type
-    in
-    let env' = update_env_var env typ id in
-    env', S.AssigningDecl(typ, idstr, s_ex)
-
-  | A.PrimitiveDecl(typ, id) -> 
-    let idstr = get_id id in
-    let _ = check_matrix_decl idstr typ in (* disallow certain bad matrices *)
-    let env' = update_env_var env typ id in
-    env', S.PrimitiveDecl(typ, idstr)
-
 
 (* for-loop iterator syntax *)  
 let gen_s_range env id = function
@@ -407,7 +301,7 @@ let gen_param_list param_list =
     (fun accstr param -> accstr ^
       ((function 
       | S.PrimitiveDecl(typ, id) -> gen_datatype typ ^ " " ^ id
-      | _ -> failwith "INTERNAL codegen gen_param_list"
+      | _ -> fail_unhandle "gen_param_list"
       ) param) ^ ", "
     ) "" param_list
     
@@ -446,8 +340,13 @@ let rec gen_code = function
         let stmt_list_code = gen_code stmt_list in
         "{\n" ^ stmt_list_code ^ "} // end compound"
 
-      | S.Declaration(dec) -> 
-        ""
+      | S.Declaration(dec) -> begin
+        match dec with
+        | S.AssigningDecl(typ, id, ex) -> 
+          gen_datatype typ ^" "^ id ^" = "^ gen_expr ex
+        | S.PrimitiveDecl(typ, id) -> 
+          gen_datatype typ ^" "^ id
+        end
 
       | S.Expression(ex) -> (gen_expr ex) ^ ";"
 
