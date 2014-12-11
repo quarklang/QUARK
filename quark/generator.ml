@@ -75,7 +75,7 @@ let rec gen_expr = function
   | S.IntLit(i) -> i
   | S.BoolLit(b) -> b
   | S.FloatLit(f) -> f
-  | S.StringLit(s) -> s
+  | S.StringLit(s) -> "string(\"" ^ s ^ "\")"
 
   (* compound literals *)
   | S.FractionLit(num_ex, denom_ex) -> 
@@ -157,35 +157,11 @@ let rec gen_expr = function
     
   (* Unary ops *)
   | S.Unop(op, ex, optag) -> 
-    "UNOP_TODO"
-    (*
-    let s_ex, typ = gen_expr ex in
-    let err_msg op t = "Incompatible operand for unary op " 
-        ^ A.str_of_unop op ^ ": " ^ A.str_of_datatype t in
-    let return_type = 
-      if is_matrix typ && op = A.Neg then 
-        typ (* matrix support negation *)
-      else
-      A.DataType(
-        let raw_type = match typ with
-          | A.DataType(t) -> t
-          | _ -> failwith @@ err_msg op typ 
-        in
-        match op with
-        | A.Neg -> (match raw_type with
-          | T.Int | T.Float | T.Fraction | T.Complex -> raw_type
-          | _ -> failwith @@ err_msg op typ)
-        | A.Not -> (match raw_type with
-          | T.Bool -> T.Bool
-          | _ -> failwith @@ err_msg op typ)
-        | A.BitNot -> (match raw_type with
-           (* ~fraction inverts the fraction *)
-          | T.Int | T.Fraction -> raw_type
-          | _ -> failwith @@ err_msg op typ)
-      )
-    in
-    S.Unop(op, s_ex, S.OpVerbatim), return_type
-    *)
+    let ex_code = gen_expr ex in begin
+    match optag with
+    | S.OpVerbatim -> (gen_unop op) ^ ex_code
+    | _ -> failwith "INTERNAL unhandle optag in codegen unop"
+    end
   
   | S.Lval(lval) -> 
     "LVAL_TODO"
