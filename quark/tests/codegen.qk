@@ -2,7 +2,8 @@ int foo: int a, string b, fraction[][] c;
 
 def int main:
 {
-    <| 3, 2 |>;
+    qreg q = <| 10, 2 |>;
+    q ?' 1;
     i(10); i(1, 10);
     3$2;
     {

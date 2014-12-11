@@ -49,13 +49,13 @@ let rec gen_datatype = function
       | T.Int | T.Float | T.Complex -> 
       "Matrix<" ^ gen_basictype matType ^ ", Dynamic, Dynamic>"
       | _ -> failwith 
-        "INTERNAL non-numerical matrix in codegen gen_datatype"
+        "INTERNAL codegen non-numerical matrix in gen_datatype"
       )
     (* we shouldn't support float[][[]] *)
     | _ -> 
       failwith "INTERNAL bad matrix type to str"
     )
-  | A.NoneType -> failwith "INTERNAL NoneType in codegen gen_datatype"
+  | A.NoneType -> failwith "INTERNAL codegen NoneType in gen_datatype"
 
 (******* Utilities *******)
 (* handles "2, 3, 4, " -> "2, 3, 4" *)
@@ -67,6 +67,19 @@ let trim_last str =
 (* generate Func(arg1, arg2) code *)
 let two_arg func code1 code2 =
   func ^"("^ code1 ^", "^ code2 ^")"
+
+(* generate Func(arg1, arg2) code *)
+let more_arg func code_list =
+  let codes = 
+    List.fold_left (
+    fun acc code -> acc ^ code ^ ", "
+    ) "" code_list in
+  let codes = trim_last codes in
+  func ^"("^ codes ^")"
+  
+(* common error msg: unhandled case that shouldn't happen *)
+let fail_unhandle msg = 
+  failwith @@ "INTERNAL codegen unhandled " ^ msg
 
 
 (********* Main expr -> code string entry *********)
@@ -126,41 +139,30 @@ let rec gen_expr = function
       put_space expr1_code A.Add expr2_code
     | S.OpMatrixKronecker -> 
       two_arg "kronecker_mat" expr1_code expr2_code
-    | _ -> failwith "INTERNAL unhandle optag in codegen binop"
+    | _ -> fail_unhandle "optag in binop"
     end
     
   (* Query ops *)
   | S.Queryop(qreg_ex, op, start_ex, end_ex, optag) -> 
-    ""
-    (*
-    let s_qreg_ex, qreg_type = gen_expr qreg_ex in
+    let qreg_code = gen_expr qreg_ex in
+    let start_code = gen_expr start_ex in
+    let end_code = gen_expr end_ex in
+    let real_flag = if op = A.Query then "true" else "false" in
     begin
-      match qreg_type with 
-      | A.DataType(T.Qreg) ->
-        let s_start_ex, start_type = gen_expr start_ex in
-        let s_end_ex, end_type = gen_expr end_ex in
-        let optag = match s_end_ex with
-          (* dummy literal from parser *)
-        | S.IntLit("QuerySingleBit") -> S.OpQuerySingleBit
-        | _ -> S.OpVerbatim in (
-        match start_type, end_type with
-        | A.DataType(T.Int), A.DataType(T.Int) -> 
-          (* query check success *)
-          S.Queryop(s_qreg_ex, op, s_start_ex, s_end_ex, optag), A.DataType(T.Int)
-        | _ -> failwith @@ "Incompatible query args: " ^ A.str_of_datatype start_type 
-          ^ (if optag = S.OpVerbatim then ", " ^ A.str_of_datatype end_type else "")
-        )
-      | _ -> failwith @@ 
-          "Measurement must be queried on a qureg, not " ^ A.str_of_datatype qreg_type
+    match optag with
+    | S.OpQuerySingleBit -> 
+      more_arg "measure" [qreg_code; start_code; real_flag]
+    | S.OpVerbatim -> 
+      more_arg "measure_range" [qreg_code; start_code; end_code; real_flag]
+    | _ -> fail_unhandle "optag in queryop"  
     end
-    *)
     
   (* Unary ops *)
   | S.Unop(op, ex, optag) -> 
     let ex_code = gen_expr ex in begin
     match optag with
     | S.OpVerbatim -> (gen_unop op) ^ ex_code
-    | _ -> failwith "INTERNAL unhandle optag in codegen unop"
+    | _ -> fail_unhandle "optag in unop"
     end
   
   | S.Lval(lval) -> 

@@ -416,6 +416,11 @@ let rec gen_s_expr env = function
     begin
       match qreg_type with 
       | A.DataType(T.Qreg) ->
+        (* we disallow measurement on an rvalue, e.g. a qureg literal *)
+        let _ = match qreg_ex with
+        | A.Lval(_) -> () (* good *)
+        | _ -> failwith "Measurement query on a Qreg must be made on an lvalue type"
+        in
         let env, s_start_ex, start_type = gen_s_expr env start_ex in
         let env, s_end_ex, end_type = gen_s_expr env end_ex in
         let optag = match s_end_ex with
