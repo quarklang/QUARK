@@ -653,7 +653,8 @@ let rec gen_code = function
         ""
             
       | S.CompoundStatement(stmt_list) -> 
-        ""
+        let stmt_list_code = gen_code stmt_list in
+        "{\n" ^ stmt_list_code ^ "} // end compound"
 
       | S.Declaration(dec) -> 
         ""
