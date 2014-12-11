@@ -43,7 +43,7 @@ type decl =
   | AssigningDecl of A.datatype * string * expr
   | PrimitiveDecl of A.datatype * string
 
-type range = Range of T.vartype * expr * T.vartype * expr * T.vartype * expr
+type range = Range of A.datatype * expr * expr * expr
 
 type iterator =
     (* first datatype in RangeIterator might be NoneType *)

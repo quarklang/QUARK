@@ -782,7 +782,7 @@ let gen_s_range env id = function
            failwith @@ "Unsupported range type: " ^ T.str_of_type start_raw_typ ^ ", "
                ^ T.str_of_type end_raw_typ ^ ", " ^ T.str_of_type step_raw_typ
         else
-           S.Range(start_raw_typ, s_start_ex, end_raw_typ, s_end_ex, step_raw_typ, s_step_ex)
+           S.Range(vtype, s_start_ex, s_end_ex, s_step_ex)
       | _ -> failwith @@ "Unsupported range type: " ^ A.str_of_datatype start_type ^ ", "
                ^ A.str_of_datatype end_type ^ ", " ^ A.str_of_datatype step_type
       end

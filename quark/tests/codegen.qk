@@ -32,8 +32,8 @@ def int main:
     }
     "sdfsd" & "ireo";
 
-    int i = 66;
-    for int i in [1:10:2]:
+    float i = 66;
+    for i in [10:1:-1]:
         print("for ", i);
 
     print("after for: ", i);

@@ -58,6 +58,26 @@ let rec gen_datatype = function
     )
   | A.NoneType -> failwith "INTERNAL codegen NoneType in gen_datatype"
 
+(* system temp var (20 char long)*)
+(* must take a unit arg to make this a function *)
+let gen_temp_var _ = 
+  let rec seq = function
+    | 0 -> []
+    | x -> 0 :: seq (x - 1)
+  in
+  List.fold_left ( fun acc _ ->
+      (* randomly generate from 3 classes: number, lower/upper case letters *)
+      let rand_char =
+        match Random.int 3 with
+        | 0 -> Char.chr (48 + Random.int 10)
+        | 1 -> Char.chr (65 + Random.int 26)
+        | 2 -> Char.chr (97 + Random.int 26)
+        | _ -> '_'
+      in
+      acc ^ Char.escaped rand_char
+  ) Builtin.forbidden_prefix (seq 10)
+
+
 (******* Utilities *******)
 (* handles "2, 3, 4, " -> "2, 3, 4" *)
 let trim_last str =
@@ -68,7 +88,6 @@ let trim_last str =
 (* generate Func(arg1, arg2) code *)
 let two_arg func code1 code2 =
   func ^"("^ code1 ^", "^ code2 ^")"
-
 
 (* generate Func(arg1, arg2) code *)
 let more_arg_helper left_delimiter right_delimiter func code_list =
@@ -293,16 +312,30 @@ let rec gen_code = function
             ^ code_for ^ " // end for-array" 
         | S.RangeIterator(typ, id, range) -> (
           match range with
-          | S.Range(start_typ, start_ex, end_typ, end_ex, step_typ, step_ex) -> 
-            let init = if typ = A.NoneType then id 
-                     else gen_datatype typ ^" "^ id in
+          | S.Range(iter_type, start_ex, end_ex, step_ex) -> 
+            (* pre-store the results in system-reserved temp variables *)
             let start_code = gen_expr start_ex in
             let end_code = gen_expr end_ex in
             let step_code = gen_expr step_ex in
-            "for (" ^ init ^ " = " ^ start_code ^ "; "
-              ^ id ^ " < " ^ end_code ^ "; "
-              ^ id ^ " += " ^ step_code ^ ")" 
-              ^ code_for ^ " // end for-range" 
+
+            let end_temp = gen_temp_var () in
+            let step_temp = gen_temp_var () in
+            (* determines the direction of iteration *)
+            let dir_temp = gen_temp_var () in
+
+            let init = if typ = A.NoneType then id 
+                     else gen_datatype typ ^" "^ id in
+            let temp_type = gen_datatype iter_type in
+              (* store step_expr to a temp var *)
+              temp_type ^" "^ end_temp ^" = "^ end_code ^";\n"
+              (* store step_expr to a temp var *)
+            ^ temp_type ^" "^ step_temp ^" = "^ step_code ^";\n"
+            ^ temp_type ^" "^ dir_temp^ " = "^ step_temp ^ " > 0 ? 1 : -1;\n"
+            ^ "for (" ^ init ^ " = " ^ start_code ^ "; "
+            ^ dir_temp ^" * "^ id ^ " < " ^ dir_temp ^" * "^ end_code ^ "; "
+            ^ id ^ " += " ^ step_temp ^ ")" 
+            ^ code_for ^ " // end for-range" 
+
           | _ -> fail_unhandle "RangeIterator"
           )
         end
