@@ -27,9 +27,12 @@ let find_builtin = function
   
   (* math section *)
   | "sqrt" -> [wrap T.Float], wrap T.Float
+  | "rand_int" -> wrap_list [T.Int; T.Int], wrap T.Int
+  | "rand_float" -> wrap_list [T.Float; T.Float], wrap T.Float
   
   (* qureg section *)
   | "qsize" -> [wrap T.Qreg], wrap T.Int
+  | "qclone" -> [wrap T.Qreg], wrap T.Qreg
   | "prefix_prob" -> wrap_list [T.Qreg; T.Int; T.Int], wrap T.Float
 
   (* quantum gate section *)
@@ -43,6 +46,7 @@ let find_builtin = function
   | "rot_Z" -> wrap_list [T.Qreg; T.Float; T.Int], wrap T.Void
   | "phase_scale" -> wrap_list [T.Qreg; T.Float; T.Int], wrap T.Void
   | "phase_shift" -> wrap_list [T.Qreg; T.Float; T.Int], wrap T.Void
+  | "qft" -> wrap_list [T.Qreg; T.Int; T.Int], wrap T.Void
   | "grover_diffuse" -> [wrap T.Qreg], wrap T.Void
   
   | _ -> [], A.NoneType
