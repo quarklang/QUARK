@@ -16,7 +16,7 @@ let trd_3 = function _, _, x -> x;;
 
 let get_id (A.Ident name) = 
   (* reserved prefix *)
-  let forbid = "_QUARK_TEMP_" in
+  let forbid = Builtin.forbidden_prefix in
   let forbid_len = String.length forbid in
   if String.length name < forbid_len then name
   else
