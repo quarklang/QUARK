@@ -64,6 +64,10 @@ let trim_last str =
     String.sub str 0 ((String.length str) - 2)
   else str
 
+(* generate Func(arg1, arg2) code *)
+let two_arg func code1 code2 =
+  func ^"("^ code1 ^", "^ code2 ^")"
+
 
 (********* Main expr -> code string entry *********)
 let rec gen_expr = function
@@ -75,133 +79,55 @@ let rec gen_expr = function
 
   (* compound literals *)
   | S.FractionLit(num_ex, denom_ex) -> 
-    "Frac(" ^ gen_expr num_ex ^", "^ gen_expr denom_ex ^ ")"
+    two_arg "Frac" (gen_expr num_ex) (gen_expr denom_ex) 
 
   | S.QRegLit(qex1, qex2) -> 
-    "Qureg::create<true>(" ^ gen_expr qex1 ^", "^ gen_expr qex2 ^ ")"
+    two_arg "Qureg::create<true>" (gen_expr qex1) (gen_expr qex2)
 
   | S.ComplexLit(real_ex, im_ex) -> 
-    "complex<float>(" ^ gen_expr real_ex ^", "^ gen_expr im_ex ^ ")"
+    two_arg "complex<float>" (gen_expr real_ex) (gen_expr im_ex)
 
   | S.ArrayLit(elem_type, ex_list) ->
-    ""
+    "ARRAY TODO"
 
   | S.MatrixLit(elem_type, ex_list, coldim) ->
-    ""
+    "MATRIX TODO"
   
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)
-  | S.Binop(expr1, op, expr2, optag) -> ""
-    (*
-    (* helper functions for Binop case *)
-    let err_msg_helper func_str_of op type1 type2 =
-      "Incompatible operands for binary op " ^ A.str_of_binop op ^ ": " 
-      ^ func_str_of type1 ^ " -.- " ^ func_str_of type2 in
-    let err_msg = err_msg_helper T.str_of_type in (* basic types *)
-    let err_msg_arrmat = err_msg_helper A.str_of_datatype in (* array/matrix types *)
-    
-    (* check left and right children *)
-    let s_expr1, ex_type1 = gen_expr expr1 in
-    let s_expr2, ex_type2 = gen_expr expr2 in
-    begin
-    match ex_type1, ex_type2 with 
-    (* cases with raw types *)
-    | A.DataType(type1), A.DataType(type2) -> 
-      begin
-      let logic_relational op type1 type2 =
-        match type1, type2 with
-          | T.Int,   T.Int 
-          | T.Float, T.Float 
-          | T.Int,   T.Float 
-          | T.Float, T.Int -> T.Bool, S.OpVerbatim
-          (* | T.Fraction, T.Fraction -> T.Bool *)
-          | t1, t2 -> failwith @@ err_msg op t1 t2
-      in
-      let binop_math op type1 type2 = 
-          let notmod = op <> A.Mod in
-          let notmodpow = notmod && op <> A.Pow in
-          match type1, type2 with
-          | T.Float, T.Int
-          | T.Int,   T.Float 
-          | T.Float, T.Float when notmod -> 
-              T.Float, S.OpVerbatim
-          | T.Int,   T.Int -> 
-              T.Int, S.OpVerbatim
-          | T.Float, T.Complex when notmod -> 
-              T.Complex, S.CastComplex1
-          | T.Complex, T.Float when notmod -> 
-              T.Complex, S.CastComplex2
-          | T.Complex, T.Complex when notmod -> 
-              T.Complex, S.OpVerbatim
-          | T.Int, T.Fraction when notmodpow -> 
-              T.Fraction, S.CastFraction1
-          | T.Fraction, T.Int when notmodpow -> 
-              T.Fraction, S.CastFraction2
-          | T.Fraction, T.Fraction  when notmodpow ->
-              T.Fraction, S.OpVerbatim
-          | t1, t2 -> failwith @@ err_msg op t1 t2
-      in
-      let logic_basic op type1 type2 =
-        match type1, type2 with
-          | T.Bool, T.Bool -> T.Bool, S.OpVerbatim
-          | t1, t2 -> failwith @@ err_msg op t1 t2
-      in
-      let logic_equal op type1 type2 = 
-        match type1, type2 with
-          | T.Float, T.Int
-          | T.Int,   T.Float -> T.Bool, S.OpVerbatim
-          | t1, t2 when t1 = t2 -> T.Bool, S.OpVerbatim
-          | t1, t2 -> failwith @@ err_msg op t1 t2
-      in
-      let binop_bitwise op type1 type2 = 
-        match type1, type2 with
-          | T.Int, T.Int -> T.Int, S.OpVerbatim
-          | T.String, T.String when op = A.BitAnd -> 
-              T.String, S.OpStringConcat
-          | t1, t2 -> failwith @@ err_msg op t1 t2
-      in
-      let result_type, optag = 
-        match op with 
-          | A.Add         -> binop_math op type1 type2
-          | A.Sub         -> binop_math op type1 type2
-          | A.Mul         -> binop_math op type1 type2
-          | A.Div         -> binop_math op type1 type2
-          | A.Pow         -> binop_math op type1 type2
-          | A.Mod         -> binop_math op type1 type2
-          | A.Eq          -> logic_equal op type1 type2 
-          | A.NotEq       -> logic_equal op type1 type2
-          | A.Less        -> logic_relational op type1 type2 
-          | A.LessEq      -> logic_relational op type1 type2
-          | A.Greater     -> logic_relational op type1 type2
-          | A.GreaterEq   -> logic_relational op type1 type2
-          | A.And         -> logic_basic op type1 type2
-          | A.Or          -> logic_basic op type1 type2
-          | A.BitAnd      -> binop_bitwise op type1 type2
-          | A.BitOr       -> binop_bitwise op type1 type2
-          | A.BitXor      -> binop_bitwise op type1 type2
-          | A.Lshift      -> binop_bitwise op type1 type2
-          | A.Rshift      -> binop_bitwise op type1 type2
-          | _ -> failwith "INTERNAL unmatched binop"
-      in
-      S.Binop(s_expr1, op, s_expr2, optag), A.DataType(result_type)
-      end
-      
-    (* At least one of the binop operand is an array/matrix *)
-    | type1, type2 -> 
-      let result_type, optag =
-        match op with
-        | A.Eq  | A.NotEq when type1 = type2 -> 
-            A.DataType(T.Bool), S.OpVerbatim
-        | A.Add | A.Sub | A.Mul | A.Pow when type1 = type2 && is_matrix type1 -> 
-            (* matrix pow will be kronecker product *)
-            type1, S.OpMatrixMath (* matrix operations *)
-        | A.BitAnd when type1 = type2 -> 
-            type1, S.OpArrayConcat (* array/mat concatenation *)
-        | _ -> failwith @@ err_msg_arrmat op type1 type2
-      in
-      S.Binop(s_expr1, op, s_expr2, optag), result_type
-    end (* end of binop *)
-    *)
+  | S.Binop(expr1, op, expr2, optag) ->
+    let expr1_code = gen_expr expr1 in
+    let expr2_code = gen_expr expr2 in
+    (* cast helpers *)
+    let cast_complex ex_code = 
+      two_arg "complex<float>" ex_code "0.0" in
+    let cast_fraction ex_code = 
+      two_arg "Frac" ex_code "1" in
+    let put_space code1 op code2 =
+      code1 ^" "^ gen_binop op ^" "^ code2
+    in begin
+    match optag with
+    | S.OpVerbatim -> 
+      if op = A.Pow then (* special: not infix! *)
+        two_arg "pow" expr1_code expr2_code
+      else
+        put_space expr1_code op expr2_code
+    | S.CastComplex1 -> 
+      put_space (cast_complex expr1_code) op expr2_code
+    | S.CastComplex2 -> 
+      put_space expr1_code op (cast_complex expr2_code)      
+    | S.CastFraction1 -> 
+      put_space (cast_fraction expr1_code) op expr2_code
+    | S.CastFraction2 -> 
+      put_space expr1_code op (cast_fraction expr2_code)
+    | S.OpArrayConcat ->  
+      two_arg "concat_vector" expr1_code expr2_code
+    | S.OpStringConcat -> 
+      put_space expr1_code A.Add expr2_code
+    | S.OpMatrixKronecker -> 
+      two_arg "kronecker_mat" expr1_code expr2_code
+    | _ -> failwith "INTERNAL unhandle optag in codegen binop"
+    end
     
   (* Query ops *)
   | S.Queryop(qreg_ex, op, start_ex, end_ex, optag) -> 
@@ -231,7 +157,7 @@ let rec gen_expr = function
     
   (* Unary ops *)
   | S.Unop(op, ex, optag) -> 
-    ""
+    "UNOP_TODO"
     (*
     let s_ex, typ = gen_expr ex in
     let err_msg op t = "Incompatible operand for unary op " 
@@ -262,7 +188,7 @@ let rec gen_expr = function
     *)
   
   | S.Lval(lval) -> 
-    ""
+    "LVAL_TODO"
     (*
     let s_lval, ltype = match lval with
     | A.Variable(id) -> 
@@ -331,7 +257,7 @@ let rec gen_expr = function
     
   (* Post ++ and -- *)
   | S.PostOp(lval, op) -> 
-    ""
+    "POSTOP_TODO"
     (*
     let s_lval_ex, typ = gen_expr (A.Lval(lval)) in
       let s_lval = match s_lval_ex with
@@ -348,7 +274,7 @@ let rec gen_expr = function
       
   (* Assignment *)
   | S.Assign(lval, rhs_ex) -> 
-    ""
+    "ASSIGN_TODO"
     (*
     let s_lval_ex, l_type = gen_expr (A.Lval(lval)) in
     let s_rhs_ex, r_type = gen_expr rhs_ex in
@@ -370,7 +296,7 @@ let rec gen_expr = function
 
   (* Function calls *)
   | S.FunctionCall(func_id, ex_list) -> 
-    ""
+    "FUNCALL_TODO"
     (*
     let finfo = get_env_func env func_id in
     let fidstr = get_id func_id in
