@@ -35,6 +35,8 @@
 </tbody></table>
 
 
+
+
 <h2 id="table-of-contents">Table of contents</h2>
 
 <p><div class="toc"><div class="toc">
@@ -54,6 +56,10 @@
 <li><a href="#tokens">Tokens</a></li>
 <li><a href="#identifiers">Identifiers</a></li>
 <li><a href="#keywords">Keywords</a></li>
+<li><a href="#punctuation">Punctuation</a></li>
+<li><a href="#escape-sequences">Escape Sequences</a></li>
+<li><a href="#data-types">Data Types</a></li>
+<li><a href="#iterators">Iterators</a></li>
 </ul>
 </li>
 </ul>
@@ -63,41 +69,61 @@
 </div>
 </p>
 
+
+
 <h3 id="introduction">Introduction</h3>
 
 <p>This is the language reference manual for Quark, a high level language for quantum computing. Quark makes it simple to perform complicated mathematical operations required for quantum computing in a simple and intuitive manner. In addition to standard types featured in most common programming languages, Quark supports complex numbers, fractions, matrices and quantum registers.</p>
 
+
+
 <h2 id="reference-manual">Reference Manual</h2>
+
+
 
 <h3 id="grammar-notation">Grammar Notation</h3>
 
 <p>FILL OUT LATER</p>
 
+
+
 <h3 id="lexical-conventions">Lexical Conventions</h3>
 
 <p>A program in QUARK includes at least one function definition, though something trivial like a variable declaration or a string should compile. Programs are written using a basic source character set accepted by the C++ compiler in use. Refer to what source-code file encoding your compiler accepts. The QUARK compiler will only output ASCII.</p>
+
+
 
 <h3 id="line-terminators">Line Terminators</h3>
 
 <p>?</p>
 
+
+
 <h3 id="comments">Comments</h3>
 
 <p>MATLAB style commenting is supported. A MATLAB style comment begins with <code>%</code> and ends with <code>%</code>. Multi-line MATLAB comments start with <code>%{</code> and end with <code>}%</code>. Any sequence of characters can appear inside of a comment except the string <code>}%</code>. These comments do not nest. </p>
+
+
 
 <h3 id="whitespace">Whitespace</h3>
 
 <p>Whitespace is defined as the ASCII space, horizontal tab and form feed characters, as well as line terminators and comments.</p>
 
+
+
 <h3 id="tokens">Tokens</h3>
 
 <p>Tokens in QUARK consist of identifiers, keywords, constants, and separators. Whitespace is ignored and not taken into consideration.</p>
+
+
 
 <h3 id="identifiers">Identifiers</h3>
 
 <p>An identifier is composed of a sequence of letters and digits, the first of which must be a letter. There is no limit on the length of an identifier. The underscore character <code>_</code> is included in the regular expression pattern for letters. </p>
 
 <p>Two identifiers are the same if they have the same ASCII character for every letter and digit. </p>
+
+
 
 <pre class="prettyprint"><code class=" hljs coffeescript">digit<span class="hljs-function"> -&gt;</span> [<span class="hljs-string">'0'</span>-<span class="hljs-string">'9'</span>]
 letter<span class="hljs-function"> -&gt;</span> [<span class="hljs-string">'a'</span>-<span class="hljs-string">'z'</span> <span class="hljs-string">'A'</span>-<span class="hljs-string">'Z'</span> <span class="hljs-string">'_'</span>]
@@ -116,14 +142,87 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
   fraction <br>
   complex <br>
   qreg <br>
-  print <br>
+  mod <br>
   in <br>
   return <br>
+  continue <br>
+  break <br>
   while <br>
   for <br>
   else <br>
   if <br>
   and <br>
+  not <br>
   or</p>
-</blockquote></div></body>
+</blockquote>
+
+<h3 id="punctuation">Punctuation</h3>
+
+<p><strong>Parenthesis</strong> – Expressions can include expressions inside parenthesis. Parenthesis can also indicate a function call.</p>
+
+<p><strong>Braces</strong> – Braces indicate a block of statements.</p>
+
+<p><strong>Semicolon</strong> – Semicolons are used at the end of every statement as a terminator. </p>
+
+<p><strong>Colon</strong> – Colons are used to denote slicing in arrays and within a function declaration. In a function declaration, formal arguments appear between the colon and a left curly brace. </p>
+
+
+
+<h3 id="escape-sequences">Escape Sequences</h3>
+
+<p>Certain characters within strings need to be preceded by a backslash. These characters and the sequences to produce them in a string are:</p>
+
+<table>
+<thead>
+<tr>
+  <th align="center">Character</th>
+  <th align="left">Sequence</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="center">\”</td>
+  <td align="left">“</td>
+</tr>
+<tr>
+  <td align="center">\n</td>
+  <td align="left">linefeed</td>
+</tr>
+<tr>
+  <td align="center">\r</td>
+  <td align="left">carriage return</td>
+</tr>
+<tr>
+  <td align="center">\t</td>
+  <td align="left">horizontal tabulation</td>
+</tr>
+<tr>
+  <td align="center">\b</td>
+  <td align="left">backspace</td>
+</tr>
+</tbody></table>
+
+
+
+
+<h3 id="data-types">Data Types</h3>
+
+<p>The data types available in QUARK are:</p>
+
+<blockquote>
+  <p>int <br>
+  float <br>
+  fraction <br>
+  bool <br>
+  string <br>
+  qreg <br>
+  matrix</p>
+</blockquote>
+
+<p>Additionally, the aggregate data type of array is available to the user.</p>
+
+<h3 id="iterators">Iterators</h3>
+
+<p>for i in [1:10] <br>
+for int i in [1:10] <br>
+for int i in array_of_int</p></div></body>
 </html>
