@@ -211,7 +211,7 @@ let is_matrix = function
 
 (* flatten a matrix (list list) into row major 1D list *)
 let flatten_matrix = List.fold_left
-  (fun row acc -> acc @ row ) []
+  (fun acc row -> acc @ row ) []
 
 
 (********* Main expr semantic checker entry *********)
