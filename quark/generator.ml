@@ -185,20 +185,7 @@ let rec gen_expr = function
     
   (* Post ++ and -- *)
   | S.PostOp(lval, op) -> 
-    "POSTOP_TODO"
-    (*
-    let s_lval_ex, typ = gen_expr (A.Lval(lval)) in
-      let s_lval = match s_lval_ex with
-      | S.Lval(s_lval) -> s_lval
-      | _ -> failwith "INTERNAL in postop: doesn't return S.Lval as expected"
-      in (
-      match typ with
-      | A.DataType(T.Int)  | A.DataType(T.Float) -> 
-        S.PostOp(s_lval, op), typ
-      | _ -> failwith @@ "Incompatible operand for post op " 
-          ^ A.str_of_postop op ^ ": " ^ A.str_of_datatype typ
-      )
-     *)
+    gen_expr (S.Lval(lval)) ^" "^ gen_postop op
       
   (* Assignment *)
   | S.Assign(lval, rhs_ex) -> 
