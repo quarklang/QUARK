@@ -868,6 +868,12 @@ let rec gen_sast env = function
         let fidstr = get_id func_id in
         (* check: mustn't override certain built-in functions *)
         let _ = Builtin.overridable fidstr in
+        (* check: main function must have void main() signature *)
+        let _ = if fidstr = "main" then
+          if List.length param_list > 0 
+            || return_type <> A.DataType(T.Int) then
+          failwith "Main entry function must have signature 'int main()'"
+        in
         let env' = incr_env_depth env in
         let env' = update_env_func env' return_type func_id param_list true in
         let _ = debug_env env' "after FunctionDecl" in
@@ -897,6 +903,10 @@ let rec gen_sast env = function
         let fidstr = get_id func_id in
         (* check: mustn't override certain built-in functions *)
         let _ = Builtin.overridable fidstr in
+        (* check: cannot forward decl main function *)
+        let _ = if fidstr = "main" then
+          failwith "Cannot forward declare main()"
+        in
         let s_param_list = gen_s_param_list param_list in
         let env' = update_env_func env return_type func_id param_list false in
         env', S.ForwardDecl(return_type, fidstr, s_param_list)

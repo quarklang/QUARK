@@ -29,7 +29,7 @@ let gen_unop = function
 let gen_postop = A.str_of_postop
 
 let gen_basictype = function
-  | T.Int -> "int"
+  | T.Int -> "int64_t"
   | T.Float -> "float"
   | T.Bool -> "bool"
   | T.Fraction -> "Frac"
@@ -291,10 +291,14 @@ let rec gen_code = function
       | S.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
         let param_list_code = gen_param_list param_list in
         let stmt_list_code = gen_code stmt_list in
-        gen_datatype return_type ^ " " ^ func_id ^ "(" 
-          ^ trim_last param_list_code ^ ")\n"
-          ^ "{\n" ^ stmt_list_code 
-          ^ "\n} // end " ^ func_id ^ "()\n"
+        let return_type_code = 
+          if func_id = "main" then "int" (* otherwise int64_t *)
+          else gen_datatype return_type
+        in
+        return_type_code ^ " " ^ func_id ^ "(" 
+        ^ trim_last param_list_code ^ ")\n"
+        ^ "{\n" ^ stmt_list_code 
+        ^ "\n} // end " ^ func_id ^ "()\n"
       
       | S.ForwardDecl(return_type, func_id, param_list) -> 
         let param_list_code = gen_param_list param_list in
