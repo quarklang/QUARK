@@ -109,13 +109,14 @@ let rec gen_expr = function
     array_arg (gen_datatype arr_type) (to_code_list ex_list)
 
   | S.ArrayCtor(arr_type, dim) ->
-    "CTOR TODO"
+    gen_datatype arr_type ^"("^ gen_expr dim ^")"
 
   | S.MatrixLit(elem_type, ex_list, coldim) ->
     "MATRIX TODO"
   
   | S.MatrixCtor(mat_type, rowdim, coldim) ->
-    "CTOR TODO"
+    two_arg (gen_datatype mat_type ^ "::Zeros")
+        (gen_expr rowdim) (gen_expr coldim)
 
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)

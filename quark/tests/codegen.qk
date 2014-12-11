@@ -8,6 +8,8 @@ def int foo: int c, string d, fraction[][] dudud
 def int main:
 {
     qreg q = <| 10, 2 |>;
+    fraction[10];
+    complex[| 10, 11 |];
     [[[2, 3, 4], [5], [6, 7]], [[5]]];
     q ?' 1;
     i(10); i(1, 10);
