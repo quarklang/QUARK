@@ -272,11 +272,11 @@ let rec gen_s_expr env = function
 
   | A.MatrixLit(exprs_list_list) ->
     let env, s_matrix, elem_type, coldim = gen_s_matrix env exprs_list_list in
-    let mat_type = A.MatrixType(A.DataType(elem_type)) in
-    let _ = debug_print @@ "MATRIX " ^ (A.str_of_datatype mat_type) 
+    let elem_type = A.DataType(elem_type) in
+    let _ = debug_print @@ "MATRIX " ^ A.str_of_datatype (A.MatrixType(elem_type)) 
         ^ " cols= " ^ string_of_int coldim ^ " rows= " ^ string_of_int (List.length exprs_list_list) 
     in
-    env, S.MatrixLit(mat_type, s_matrix, coldim), mat_type
+    env, S.MatrixLit(elem_type, s_matrix, coldim), A.MatrixType(elem_type)
   
   (* constructs a matrix with row, col dim *)
   | A.MatrixCtor(elem_type, rowdim_ex, coldim_ex) -> (

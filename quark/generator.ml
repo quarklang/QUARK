@@ -68,14 +68,19 @@ let trim_last str =
 let two_arg func code1 code2 =
   func ^"("^ code1 ^", "^ code2 ^")"
 
+
 (* generate Func(arg1, arg2) code *)
-let more_arg func code_list =
+let more_arg_helper left_delimiter right_delimiter func code_list =
   let codes = 
     List.fold_left (
     fun acc code -> acc ^ code ^ ", "
     ) "" code_list in
   let codes = trim_last codes in
-  func ^"("^ codes ^")"
+  func ^left_delimiter^ codes ^right_delimiter
+  
+let more_arg = more_arg_helper "(" ")"
+
+let array_arg = more_arg_helper "{ " " }"
   
 (* common error msg: unhandled case that shouldn't happen *)
 let fail_unhandle msg = 
@@ -100,16 +105,16 @@ let rec gen_expr = function
   | S.ComplexLit(real_ex, im_ex) -> 
     two_arg "complex<float>" (gen_expr real_ex) (gen_expr im_ex)
 
-  | S.ArrayLit(elem_type, ex_list) ->
-    "ARRAY TODO"
+  | S.ArrayLit(arr_type, ex_list) ->
+    array_arg (gen_datatype arr_type) (to_code_list ex_list)
 
-  | S.ArrayCtor(elem_type, dim) ->
+  | S.ArrayCtor(arr_type, dim) ->
     "CTOR TODO"
 
   | S.MatrixLit(elem_type, ex_list, coldim) ->
     "MATRIX TODO"
   
-  | S.MatrixCtor(elem_type, rowdim, coldim) ->
+  | S.MatrixCtor(mat_type, rowdim, coldim) ->
     "CTOR TODO"
 
   (* Binary ops *)
@@ -183,10 +188,8 @@ let rec gen_expr = function
       in
       id ^ subscripts
     | S.MatrixElem(id, ex_list) -> 
-      (* hackish: Eigen lib's feature *)
-      let code_list = 
-        List.map (fun ex -> gen_expr ex) ex_list in
-      more_arg id code_list
+      (* hackish: Eigen lib access matrix elem just like funcall *)
+      more_arg id (to_code_list ex_list)
     end
     
   (* Post ++ and -- *)
@@ -199,9 +202,7 @@ let rec gen_expr = function
 
   (* Function calls *)
   | S.FunctionCall(func_id, ex_list) -> 
-    let code_list = 
-      List.map (fun ex -> gen_expr ex) ex_list in
-    more_arg func_id code_list
+    more_arg func_id (to_code_list ex_list)
   
   (* Membership testing with keyword 'in' *)
   | S.Membership(elem, array) -> 
@@ -216,6 +217,9 @@ let rec gen_expr = function
     
   | _ -> fail_unhandle "expr"
 
+(* helper: expr_list -> code(string)_list *)
+and to_code_list ex_list =
+  List.map (fun ex -> gen_expr ex) ex_list
 
 (*
 and gen_s_array env exprs =
