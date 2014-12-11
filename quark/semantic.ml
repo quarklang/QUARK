@@ -334,9 +334,11 @@ let rec gen_s_expr env = function
               T.Float, S.OpVerbatim
           | T.Int,   T.Int -> 
               T.Int, S.OpVerbatim
-          | T.Float, T.Complex when notmod -> 
+          | T.Float, T.Complex
+          | T.Int, T.Complex when notmod -> 
               T.Complex, S.CastComplex1
-          | T.Complex, T.Float when notmod -> 
+          | T.Complex, T.Float
+          | T.Complex, T.Int when notmod -> 
               T.Complex, S.CastComplex2
           | T.Complex, T.Complex when notmod -> 
               T.Complex, S.OpVerbatim
