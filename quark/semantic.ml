@@ -218,6 +218,10 @@ let is_matrix = function
   | A.MatrixType(_) -> true
   | _ -> false
 
+let is_lvalue = function
+  | A.Lval(_) -> true
+  | _ -> false
+
 (* flatten a matrix (list list) into row major 1D list *)
 let flatten_matrix = List.fold_left
   (fun acc row -> acc @ row ) []
@@ -428,9 +432,8 @@ let rec gen_s_expr env = function
       match qreg_type with 
       | A.DataType(T.Qreg) ->
         (* we disallow measurement on an rvalue, e.g. a qureg literal *)
-        let _ = match qreg_ex with
-        | A.Lval(_) -> () (* good *)
-        | _ -> failwith "Measurement query on a Qreg must be made on an lvalue type"
+        let _ = if not (is_lvalue qreg_ex) then
+            failwith "Measurement query on a Qreg must be made on lvalue type"
         in
         let env, s_start_ex, start_type = gen_s_expr env start_ex in
         let env, s_end_ex, end_type = gen_s_expr env end_ex in
@@ -454,9 +457,15 @@ let rec gen_s_expr env = function
     let env, s_ex, typ = gen_s_expr env ex in
     let err_msg op t = "Incompatible operand for unary op " 
         ^ A.str_of_unop op ^ ": " ^ A.str_of_datatype t in
-    let return_type = 
-      if is_matrix typ && op = A.Neg then 
-        typ (* matrix support negation *)
+    let return_type, optag = 
+      if is_matrix typ then 
+        (* matrix support negation and transposition *)
+        let optag = match op with
+        | A.Neg -> S.OpVerbatim
+        | A.Transpose -> S.OpMatrixTranspose
+        | _ -> failwith @@ err_msg op typ
+        in
+        typ, optag 
       else
       A.DataType(
         let raw_type = match typ with
@@ -474,9 +483,10 @@ let rec gen_s_expr env = function
            (* ~fraction inverts the fraction *)
           | T.Int | T.Fraction -> raw_type
           | _ -> failwith @@ err_msg op typ)
-      )
+        | _ -> failwith @@ err_msg op typ
+      ), S.OpVerbatim
     in
-    env, S.Unop(op, s_ex, S.OpVerbatim), return_type
+    env, S.Unop(op, s_ex, optag), return_type
   
   | A.Lval(lval) -> 
     let s_lval, ltype = match lval with
@@ -597,7 +607,7 @@ let rec gen_s_expr env = function
       let s_ex_list = 
         List.map (fun ex -> snd_3 @@ gen_s_expr env ex) ex_list in
         env, S.FunctionCall(fidstr, s_ex_list), finfo.f_return
-    else
+    else (* non-special cases *)
     if finfo.f_defined then
       let f_args = finfo.f_args in
       let farg_len = List.length f_args in 
@@ -613,11 +623,30 @@ let rec gen_s_expr env = function
                (* Array(None) means built-in function matches any array type *)
             | A.ArrayType(_), A.ArrayType(A.NoneType)
             | A.MatrixType(_), A.MatrixType(A.NoneType) -> s_ex
-            | ex_type', f_arg' when ex_type' = f_arg' -> s_ex
+            | ex_type', f_arg' when ex_type' = f_arg' -> 
+              if ex_type = A.DataType(T.Qreg) then
+                (* disallow non-lvalue qureg to be used as function parameter *)
+                if is_lvalue ex then s_ex
+                else failwith @@
+                  "Qreg parameter to function "^fidstr^"() must be lvalue type"
+              else s_ex
             | _ -> failwith @@ "Incompatible args for function " ^fidstr^ ": "
                   ^ A.str_of_datatype ex_type ^ " given but " 
                   ^ A.str_of_datatype f_arg ^ " expected"   
           ) ex_list f_args
+        in
+        (* check apply_oracle: arg#2(string) must represent a function(int) returns int *)
+        let _ = if fidstr = "apply_oracle" then
+          let oracle_ex = List.nth ex_list 1 in
+          let oracle_id = match oracle_ex with
+          | A.StringLit(id) -> id
+          | _ -> failwith "Arg #2 of built-in apply_oracle() must be a string literal"
+          in
+          let oracle_finfo = get_env_func env (A.Ident(oracle_id)) in
+          if oracle_finfo.f_args <> [A.DataType(T.Int)]
+            || oracle_finfo.f_return <> A.DataType(T.Int) then
+            failwith @@ "Arg #2 of built-in apply_oracle(): user-defined function " 
+              ^ oracle_id ^" must have signature 'int " ^ oracle_id ^ "(int)'"
         in
         env, S.FunctionCall(fidstr, s_ex_list), finfo.f_return
       else
@@ -629,15 +658,22 @@ let rec gen_s_expr env = function
         "Only forward declaration, no actual definition is found for " ^ fidstr
   
   (* Membership testing with keyword 'in' *)
-  | A.Membership(elem, array) -> 
-    failwith "Membership not yet supported"
-    (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
-    (*
-    let exElem = gen_s_expr exElem in
-    let exArray = gen_s_expr exArray in
-      "std::find(" ^surr exArray^ ".begin(), " ^surr exArray^ ".end(), " ^
-      exElem^ ") != " ^surr exArray^ ".end()"
-    *)
+  | A.Membership(elem, array_ex) -> 
+    let env, s_array_ex, array_type = gen_s_expr env array_ex in
+    let env, s_elem, elem_type = gen_s_expr env elem in
+    let arr_elem_type = match array_type with 
+      | A.ArrayType(elem_type) -> elem_type
+      | _ -> failwith @@ 
+        "Membership testing must operate on array type, not " ^ A.str_of_datatype array_type
+    in
+    let _ = match elem_type, arr_elem_type with
+      | A.DataType(T.Int), A.DataType(T.Float)
+      | A.DataType(T.Float), A.DataType(T.Int) -> ()
+      | elem_type', arr_elem_type' when elem_type' = arr_elem_type' -> ()
+      | _ -> failwith @@ "Membership testing has incompatible types: " 
+          ^ A.str_of_datatype elem_type ^" -.- "^ A.str_of_datatype arr_elem_type
+    in
+    env, S.Membership(s_elem, s_array_ex), A.DataType(T.Bool)
     
   | _ -> failwith "INTERNAL some expr not properly checked"
 
@@ -807,7 +843,7 @@ let gen_s_iter env = function
     let elem_type = match array_type with 
       | A.ArrayType(elem_type) -> elem_type
       | _ -> failwith @@ 
-        "Array-style for-loop must have array type, not " ^ A.str_of_datatype array_type
+        "Array-style for-loop must operate on array type, not " ^ A.str_of_datatype array_type
     in
     (* check iterator variable and list consistency *)
     let _ = match typ, elem_type with
@@ -838,6 +874,15 @@ let rec gen_sast env = function
       | A.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
         let _ = debug_env env "before FunctionDecl" in
         let s_param_list = gen_s_param_list param_list in
+        let fidstr = get_id func_id in
+        (* check: mustn't override certain built-in functions *)
+        let _ = Builtin.overridable fidstr in
+        (* check: main function must have void main() signature *)
+        let _ = if fidstr = "main" then
+          if List.length param_list > 0 
+            || return_type <> A.DataType(T.Int) then
+          failwith "Main entry function must have signature 'int main()'"
+        in
         let env' = incr_env_depth env in
         let env' = update_env_func env' return_type func_id param_list true in
         let _ = debug_env env' "after FunctionDecl" in
@@ -847,7 +892,7 @@ let rec gen_sast env = function
         let is_returned = env_after_decl.is_returned in
         let _ = if is_returned then ()
           else if return_type = A.DataType(T.Void) then ()
-          else failwith @@ "Function " ^ get_id func_id 
+          else failwith @@ "Function " ^ fidstr 
               ^ " should have at least one return: " ^ A.str_of_datatype return_type
         in
         let function_decl = 
@@ -864,9 +909,16 @@ let rec gen_sast env = function
         env'', function_decl
       
       | A.ForwardDecl(return_type, func_id, param_list) -> 
+        let fidstr = get_id func_id in
+        (* check: mustn't override certain built-in functions *)
+        let _ = Builtin.overridable fidstr in
+        (* check: cannot forward decl main function *)
+        let _ = if fidstr = "main" then
+          failwith "Cannot forward declare main()"
+        in
         let s_param_list = gen_s_param_list param_list in
         let env' = update_env_func env return_type func_id param_list false in
-        env', S.ForwardDecl(return_type, get_id func_id, s_param_list)
+        env', S.ForwardDecl(return_type, fidstr, s_param_list)
 
       (* statements *)
       | A.IfStatement(pred_ex, stmt_if, stmt_else) -> 

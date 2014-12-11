@@ -23,18 +23,19 @@ let gen_binop = function
 
 let gen_unop = function
   | A.Not -> "!"
+  | A.Transpose -> ".adjoint()"
   | other -> A.str_of_unop other
 
 let gen_postop = A.str_of_postop
 
 let gen_basictype = function
-  | T.Int -> "int"
+  | T.Int -> "int64_t"
   | T.Float -> "float"
   | T.Bool -> "bool"
   | T.Fraction -> "Frac"
-  | T.Complex -> "complex<float>"
+  | T.Complex -> "std::complex<float>"
   | T.Qreg -> "Qureg"
-  | T.String -> "string"
+  | T.String -> "std::string"
   | T.Void -> "void"
 
 let rec gen_datatype = function
@@ -113,7 +114,8 @@ let rec gen_expr = function
   | S.IntLit(i) -> i
   | S.BoolLit(b) -> b
   | S.FloatLit(f) -> f
-  | S.StringLit(s) -> "string(\"" ^ s ^ "\")"
+  | S.StringLit(s) -> 
+    gen_basictype T.String ^ "(\"" ^ s ^ "\")"
 
   (* compound literals *)
   | S.FractionLit(num_ex, denom_ex) -> 
@@ -123,7 +125,7 @@ let rec gen_expr = function
     two_arg "Qureg::create<true>" (gen_expr qex1) (gen_expr qex2)
 
   | S.ComplexLit(real_ex, im_ex) -> 
-    two_arg "complex<float>" (gen_expr real_ex) (gen_expr im_ex)
+    two_arg (gen_basictype T.Complex) (gen_expr real_ex) (gen_expr im_ex)
 
   | S.ArrayLit(arr_type, ex_list) ->
     array_arg (gen_datatype arr_type) (ex_to_code_list ex_list)
@@ -199,6 +201,8 @@ let rec gen_expr = function
     let ex_code = gen_expr ex in begin
     match optag with
     | S.OpVerbatim -> surr @@ (gen_unop op) ^ ex_code
+      (* blablamat.adjoint() *)
+    | S.OpMatrixTranspose -> surr @@ (surr ex_code) ^ (gen_unop op)
     | _ -> fail_unhandle "optag in unop"
     end
   
@@ -235,22 +239,29 @@ let rec gen_expr = function
         let delim = " << " in
         let cout_code = List.fold_left (
           fun acc ex -> acc ^delim^ gen_expr ex
-        ) "cout" ex_list
+        ) 
+        (* C++ prints 'true/false' instead of '1/0' *)
+        "std::cout << std::boolalpha << std::setprecision(6)" ex_list 
         in
-        cout_code ^ if func_id = "print" then " << endl" else ""
-    else
-    more_arg func_id (ex_to_code_list ex_list)
+        cout_code ^ if func_id = "print" then " << std::endl" else ""
+
+    else if func_id = "apply_oracle" then
+      let code_list = ex_to_code_list ex_list in
+      (* de-string arg #2, which is actually a function parameter *)
+      let arg2 = List.nth code_list 1 in
+      let str_type_len = String.length (gen_basictype T.String) in
+      let arg2 = String.sub arg2 
+          (str_type_len+2) ((String.length arg2) - (str_type_len+4)) in
+      let code_list = [List.nth code_list 0; arg2; List.nth code_list 2] in
+      more_arg func_id code_list
+      
+    else (* non-special cases *)
+      more_arg func_id (ex_to_code_list ex_list)
   
   (* Membership testing with keyword 'in' *)
   | S.Membership(elem, array) -> 
-    failwith "Membership not yet supported"
-    (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
-    (*
-    let exElem = gen_expr exElem in
-    let exArray = gen_expr exArray in
-      "std::find(" ^surr exArray^ ".begin(), " ^surr exArray^ ".end(), " ^
-      exElem^ ") != " ^surr exArray^ ".end()"
-    *)
+    (* from quarklang.h *)
+    two_arg "membership_in" (gen_expr elem) (gen_expr array)
     
   | _ -> fail_unhandle "expr"
 
@@ -264,7 +275,11 @@ let gen_param_list param_list =
   List.fold_left 
     (fun accstr param -> accstr ^
       ((function 
-      | S.PrimitiveDecl(typ, id) -> gen_datatype typ ^ " " ^ id
+      | S.PrimitiveDecl(typ, id) -> 
+        let type_code = if typ = A.DataType(T.Qreg)
+        then "const Qureg&" else gen_datatype typ 
+        in
+        type_code ^ " " ^ id
       | _ -> fail_unhandle "gen_param_list"
       ) param) ^ ", "
     ) "" param_list
@@ -280,10 +295,14 @@ let rec gen_code = function
       | S.FunctionDecl(return_type, func_id, param_list, stmt_list) ->
         let param_list_code = gen_param_list param_list in
         let stmt_list_code = gen_code stmt_list in
-        gen_datatype return_type ^ " " ^ func_id ^ "(" 
-          ^ trim_last param_list_code ^ ")\n"
-          ^ "{\n" ^ stmt_list_code 
-          ^ "\n} // end " ^ func_id ^ "()\n"
+        let return_type_code = 
+          if func_id = "main" then "int" (* otherwise int64_t *)
+          else gen_datatype return_type
+        in
+        return_type_code ^ " " ^ func_id ^ "(" 
+        ^ trim_last param_list_code ^ ")\n"
+        ^ "{\n" ^ stmt_list_code 
+        ^ "\n} // end " ^ func_id ^ "()\n"
       
       | S.ForwardDecl(return_type, func_id, param_list) -> 
         let param_list_code = gen_param_list param_list in
