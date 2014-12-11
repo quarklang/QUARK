@@ -14,7 +14,16 @@ let fst_3 = function x, _, _ -> x;;
 let snd_3 = function _, x, _ -> x;;
 let trd_3 = function _, _, x -> x;;
 
-let get_id (A.Ident name) = name
+let get_id (A.Ident name) = 
+  (* reserved prefix *)
+  let forbid = "_QUARK_TEMP_" in
+  let forbid_len = String.length forbid in
+  if String.length name < forbid_len then name
+  else
+    if String.sub name 0 forbid_len = forbid
+    then failwith @@ "Identifier name cannot start with "
+        ^ "the reserved prefix " ^forbid^ ": " ^ name
+    else name
 
 (****** Environment definition ******)
 type func_info = {
