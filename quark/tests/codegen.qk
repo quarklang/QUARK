@@ -2,6 +2,9 @@ int foo: int a, string b, fraction[][] c;
 
 def int main:
 {
+    <| 3, 2 |>;
+    i(10); i(1, 10);
+    3$2;
     {
         int a;
     }

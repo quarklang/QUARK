@@ -7,7 +7,7 @@ let header_code =
  "#include \"qumat.h\"\n" ^
  "#include \"qugate.h\"\n" ^
  "using namespace Qumat;\n" ^
- "using namespace Qugate;\n"
+ "using namespace Qugate;\n\n"
 
 (* surround with parenthesis *)
 let surr str = "(" ^ str ^ ")"
@@ -65,63 +65,34 @@ let trim_last str =
   else str
 
 
-(********* Main expr semantic checker entry *********)
-(*
-let rec gen_s_expr env = function
+(********* Main expr -> code string entry *********)
+let rec gen_expr = function
   (* simple literals *)
-  | A.IntLit(i) -> env, S.IntLit(i), A.DataType(T.Int)
-  | A.BoolLit(b) -> env, S.BoolLit(b), A.DataType(T.Bool)
-  | A.FloatLit(f) -> env, S.FloatLit(f), A.DataType(T.Float)
-  | A.StringLit(s) -> env, S.StringLit(s), A.DataType(T.String)
+  | S.IntLit(i) -> i
+  | S.BoolLit(b) -> b
+  | S.FloatLit(f) -> f
+  | S.StringLit(s) -> s
 
   (* compound literals *)
-  | A.FractionLit(num_ex, denom_ex) -> 
-    let env, s_num_ex, num_type = gen_s_expr env num_ex in
-    let env, s_denom_ex, denom_type = gen_s_expr env denom_ex in (
-    match num_type, denom_type with
-    | A.DataType(T.Int), A.DataType(T.Int) -> 
-      env, S.FractionLit(s_num_ex, s_denom_ex), A.DataType(T.Fraction)
-    | _ -> failwith @@ compound_type_err_msg "fraction" num_type denom_type
-    )            
+  | S.FractionLit(num_ex, denom_ex) -> 
+    "Frac(" ^ gen_expr num_ex ^", "^ gen_expr denom_ex ^ ")"
 
-  | A.QRegLit(qex1, qex2) -> 
-    let env, s_qex1, q1_type = gen_s_expr env qex1 in
-    let env, s_qex2, q2_type = gen_s_expr env qex2 in (
-    match q1_type, q2_type with
-    | A.DataType(T.Int), A.DataType(T.Int) -> 
-      env, S.QRegLit(s_qex1, s_qex2), A.DataType(T.Qreg)
-    | _ -> failwith @@ compound_type_err_msg "qreg" q1_type q2_type
-    )            
+  | S.QRegLit(qex1, qex2) -> 
+    "Qureg::create<true>(" ^ gen_expr qex1 ^", "^ gen_expr qex2 ^ ")"
 
-  | A.ComplexLit(real_ex, im_ex) -> 
-    let env, s_real_ex, real_type = gen_s_expr env real_ex in
-    let env, s_im_ex, im_type = gen_s_expr env im_ex in (
-    match real_type, im_type with
-    | A.DataType(T.Int), A.DataType(T.Int)
-    | A.DataType(T.Int), A.DataType(T.Float)
-    | A.DataType(T.Float), A.DataType(T.Int)
-    | A.DataType(T.Float), A.DataType(T.Float) -> 
-      env, S.ComplexLit(s_real_ex, s_im_ex), A.DataType(T.Complex)
-    | _ -> failwith @@ compound_type_err_msg "complex" real_type im_type
-    )            
+  | S.ComplexLit(real_ex, im_ex) -> 
+    "complex<float>(" ^ gen_expr real_ex ^", "^ gen_expr im_ex ^ ")"
 
-  | A.ArrayLit(exprs) ->
-    let env, s_exprs, elem_type = gen_s_array env exprs in
-    let _tmp = A.ArrayType(elem_type) in
-    let _ = print_endline @@ "DEBUG ARRAY " ^ (A.str_of_datatype _tmp) in
-    env, S.ArrayLit(elem_type, s_exprs), A.ArrayType(elem_type)
+  | S.ArrayLit(elem_type, ex_list) ->
+    ""
 
-  | A.MatrixLit(exprs_list_list) ->
-    let env, s_matrix, elem_type, coldim = gen_s_matrix env exprs_list_list in
-    let _tmp = A.MatrixType(A.DataType(elem_type)) in
-    let _ = print_endline @@ "DEBUG MATRIX " ^ (A.str_of_datatype _tmp) 
-        ^ " cols= " ^ string_of_int coldim ^ " rows= " ^ string_of_int (List.length exprs_list_list) 
-    in
-    env, S.MatrixLit(elem_type, s_matrix, coldim), A.MatrixType(A.DataType(elem_type))
+  | S.MatrixLit(elem_type, ex_list, coldim) ->
+    ""
   
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)
-  | A.Binop(expr1, op, expr2) -> 
+  | S.Binop(expr1, op, expr2, optag) -> ""
+    (*
     (* helper functions for Binop case *)
     let err_msg_helper func_str_of op type1 type2 =
       "Incompatible operands for binary op " ^ A.str_of_binop op ^ ": " 
@@ -130,8 +101,8 @@ let rec gen_s_expr env = function
     let err_msg_arrmat = err_msg_helper A.str_of_datatype in (* array/matrix types *)
     
     (* check left and right children *)
-    let env, s_expr1, ex_type1 = gen_s_expr env expr1 in
-    let env, s_expr2, ex_type2 = gen_s_expr env expr2 in
+    let s_expr1, ex_type1 = gen_expr expr1 in
+    let s_expr2, ex_type2 = gen_expr expr2 in
     begin
     match ex_type1, ex_type2 with 
     (* cases with raw types *)
@@ -212,7 +183,7 @@ let rec gen_s_expr env = function
           | A.Rshift      -> binop_bitwise op type1 type2
           | _ -> failwith "INTERNAL unmatched binop"
       in
-      env, S.Binop(s_expr1, op, s_expr2, optag), A.DataType(result_type)
+      S.Binop(s_expr1, op, s_expr2, optag), A.DataType(result_type)
       end
       
     (* At least one of the binop operand is an array/matrix *)
@@ -228,17 +199,20 @@ let rec gen_s_expr env = function
             type1, S.OpArrayConcat (* array/mat concatenation *)
         | _ -> failwith @@ err_msg_arrmat op type1 type2
       in
-      env, S.Binop(s_expr1, op, s_expr2, optag), result_type
+      S.Binop(s_expr1, op, s_expr2, optag), result_type
     end (* end of binop *)
+    *)
     
   (* Query ops *)
-  | A.Queryop(qreg_ex, op, start_ex, end_ex) -> 
-    let env, s_qreg_ex, qreg_type = gen_s_expr env qreg_ex in
+  | S.Queryop(qreg_ex, op, start_ex, end_ex, optag) -> 
+    ""
+    (*
+    let s_qreg_ex, qreg_type = gen_expr qreg_ex in
     begin
       match qreg_type with 
       | A.DataType(T.Qreg) ->
-        let env, s_start_ex, start_type = gen_s_expr env start_ex in
-        let env, s_end_ex, end_type = gen_s_expr env end_ex in
+        let s_start_ex, start_type = gen_expr start_ex in
+        let s_end_ex, end_type = gen_expr end_ex in
         let optag = match s_end_ex with
           (* dummy literal from parser *)
         | S.IntLit("QuerySingleBit") -> S.OpQuerySingleBit
@@ -246,17 +220,20 @@ let rec gen_s_expr env = function
         match start_type, end_type with
         | A.DataType(T.Int), A.DataType(T.Int) -> 
           (* query check success *)
-          env, S.Queryop(s_qreg_ex, op, s_start_ex, s_end_ex, optag), A.DataType(T.Int)
+          S.Queryop(s_qreg_ex, op, s_start_ex, s_end_ex, optag), A.DataType(T.Int)
         | _ -> failwith @@ "Incompatible query args: " ^ A.str_of_datatype start_type 
           ^ (if optag = S.OpVerbatim then ", " ^ A.str_of_datatype end_type else "")
         )
       | _ -> failwith @@ 
           "Measurement must be queried on a qureg, not " ^ A.str_of_datatype qreg_type
     end
+    *)
     
   (* Unary ops *)
-  | A.Unop(op, ex) -> 
-    let env, s_ex, typ = gen_s_expr env ex in
+  | S.Unop(op, ex, optag) -> 
+    ""
+    (*
+    let s_ex, typ = gen_expr ex in
     let err_msg op t = "Incompatible operand for unary op " 
         ^ A.str_of_unop op ^ ": " ^ A.str_of_datatype t in
     let return_type = 
@@ -281,9 +258,12 @@ let rec gen_s_expr env = function
           | _ -> failwith @@ err_msg op typ)
       )
     in
-    env, S.Unop(op, s_ex, S.OpVerbatim), return_type
+    S.Unop(op, s_ex, S.OpVerbatim), return_type
+    *)
   
-  | A.Lval(lval) -> 
+  | S.Lval(lval) -> 
+    ""
+    (*
     let s_lval, ltype = match lval with
     | A.Variable(id) -> 
       let vtype = (get_env_var env id).v_type in
@@ -303,7 +283,7 @@ let rec gen_s_expr env = function
         let sub_dim = List.length ex_list in (* subscript [2,3,4] dimension *)
         let s_ex_list = (* check subscript types, must all be ints *)
           List.map (fun ex -> 
-            let _, s_ex, typ = gen_s_expr env ex in
+            let _, s_ex, typ = gen_expr ex in
             if typ = A.DataType(T.Int) then s_ex
             else failwith @@ "Subscript contains non-int: " 
                 ^ idstr ^"["^ A.str_of_datatype typ ^ "]") ex_list
@@ -346,38 +326,32 @@ let rec gen_s_expr env = function
         (* bad lvalue *)
         | _ -> failwith @@ idstr ^ " is not an array/matrix"
     in
-    env, S.Lval(s_lval), ltype
+    S.Lval(s_lval), ltype
+    *)
     
-  (* Special assignment *)
-  | A.AssignOp(lval, op, ex) ->
-    let binop = match op with
-    | A.AddEq -> A.Add
-    | A.SubEq -> A.Sub
-    | A.MulEq -> A.Mul
-    | A.DivEq -> A.Div
-    | A.BitAndEq -> A.BitAnd
-    | _ -> failwith @@ "INTERNAL bad AssignOp: " ^ A.str_of_binop op
-    in
-    gen_s_expr env (A.Assign(lval, A.Binop(A.Lval(lval), binop, ex)))
-
   (* Post ++ and -- *)
-  | A.PostOp(lval, op) -> 
-    let env, s_lval_ex, typ = gen_s_expr env (A.Lval(lval)) in
+  | S.PostOp(lval, op) -> 
+    ""
+    (*
+    let s_lval_ex, typ = gen_expr (A.Lval(lval)) in
       let s_lval = match s_lval_ex with
       | S.Lval(s_lval) -> s_lval
       | _ -> failwith "INTERNAL in postop: doesn't return S.Lval as expected"
       in (
       match typ with
       | A.DataType(T.Int)  | A.DataType(T.Float) -> 
-        env, S.PostOp(s_lval, op), typ
+        S.PostOp(s_lval, op), typ
       | _ -> failwith @@ "Incompatible operand for post op " 
           ^ A.str_of_postop op ^ ": " ^ A.str_of_datatype typ
       )
+     *)
       
   (* Assignment *)
-  | A.Assign(lval, rhs_ex) -> 
-    let env, s_lval_ex, l_type = gen_s_expr env (A.Lval(lval)) in
-    let env, s_rhs_ex, r_type = gen_s_expr env rhs_ex in
+  | S.Assign(lval, rhs_ex) -> 
+    ""
+    (*
+    let s_lval_ex, l_type = gen_expr (A.Lval(lval)) in
+    let s_rhs_ex, r_type = gen_expr rhs_ex in
       let s_lval = match s_lval_ex with
       | S.Lval(s_lval) -> s_lval
       | _ -> failwith "INTERNAL in postop: doesn't return S.Lval as expected"
@@ -391,10 +365,13 @@ let rec gen_s_expr env = function
             ^ A.str_of_datatype l_type ^" = "^ A.str_of_datatype r_type
       in
       let _ = print_endline @@ "DEBUG ASSIGN returns "^A.str_of_datatype return_type in
-      env, S.Assign(s_lval, s_rhs_ex), return_type
+      S.Assign(s_lval, s_rhs_ex), return_type
+     *)
 
   (* Function calls *)
-  | A.FunctionCall(func_id, ex_list) -> 
+  | S.FunctionCall(func_id, ex_list) -> 
+    ""
+    (*
     let finfo = get_env_func env func_id in
     let fidstr = get_id func_id in
     if finfo.f_defined then
@@ -405,7 +382,7 @@ let rec gen_s_expr env = function
         let s_ex_list = List.map2 (
           fun ex f_arg -> 
             (* check ex type must agree with expected arg type *)
-            let _, s_ex, ex_type = gen_s_expr env ex in 
+            let _, s_ex, ex_type = gen_expr ex in 
             match ex_type, f_arg with
             | A.DataType(T.Int), A.DataType(T.Float)
             | A.DataType(T.Float), A.DataType(T.Int) -> s_ex
@@ -415,7 +392,7 @@ let rec gen_s_expr env = function
                   ^ A.str_of_datatype f_arg ^ " expected"   
           ) ex_list f_args
         in
-        env, S.FunctionCall(fidstr, s_ex_list), finfo.f_return
+        S.FunctionCall(fidstr, s_ex_list), finfo.f_return
       else
         failwith @@ "Function " ^fidstr^ " requires " ^ string_of_int farg_len
             ^ " arg but " ^ string_of_int actual_len ^ " provided"
@@ -423,14 +400,15 @@ let rec gen_s_expr env = function
       failwith @@ if finfo.f_return = A.NoneType then
         "Function " ^ fidstr ^ " is undefined" else
         "Only forward declaration, no actual definition is found for " ^ fidstr
+    *)
   
   (* Membership testing with keyword 'in' *)
-  | A.Membership(elem, array) -> 
+  | S.Membership(elem, array) -> 
     failwith "Membership not yet supported"
     (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
     (*
-    let exElem = gen_s_expr exElem in
-    let exArray = gen_s_expr exArray in
+    let exElem = gen_expr exElem in
+    let exArray = gen_expr exArray in
       "std::find(" ^surr exArray^ ".begin(), " ^surr exArray^ ".end(), " ^
       exElem^ ") != " ^surr exArray^ ".end()"
     *)
@@ -438,34 +416,35 @@ let rec gen_s_expr env = function
   | _ -> failwith "INTERNAL some expr not properly checked"
 
 
+(*
 and gen_s_array env exprs =
-  let env, s_exprs, array_type = List.fold_left
+  let s_exprs, array_type = List.fold_left
     (* evaluate each expression in the list *)
-    (fun (env, checked_exprs_acc, prev_type) unchecked_expr ->
-        let env, checked_expr, expr_type = gen_s_expr env unchecked_expr in
+    (fun (checked_exprs_acc, prev_type) unchecked_expr ->
+        let checked_expr, expr_type = gen_expr unchecked_expr in
         match prev_type with
         | A.NoneType ->
           (* means we're seeing the 1st expr in the array and now know array type *)
-          env, checked_expr :: checked_exprs_acc, expr_type
+          checked_expr :: checked_exprs_acc, expr_type
         | array_type -> (
           (* ensure all elems in array are the same type *)
           match array_type, expr_type with (* <> for != *)
           | A.DataType(T.Int), A.DataType(T.Float)
           | A.DataType(T.Float), A.DataType(T.Int) -> 
-            env, checked_expr :: checked_exprs_acc, A.DataType(T.Float)
+            checked_expr :: checked_exprs_acc, A.DataType(T.Float)
           | _ when array_type = expr_type -> 
-            env, checked_expr :: checked_exprs_acc, array_type
+            checked_expr :: checked_exprs_acc, array_type
           | _ ->  failwith @@ "Array element type conflict: " 
             ^ A.str_of_datatype array_type ^ " -.- " ^ A.str_of_datatype expr_type)
           )
-    (env, [], A.NoneType) exprs in
-  (env, List.rev s_exprs , array_type)
+    ([], A.NoneType) exprs in
+  (List.rev s_exprs , array_type)
 
 and gen_s_matrix env exprs_list_list =
-  let env, matrix, matrix_type, row_length = List.fold_left
-    (fun (env, rows, curr_type, row_length) exprs -> 
+  let matrix, matrix_type, row_length = List.fold_left
+    (fun (rows, curr_type, row_length) exprs -> 
         (* evaluate each row where each row is an expr list *)
-        let env, exprs, row_type = gen_s_array env exprs in
+        let exprs, row_type = gen_s_array env exprs in
         let prev_type = 
             match row_type with 
             | A.DataType(prev_type) -> (
@@ -479,7 +458,7 @@ and gen_s_matrix env exprs_list_list =
         match curr_type with
         | T.Void -> 
             (* means this is the 1st row which means we now know the matrix type *)
-            env, (exprs :: rows), prev_type, exprs_length
+            (exprs :: rows), prev_type, exprs_length
         | _ -> (
           let curr_type' = 
             (* the same length*)
@@ -498,9 +477,9 @@ and gen_s_matrix env exprs_list_list =
               ^ T.str_of_type curr_type ^ " -.- " ^ T.str_of_type prev_type
             )
             in
-          env, (exprs :: rows), curr_type', row_length ))
-    (env, [], T.Void, 0) exprs_list_list in
-  (env, List.rev matrix , matrix_type, row_length)
+          (exprs :: rows), curr_type', row_length ))
+    ([], T.Void, 0) exprs_list_list in
+  (List.rev matrix , matrix_type, row_length)
   
     
 (* decl *)
@@ -527,7 +506,7 @@ let gen_s_decl env = function
   | A.AssigningDecl(typ, id, ex) -> 
     let idstr = get_id id in
     let _ = check_matrix_decl idstr typ in (* disallow certain bad matrices *)
-    let env, s_ex, ex_type = gen_s_expr env ex in
+    let s_ex, ex_type = gen_expr ex in
     let _ = match typ, ex_type with
     | A.DataType(T.Int), A.DataType(T.Float)
     | A.DataType(T.Float), A.DataType(T.Int) -> ()
@@ -553,9 +532,9 @@ let gen_s_range env id = function
     match vtype with
     | A.NoneType -> failwith @@ "For-iterator " ^idstr^ " undefined"
     | A.DataType(T.Int) | A.DataType(T.Float) -> begin
-      let env, s_start_ex, start_type = gen_s_expr env start_ex in
-      let env, s_end_ex, end_type = gen_s_expr env end_ex in
-      let env, s_step_ex, step_type = gen_s_expr env step_ex in
+      let s_start_ex, start_type = gen_expr start_ex in
+      let s_end_ex, end_type = gen_expr end_ex in
+      let s_step_ex, step_type = gen_expr step_ex in
       match start_type, end_type, step_type with
       | A.DataType(typ1), A.DataType(typ2), A.DataType(typ3) -> 
         if not (typ1 = T.Float || typ1 = T.Int) ||
@@ -575,7 +554,7 @@ let gen_s_iter env = function
     (* if typ = NoneType, there's no new iterator variable defined in the loop *)
     match typ with
     | A.NoneType ->
-      env, S.RangeIterator(typ, get_id id, gen_s_range env id range)
+      S.RangeIterator(typ, get_id id, gen_s_range env id range)
     | _ -> 
       (* add the declared var to scope *)
       let env', _ = gen_s_decl env (A.PrimitiveDecl(typ, id)) in
@@ -584,7 +563,7 @@ let gen_s_iter env = function
 
   | A.ArrayIterator(typ, id, array_ex) -> 
     let idstr = get_id id in
-    let env', s_array_ex, array_type = gen_s_expr env array_ex in
+    let env', s_array_ex, array_type = gen_expr array_ex in
     let env', _ = gen_s_decl env (A.PrimitiveDecl(typ, id)) in
     let elem_type = match array_type with 
       | A.ArrayType(elem_type) -> elem_type
@@ -659,11 +638,9 @@ let rec gen_code = function
       | S.Declaration(dec) -> 
         ""
 
-      | S.Expression(ex) -> 
-        ""
+      | S.Expression(ex) -> (gen_expr ex) ^ ";"
 
-      | S.ReturnStatement(ex) -> 
-        ""
+      | S.ReturnStatement(ex) -> "return " ^ gen_expr ex ^ ";" 
 
       | S.VoidReturnStatement -> "return;"
 
