@@ -57,6 +57,7 @@ The following identifiers are reserved for use as keywords, and may not be used 
 > fraction
 > complex
 > qreg
+> void
 > mod
 > in
 > return
@@ -75,9 +76,11 @@ The following identifiers are reserved for use as keywords, and may not be used 
 
 **Braces** -- Braces indicate a block of statements.
 
-**Semicolon** -- Semicolons are used at the end of every statement as a terminator. 
+**Semicolon** -- Semicolons are used at the end of every statement as a terminator. Semicolons are also used to separate rows in the matrix data type.
 
 **Colon** -- Colons are used to denote slicing in arrays and within a function declaration. In a function declaration, formal arguments appear between the colon and a left curly brace. 
+
+**Dollar Sign** -- Dollar sign separates the numerator value from the denominator value in a fraction data type.
 
 ###Escape Sequences
 Certain characters within strings need to be preceded by a backslash. These characters and the sequences to produce them in a string are:
@@ -97,11 +100,39 @@ The data types available in QUARK are:
 > float
 > fraction
 > bool
+> complex
 > string
 > qreg
 > matrix
+> void
 
 Additionally, the aggregate data type of array is available to the user.
+
+####int
+An integer is a 64-bit signed integer.
+
+####float
+A float is a 64-bit signed floating-point number.
+
+####fraction
+A fraction is denoted by a numerical number (numerator) separated by `$` and another numerical number (denominator).
+
+####complex
+
+
+####bool
+A boolean value is denoted using the literals `true` or `false`.
+
+####string
+A string is a sequence of characters. String literals are placed between double quotations.
+
+####matrix
+QUARK allows you to create matrices; a matrix uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only `int`, `float`, or `complex`.
+
+`[| r00, r01; r10, r11; r20, r21 |]`
+
+####array
+
 
 ###Iterators
 for i in [1:10]
