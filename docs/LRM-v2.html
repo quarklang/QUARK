@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LRM-v2</title>
+<link rel="stylesheet" href="https://stackedit.io/res-min/themes/base.css" />
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body><div class="container"><h2 id="quark-language-reference-manual">Quark Language Reference Manual</h2>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Name</th>
+  <th align="right">UNI</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left">Daria Jung</td>
+  <td align="right">djj2115</td>
+</tr>
+<tr>
+  <td align="left">Jamis Johnson</td>
+  <td align="right">jmj2180</td>
+</tr>
+<tr>
+  <td align="left">Jim Fan</td>
+  <td align="right">lf2422</td>
+</tr>
+<tr>
+  <td align="left">Parthiban Loganathan</td>
+  <td align="right">pl2487</td>
+</tr>
+</tbody></table>
+
+
+<h2 id="table-of-contents">Table of contents</h2>
+
+<p><div class="toc"><div class="toc">
+<ul>
+<li><ul>
+<li><a href="#quark-language-reference-manual">Quark Language Reference Manual</a></li>
+<li><a href="#table-of-contents">Table of contents</a><ul>
+<li><a href="#introduction">Introduction</a></li>
+</ul>
+</li>
+<li><a href="#reference-manual">Reference Manual</a><ul>
+<li><a href="#grammar-notation">Grammar Notation</a></li>
+<li><a href="#lexical-conventions">Lexical Conventions</a></li>
+<li><a href="#line-terminators">Line Terminators</a></li>
+<li><a href="#comments">Comments</a></li>
+<li><a href="#whitespace">Whitespace</a></li>
+<li><a href="#tokens">Tokens</a></li>
+<li><a href="#identifiers">Identifiers</a></li>
+<li><a href="#keywords">Keywords</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</p>
+
+<h3 id="introduction">Introduction</h3>
+
+<p>This is the language reference manual for Quark, a high level language for quantum computing. Quark makes it simple to perform complicated mathematical operations required for quantum computing in a simple and intuitive manner. In addition to standard types featured in most common programming languages, Quark supports complex numbers, fractions, matrices and quantum registers.</p>
+
+<h2 id="reference-manual">Reference Manual</h2>
+
+<h3 id="grammar-notation">Grammar Notation</h3>
+
+<p>FILL OUT LATER</p>
+
+<h3 id="lexical-conventions">Lexical Conventions</h3>
+
+<p>A program in QUARK includes at least one function definition, though something trivial like a variable declaration or a string should compile. Programs are written using a basic source character set accepted by the C++ compiler in use. Refer to what source-code file encoding your compiler accepts. The QUARK compiler will only output ASCII.</p>
+
+<h3 id="line-terminators">Line Terminators</h3>
+
+<p>?</p>
+
+<h3 id="comments">Comments</h3>
+
+<p>MATLAB style commenting is supported. A MATLAB style comment begins with <code>%</code> and ends with <code>%</code>. Multi-line MATLAB comments start with <code>%{</code> and end with <code>}%</code>. Any sequence of characters can appear inside of a comment except the string <code>}%</code>. These comments do not nest. </p>
+
+<h3 id="whitespace">Whitespace</h3>
+
+<p>Whitespace is defined as the ASCII space, horizontal tab and form feed characters, as well as line terminators and comments.</p>
+
+<h3 id="tokens">Tokens</h3>
+
+<p>Tokens in QUARK consist of identifiers, keywords, constants, and separators. Whitespace is ignored and not taken into consideration.</p>
+
+<h3 id="identifiers">Identifiers</h3>
+
+<p>An identifier is composed of a sequence of letters and digits, the first of which must be a letter. There is no limit on the length of an identifier. The underscore character <code>_</code> is included in the regular expression pattern for letters. </p>
+
+<p>Two identifiers are the same if they have the same ASCII character for every letter and digit. </p>
+
+<pre class="prettyprint"><code class=" hljs coffeescript">digit<span class="hljs-function"> -&gt;</span> [<span class="hljs-string">'0'</span>-<span class="hljs-string">'9'</span>]
+letter<span class="hljs-function"> -&gt;</span> [<span class="hljs-string">'a'</span>-<span class="hljs-string">'z'</span> <span class="hljs-string">'A'</span>-<span class="hljs-string">'Z'</span> <span class="hljs-string">'_'</span>]
+Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </code></pre>
+
+
+
+<h3 id="keywords">Keywords</h3>
+
+<p>The following identifiers are reserved for use as keywords, and may not be used otherwise:</p>
+
+<blockquote>
+  <p>bool <br>
+  int <br>
+  float <br>
+  fraction <br>
+  complex <br>
+  qreg <br>
+  print <br>
+  in <br>
+  return <br>
+  while <br>
+  for <br>
+  else <br>
+  if <br>
+  and <br>
+  or</p>
+</blockquote></div></body>
+</html>
