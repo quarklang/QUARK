@@ -60,7 +60,9 @@ let rec gen_datatype = function
 (******* Utilities *******)
 (* handles "2, 3, 4, " -> "2, 3, 4" *)
 let trim_last str =
-  String.sub str 0 ((String.length str) - 2)
+  if String.length str > 1 then
+    String.sub str 0 ((String.length str) - 2)
+  else str
 
 
 (********* Main expr semantic checker entry *********)
