@@ -1,3 +1,4 @@
+int foo: int a, string b, fraction[][] c;
 
 def int main:
 {

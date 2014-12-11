@@ -638,7 +638,9 @@ let rec gen_code = function
         ^ "} // end " ^ func_id ^ "()\n"
       
       | S.ForwardDecl(return_type, func_id, param_list) -> 
-        ""
+        let param_list_code = gen_param_list param_list in
+        gen_datatype return_type ^ " " ^ func_id ^ "(" 
+        ^ trim_last param_list_code ^ ");\n"
 
       (* statements *)
       | S.IfStatement(pred_ex, stmt_if, stmt_else) -> 
