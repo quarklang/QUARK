@@ -2,6 +2,8 @@ int foo: int a, string b, fraction[][] c;
 
 def int foo: int c, string d, fraction[][] dudud
 {
+    fraction dud;
+    print(dud in dudud);
     print(dudud);
     if not (d == "shit"):
     {
@@ -35,6 +37,10 @@ def int main:
     float i = 66;
     for i in [10:1:-1]:
         print("for ", i);
+
+    int[][] all = [[100, 200, 300, 400], [500,600]];
+    for int[] i in all:
+        print("all ", i);
 
     print("after for: ", i);
 

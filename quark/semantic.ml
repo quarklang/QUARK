@@ -629,15 +629,22 @@ let rec gen_s_expr env = function
         "Only forward declaration, no actual definition is found for " ^ fidstr
   
   (* Membership testing with keyword 'in' *)
-  | A.Membership(elem, array) -> 
-    failwith "Membership not yet supported"
-    (* !!!! Needs to assign exElem and exArray to compiled temp vars *)
-    (*
-    let exElem = gen_s_expr exElem in
-    let exArray = gen_s_expr exArray in
-      "std::find(" ^surr exArray^ ".begin(), " ^surr exArray^ ".end(), " ^
-      exElem^ ") != " ^surr exArray^ ".end()"
-    *)
+  | A.Membership(elem, array_ex) -> 
+    let env, s_array_ex, array_type = gen_s_expr env array_ex in
+    let env, s_elem, elem_type = gen_s_expr env elem in
+    let arr_elem_type = match array_type with 
+      | A.ArrayType(elem_type) -> elem_type
+      | _ -> failwith @@ 
+        "Membership testing must operate on array type, not " ^ A.str_of_datatype array_type
+    in
+    let _ = match elem_type, arr_elem_type with
+      | A.DataType(T.Int), A.DataType(T.Float)
+      | A.DataType(T.Float), A.DataType(T.Int) -> ()
+      | elem_type', arr_elem_type' when elem_type' = arr_elem_type' -> ()
+      | _ -> failwith @@ "Membership testing has incompatible types: " 
+          ^ A.str_of_datatype elem_type ^" -.- "^ A.str_of_datatype arr_elem_type
+    in
+    env, S.Membership(s_elem, s_array_ex), A.DataType(T.Bool)
     
   | _ -> failwith "INTERNAL some expr not properly checked"
 
@@ -807,7 +814,7 @@ let gen_s_iter env = function
     let elem_type = match array_type with 
       | A.ArrayType(elem_type) -> elem_type
       | _ -> failwith @@ 
-        "Array-style for-loop must have array type, not " ^ A.str_of_datatype array_type
+        "Array-style for-loop must operate on array type, not " ^ A.str_of_datatype array_type
     in
     (* check iterator variable and list consistency *)
     let _ = match typ, elem_type with

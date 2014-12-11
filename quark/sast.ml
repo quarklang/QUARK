@@ -37,7 +37,7 @@ and expr =
   | MatrixCtor of A.datatype * expr * expr (* int, int of new Matrix::Zeros() *)
   | FunctionCall of string * expr list
   | Lval of lvalue
-  | Membership of expr * expr (* not yet supported *)
+  | Membership of expr * expr
 
 type decl =
   | AssigningDecl of A.datatype * string * expr
