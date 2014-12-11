@@ -209,6 +209,20 @@ let rec gen_expr = function
 
   (* Function calls *)
   | S.FunctionCall(func_id, ex_list) -> 
+    (* handle print specially *)
+    if Builtin.is_print func_id then
+      if List.length ex_list = 0 then ""
+      else
+        let delim = " << " in
+        let cout_code = List.fold_left (
+          fun acc ex -> acc ^delim^ gen_expr ex
+        ) "cout" ex_list
+        in
+        if func_id = "print" then (* print with newline *)
+          cout_code ^ " << endl"
+        else (* get rid of the last redundant " << " *)
+          String.sub cout_code 0 ((String.length cout_code) - (String.length delim))
+    else
     more_arg func_id (ex_to_code_list ex_list)
   
   (* Membership testing with keyword 'in' *)

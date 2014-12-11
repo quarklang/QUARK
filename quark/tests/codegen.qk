@@ -2,7 +2,7 @@ int foo: int a, string b, fraction[][] c;
 
 def int foo: int c, string d, fraction[][] dudud
 {
-    (1+2) * (3+4);
+    print((1+2) * (3+4));
     if not (d == "shit"):
     {
         return -1;
@@ -17,11 +17,12 @@ def int main:
 {
     qreg q = <| 10, 2 |>;
     fraction[10];
-    complex[| 10, 11 |];
-    [| 10, 20, 30; -4, -5, -6; 17, 18, 19 |];
+    complex[|] c = complex[| 10, 11 |];
+    print(rowdim(c));
+    print([[| 10, 20, 30; -4, -5, -6; 17, 18, 19 |], [|3, 4; 1, 2|]]);
 
-    [[[2, 3, 4], [5], [6, 7]], [[5]]];
-    q ?' 1;
+    print([[[2, 3, 4], [5], [6, 7]], [[5]]]);
+    print("Qureg query ", q ?' 1);
     i(10); i(1, 10);
     3$2;
     {
@@ -35,6 +36,7 @@ def int main:
     
     int[|] m = int[| 3, 4 |];
     m[3-2, 8 mod 6] = 6;
-    foo(3, "shit", [[2$3], [4$3]]);
+    print(m);
+    print(foo(3, "shit", [[2$3], [4$3]]));
     return 0;
 }

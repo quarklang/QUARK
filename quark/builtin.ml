@@ -7,7 +7,7 @@ let wrap basic_type = A.DataType(basic_type)
 (* return arg_types[], return_type *)
 let find_builtin = function
   | "print" -> [], wrap T.Void
-  | "print_line" -> [], wrap T.Void
+  | "print_noline" -> [], wrap T.Void
    (* A.NoneType is a placeholder: len works with any array type *)
   | "len" -> [A.ArrayType(A.NoneType)], wrap T.Int
    (* size of a qureg *)
@@ -19,6 +19,6 @@ let find_builtin = function
   | _ -> [], A.NoneType
 
  (* print is special: it accepts any number of args *)
-let is_variable_args = function
-  | "print" | "print_line" -> true
+let is_print = function
+  | "print" | "print_noline" -> true
   | _ -> false
