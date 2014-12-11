@@ -33,8 +33,8 @@ and expr =
   | ComplexLit of expr * expr
   | ArrayLit of A.datatype * expr list
   | ArrayCtor of A.datatype * expr (* int size of new array *)
-  | MatrixLit of T.vartype * expr list * int (* column dimension. Flattened *)
-  | MatrixCtor of T.vartype * expr * expr (* int, int of new Matrix::Zeros() *)
+  | MatrixLit of A.datatype * expr list * int (* column dimension. Flattened *)
+  | MatrixCtor of A.datatype * expr * expr (* int, int of new Matrix::Zeros() *)
   | FunctionCall of string * expr list
   | Lval of lvalue
   | Membership of expr * expr (* not yet supported *)

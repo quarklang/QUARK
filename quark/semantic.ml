@@ -256,26 +256,27 @@ let rec gen_s_expr env = function
 
   | A.ArrayLit(exprs) ->
     let env, s_exprs, elem_type = gen_s_array env exprs in
-    let _DEBUG_tmp = A.ArrayType(elem_type) in
-    let _ = debug_print @@ "ARRAY " ^ (A.str_of_datatype _DEBUG_tmp) in
-    env, S.ArrayLit(elem_type, s_exprs), A.ArrayType(elem_type)
+    let arr_type = A.ArrayType(elem_type) in
+    let _ = debug_print @@ "ARRAY " ^ (A.str_of_datatype arr_type) in
+    env, S.ArrayLit(arr_type, s_exprs), arr_type
     
   (* constructs an array with size *)
   | A.ArrayCtor(elem_type, size_expr) -> 
     let env, s_size_expr, size_type = gen_s_expr env size_expr in
     if size_type = A.DataType(T.Int) then
-      env, S.ArrayCtor(elem_type, s_size_expr), A.ArrayType(elem_type)
+      let arr_type = A.ArrayType(elem_type) in
+      env, S.ArrayCtor(arr_type, s_size_expr), arr_type
     else
       failwith @@ "Array constructor size must be int, but " 
             ^ A.str_of_datatype size_type ^ " provided"
 
   | A.MatrixLit(exprs_list_list) ->
     let env, s_matrix, elem_type, coldim = gen_s_matrix env exprs_list_list in
-    let _DEBUG_tmp = A.MatrixType(A.DataType(elem_type)) in
-    let _ = debug_print @@ "MATRIX " ^ (A.str_of_datatype _DEBUG_tmp) 
+    let mat_type = A.MatrixType(A.DataType(elem_type)) in
+    let _ = debug_print @@ "MATRIX " ^ (A.str_of_datatype mat_type) 
         ^ " cols= " ^ string_of_int coldim ^ " rows= " ^ string_of_int (List.length exprs_list_list) 
     in
-    env, S.MatrixLit(elem_type, s_matrix, coldim), A.MatrixType(A.DataType(elem_type))
+    env, S.MatrixLit(mat_type, s_matrix, coldim), mat_type
   
   (* constructs a matrix with row, col dim *)
   | A.MatrixCtor(elem_type, rowdim_ex, coldim_ex) -> (
@@ -285,7 +286,8 @@ let rec gen_s_expr env = function
         let env, s_rowdim_ex, rowdim_type = gen_s_expr env rowdim_ex in
         let env, s_coldim_ex, coldim_type = gen_s_expr env coldim_ex in
         if rowdim_type = A.DataType(T.Int) && coldim_type = A.DataType(T.Int) then
-          env, S.MatrixCtor(t, s_rowdim_ex, s_coldim_ex), A.MatrixType(elem_type)
+          let mat_type = A.MatrixType(elem_type) in
+          env, S.MatrixCtor(mat_type, s_rowdim_ex, s_coldim_ex), mat_type
         else
           failwith @@ "Matrix constructor row/column dimensions must be int/int, but " 
                 ^ A.str_of_datatype rowdim_type ^ "/"

@@ -103,9 +103,15 @@ let rec gen_expr = function
   | S.ArrayLit(elem_type, ex_list) ->
     "ARRAY TODO"
 
+  | S.ArrayCtor(elem_type, dim) ->
+    "CTOR TODO"
+
   | S.MatrixLit(elem_type, ex_list, coldim) ->
     "MATRIX TODO"
   
+  | S.MatrixCtor(elem_type, rowdim, coldim) ->
+    "CTOR TODO"
+
   (* Binary ops *)
   (* '+' used for matrix addition, '&' for array concatenation *)
   | S.Binop(expr1, op, expr2, optag) ->
@@ -208,7 +214,7 @@ let rec gen_expr = function
       exElem^ ") != " ^surr exArray^ ".end()"
     *)
     
-  | _ -> failwith "INTERNAL some expr not properly checked"
+  | _ -> fail_unhandle "expr"
 
 
 (*
