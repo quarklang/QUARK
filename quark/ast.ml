@@ -34,6 +34,7 @@ type unop =
   | Neg 
   | Not 
   | BitNot
+  | Transpose
 
 type postop = 
   | Dec 
@@ -151,6 +152,7 @@ let str_of_unop = function
 | Neg -> "-"
 | Not -> "not"
 | BitNot -> "~"
+| Transpose -> "transpose"
 | _ -> failwith "INTERNAL unhandled unop"
 
 let str_of_postop = function

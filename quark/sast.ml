@@ -11,6 +11,7 @@ type op_tag =
   | OpArrayConcat
   | OpStringConcat
   | OpMatrixKronecker
+  | OpMatrixTranspose
   | OpQuerySingleBit (* measure only a single bit, not a range *)
 
 type lvalue =

@@ -42,6 +42,7 @@
 %left DEF
 
 %right NOT BITNOT POWER UMINUS
+%left PRIME /* matrix tranpose */
 
 %nonassoc IFX
 %nonassoc ELSE
@@ -89,6 +90,7 @@ expr:
   | BITNOT expr             { Unop(BitNot, $2) }
   | MINUS expr %prec UMINUS { Unop(Neg, $2) }
   | NOT expr                { Unop(Not, $2) }
+  | expr PRIME              { Unop(Transpose, $1) }
 
   /* Arithmetic */
   | expr PLUS expr    { Binop($1, Add, $3) }
