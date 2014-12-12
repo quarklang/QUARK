@@ -604,9 +604,15 @@ let rec gen_s_expr env = function
     let fidstr = get_id func_id in
     if Builtin.is_print fidstr then
       (* 'print' built-in functions support any number of args *)
-      let s_ex_list = 
-        List.map (fun ex -> snd_3 @@ gen_s_expr env ex) ex_list in
-        env, S.FunctionCall(fidstr, s_ex_list), finfo.f_return
+      (* We keep a bool list of whether each arg is a matrix. For eigen prettyprint *)
+      let s_ex_list, is_matrix_list = 
+        List.fold_right ( (* fold right so we don't have to List.rev *)
+          fun ex (s_ex_list, is_matrix_list) -> 
+            let _, s_ex, ex_type = gen_s_expr env ex in
+            s_ex :: s_ex_list, (is_matrix ex_type) :: is_matrix_list
+        ) ex_list ([], [])
+      in
+      env, S.FunctionCall(fidstr, s_ex_list, is_matrix_list), finfo.f_return
     else (* non-special cases *)
     if finfo.f_defined then
       let f_args = finfo.f_args in
@@ -648,7 +654,7 @@ let rec gen_s_expr env = function
             failwith @@ "Arg #2 of built-in apply_oracle(): user-defined function " 
               ^ oracle_id ^" must have signature 'int " ^ oracle_id ^ "(int)'"
         in
-        env, S.FunctionCall(fidstr, s_ex_list), finfo.f_return
+        env, S.FunctionCall(fidstr, s_ex_list, []), finfo.f_return
       else
         failwith @@ "Function " ^fidstr^ " requires " ^ string_of_int farg_len
             ^ " arg but " ^ string_of_int actual_len ^ " provided"

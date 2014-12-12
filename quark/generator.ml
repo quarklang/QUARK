@@ -231,17 +231,18 @@ let rec gen_expr = function
     surr @@ gen_expr (S.Lval(lval)) ^" = "^ gen_expr rhs_ex
 
   (* Function calls *)
-  | S.FunctionCall(func_id, ex_list) -> 
+  | S.FunctionCall(func_id, ex_list, is_matrix_list) -> 
     (* handle print specially *)
     if Builtin.is_print func_id then
       if List.length ex_list = 0 then ""
       else
         let delim = " << " in
-        let cout_code = List.fold_left (
-          fun acc ex -> acc ^delim^ gen_expr ex
+        let cout_code = List.fold_left2 (
+          fun acc ex is_matrix -> acc ^delim^ gen_expr ex
+            ^ (if is_matrix then ".format(QuarkEigenIOFormat)" else "")
         ) 
         (* C++ prints 'true/false' instead of '1/0' *)
-        "std::cout << std::boolalpha << std::setprecision(6)" ex_list 
+        "std::cout << std::boolalpha << std::setprecision(6)" ex_list is_matrix_list
         in
         cout_code ^ if func_id = "print" then " << std::endl" else ""
 
