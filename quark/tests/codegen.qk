@@ -21,6 +21,7 @@ int mygate: qreg q, bool b;
 
 def int main:
 {
+    print(qft_mat(3), "\nshitty\n");
     qreg q = <| 10, 2 |>;
     hadamard(q);
     apply_oracle(q, "oracle_foo", 2);
