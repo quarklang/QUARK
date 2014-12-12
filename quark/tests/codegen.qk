@@ -24,7 +24,12 @@ def int main:
     qreg q = <| 10, 2 |>;
     hadamard(q);
     apply_oracle(q, "oracle_foo", 2);
-    fraction[10];
+    fraction[] fx = fraction[8];
+    fx[3] = 9$6;
+    fraction[] fy = fraction[3];
+    print(fx & fraction[10]);
+    print(15$10 in [2$3, 9$6]);
+
     complex[|] c = complex[| 10, 11 |];
     print(rowdim(c), " -> ", c);
     int[|][] imatarr;
