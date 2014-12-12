@@ -393,6 +393,10 @@ arr<span class="hljs-matrix">[<span class="hljs-number">1</span>]</span><span cl
 
 
 
+<pre class="prettyprint"><code class="language-matlab hljs ">int x = <span class="hljs-number">5</span>;
+<span class="hljs-keyword">if</span> x in <span class="hljs-matrix">[<span class="hljs-number">1</span>:<span class="hljs-number">10</span>]</span>:
+    <span class="hljs-comment">% statement here is executed</span></code></pre>
+
 <h4 id="void">void</h4>
 
 <p>Void is a type for a function that returns normally, but does not provide a result value to the caller.</p>
@@ -499,6 +503,8 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
   <td align="right">power</td>
 </tr>
 </tbody></table>
+
+
 
 
 <h4 id="concatenation">Concatenation</h4>
@@ -818,11 +824,15 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 
 <p>QUARK supports two types of iterators, array and range, for its for statements.</p>
 
+
+
 <h4 id="array-iterator">Array Iterator</h4>
 
 <p>An array iterator allows you to sweep a variable across an array, evaluating the inner statement with identifiers assigned to a new value before each iteration. The identifier after <code>for</code> is assigned to the value of each element of the array sequentially.</p>
 
 <p>The identifier may be declared ahead of time or within the for statement itself.</p>
+
+
 
 <pre class="prettyprint"><code class=" hljs matlab">int<span class="hljs-matrix">[]</span> arr = <span class="hljs-matrix">[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>]</span>;
 <span class="hljs-keyword">for</span> int <span class="hljs-built_in">i</span> in arr:
@@ -840,6 +850,8 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 
 <p>The identifier may be declared ahead of time or within the for statement itself.</p>
 
+
+
 <pre class="prettyprint"><code class=" hljs cs"><span class="hljs-keyword">int</span> i;
 <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>:<span class="hljs-number">10</span>]
 <span class="hljs-keyword">for</span> <span class="hljs-keyword">int</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>:<span class="hljs-number">10</span>:<span class="hljs-number">2</span>]</code></pre>
@@ -847,6 +859,8 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 <p>A range consists of three integers separated by colons <code>[start : stop : step]</code>. Start denotes the start of the range, stop denotes the exclusive end of a range, and step denotes the step size of the range. If the step and the last colon is excluded, the step is defaulted to 1. If the start value is excluded, it is defaulted to 0. </p>
 
 <p>The following are various ways of declaring ranges:</p>
+
+
 
 <pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-number">0</span>:<span class="hljs-number">5</span>:<span class="hljs-number">2</span> <span class="hljs-comment">% this gives us 0, 2, 4</span>
 :<span class="hljs-number">5</span> <span class="hljs-comment">% 0, 1, 2, 3, 4</span>
@@ -859,6 +873,8 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 <p>The <code>break</code> statement causes a while loop or for loop to terminate. </p>
 
 <p>The <code>continue</code> statement provides a way to jump back to the top of a loop earlier than normal; it may be used to bypass the remainder of a loop for an iteration.</p>
+
+
 
 <h3 id="functions">Functions</h3>
 
@@ -904,6 +920,8 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 <h3 id="grammar">Grammar</h3>
 
 <p>Below is the grammar for QUARK. Words in capital letters are tokens passed in from the lexer.</p>
+
+
 
 <pre class="prettyprint"><code class="language-ocaml hljs ">ident:
     ID { Ident($<span class="hljs-number">1</span>) }

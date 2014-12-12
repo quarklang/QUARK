@@ -209,6 +209,12 @@ The built-in `len` function returns an `int` representing the length of the arra
 
 Membership may be tested using the keyword `in`. 
 
+```matlab
+int x = 5;
+if x in [1:10]:
+	% statement here is executed
+```
+
 ####void
 Void is a type for a function that returns normally, but does not provide a result value to the caller.
 
