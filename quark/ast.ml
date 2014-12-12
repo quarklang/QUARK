@@ -73,6 +73,7 @@ and expr =
   | Lval of lvalue
   | Membership of expr * expr
   | FunctionCall of ident * expr list
+  | Tertiary of expr * expr * expr
 
 type decl =
   | PrimitiveDecl of datatype * ident

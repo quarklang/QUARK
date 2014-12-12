@@ -26,7 +26,7 @@
 %left IN 
 %right QUERY QUERY_UNREAL
 
-%left FRACTION
+%right IF THEN
 %left COMPLEX_SYM
 %left OR
 %left AND
@@ -135,6 +135,9 @@ expr:
 
   /* Membership testing with keyword 'in' */
   | expr IN expr    { Membership($1, $3) }
+
+  /* Python-style tertiary */
+  | expr IF expr ELSE expr   { Tertiary($1, $3, $5) }
 
   /* literals */
   | INT_LITERAL                                 { IntLit($1) }

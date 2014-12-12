@@ -39,6 +39,7 @@ and expr =
   | FunctionCall of string * expr list * bool list (* is_matrix, for pretty print *)
   | Lval of lvalue
   | Membership of expr * expr
+  | Tertiary of expr * expr * expr
 
 type decl =
   | AssigningDecl of A.datatype * string * expr
