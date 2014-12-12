@@ -21,6 +21,8 @@ int mygate: qreg q, bool b;
 
 def int main:
 {
+    print_noline(3$4 < 2); print_noline(1 >= 2$3); print_noline(7$9 < 11$13);
+
     print(qft_mat(3), "\nshitty\n");
     qreg q = <| 10, 2 |>;
     hadamard(q);
@@ -30,6 +32,7 @@ def int main:
     fraction[] fy = fraction[3];
     print(fx & fraction[10]);
     print(15$10 in [2$3, 9$6]);
+    print(1$4 == 10$20);
 
     complex[|] c = complex[| 10, 11 |];
     print(rowdim(c), " -> ", c);

@@ -335,8 +335,13 @@ let rec gen_s_expr env = function
           | T.Int,   T.Int 
           | T.Float, T.Float 
           | T.Int,   T.Float 
-          | T.Float, T.Int -> T.Bool, S.OpVerbatim
-          (* | T.Fraction, T.Fraction -> T.Bool *)
+          | T.Float, T.Int 
+          | T.Fraction, T.Fraction
+          | T.String, T.String -> T.Bool, S.OpVerbatim
+          | T.Int, T.Fraction
+          | T.Float, T.Fraction -> T.Bool, S.CastFraction1
+          | T.Fraction, T.Int
+          | T.Fraction, T.Float -> T.Bool, S.CastFraction2
           | t1, t2 -> failwith @@ err_msg op t1 t2
       in
       let binop_math op type1 type2 = 
