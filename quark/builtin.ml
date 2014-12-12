@@ -3,7 +3,7 @@ module A = Ast
 module T = Type
 
 (* system-reserved temporary variable prefix *)
-let forbidden_prefix = "_QUARK_TEMP_"
+let forbidden_prefix = "_QUARK_"
 
 let wrap basic_type = A.DataType(basic_type)
 
