@@ -23,10 +23,13 @@
 
 %right ASSIGN PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS BITAND_EQUALS
 
+%nonassoc IFX
+%nonassoc ELSE
+
 %left IN 
 %right QUERY QUERY_UNREAL
 
-%right IF THEN
+%right IF
 %left COMPLEX_SYM
 %left OR
 %left AND
@@ -43,9 +46,6 @@
 
 %right NOT BITNOT POWER UMINUS
 %left PRIME /* matrix tranpose */
-
-%nonassoc IFX
-%nonassoc ELSE
 
 %start top_level
 %type <Ast.statement list> top_level
