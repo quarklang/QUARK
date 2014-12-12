@@ -309,9 +309,105 @@ Assignment has right to left precedence.
 
 Operators within the same row share the same precedence. Higher rows indicate higher precedence.
 
-###Iterators
+###Statements
+Statements are the smallest components of a program used to express that an action is to be carried out. Statements are used for variable declarations and assignment, control flow, loops, function calls, and expressions. All statements end with a semicolon `;`. Statements are used within blocks. The following are examples of statements and are by no means exhaustive:
+
+```
+string hello = "hello world";
+int x = 10;
+if x > 5
+foo(4);
+while x != true
+for x in [1:10]
+4 + 6
+qreg q0 = <| nbit * 2, 0 |>;
+```
+
+###Blocks 
+A block is defined to be inside curly braces `{ }`, which may include empty statements and variable declarations. 
+
+A block looks like: 
+```
+{
+	% statements here
+}
+```
+
+###Return Statement
+The return keyword accepts an expression, and exits out of the nearest calling block or smallest containing function.
+
+###If else Statement
+If statements take expressions that reduce to a boolean, and followed by a colon `:` and a statement block. If the following statement is only one line, curly braces are unnecessary. 
+
+```
+if p == 1:
+	return a;
+		
+if (3 > 1):
+{
+	% multiple statements
+}
+```
+
+###While Loop
+A while loop is of the form:
+```
+while(condition): 
+{
+	% statement
+}
+```
+As with `if else` statements, if the following statement is only one line, curly braces `{}` are unnecessary.
+
+```
+while exp_mod(b, i, M) != 1:
+	i ++;
+```
+
+The condition of the while loop may not be empty.
+
+###For Statement
+QUARK supports two types of iterators, array and range.
+
+####Array Iterator
+An array iterator allows you to sweep a variable across an array, evaluating the inner statement with identifiers assigned to a new value before each iteration. The identifier after `for` is assigned to the value of each element of the array sequentially.
+
+```
+int[] arr = [1,2,3];
+for int i in arr:
+	print i;
+
+% 1
+% 2
+% 3
+```
+
+####Range Iterator
+A range iterator allows you to sweep a variable across an array, evaluating the inner statement with identifiers assigned to a new value before each iteration. The identifier after `for` is assigned to each integer in the range.
+
+The identifier may be declared ahead of time or within the for statement itself.
+
+```
+int i;
 for i in [1:10]
-for int i in [1:10]
-for int i in array_of_int
+for int i in [1:10:2]
+```
+
+A range consists of three integers separated by colons:
+`[start : stop : step]`. Start denotes the start of the range, stop denotes the exclusive end of a range, and step denotes the step size of the range. If the step and the last colon is excluded, the step is defaulted to 1. If the start value is excluded, it is defaulted to 0. The following are various ways of declaring ranges:
+
+```matlab
+0:5:2 % this gives us 0, 2, 4
+:5 % 0, 1, 2, 3, 4
+1:3 % 1, 2
+```
+
+###Break and Continue
+The break statement causes a while loop or for loop to terminate. 
+
+The continue statement provides a way to jump back to the top of a loop earlier than normal; it may be used to bypass the remainder of a loop for an iteration.
+
+###Functions
+####Function Declaration
 
 

@@ -88,7 +88,21 @@
 <li><a href="#operator-precedence-and-associativity">Operator Precedence and Associativity</a></li>
 </ul>
 </li>
-<li><a href="#iterators">Iterators</a></li>
+<li><a href="#statements">Statements</a></li>
+<li><a href="#blocks">Blocks</a></li>
+<li><a href="#return-statement">Return Statement</a></li>
+<li><a href="#if-else-statement">If else Statement</a></li>
+<li><a href="#while-loop">While Loop</a></li>
+<li><a href="#for-statement">For Statement</a><ul>
+<li><a href="#array-iterator">Array Iterator</a></li>
+<li><a href="#range-iterator">Range Iterator</a></li>
+</ul>
+</li>
+<li><a href="#break-and-continue">Break and Continue</a></li>
+<li><a href="#functions">Functions</a><ul>
+<li><a href="#function-declaration">Function Declaration</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -684,9 +698,121 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
 
 <p>Operators within the same row share the same precedence. Higher rows indicate higher precedence.</p>
 
-<h3 id="iterators">Iterators</h3>
 
-<p>for i in [1:10] <br>
-for int i in [1:10] <br>
-for int i in array_of_int</p></div></body>
+
+<h3 id="statements">Statements</h3>
+
+<p>Statements are the smallest components of a program used to express that an action is to be carried out. Statements are used for variable declarations and assignment, control flow, loops, function calls, and expressions. All statements end with a semicolon <code>;</code>. Statements are used within blocks. The following are examples of statements and are by no means exhaustive:</p>
+
+<pre class="prettyprint"><code class=" hljs cs"><span class="hljs-keyword">string</span> hello = <span class="hljs-string">"hello world"</span>;
+<span class="hljs-keyword">int</span> x = <span class="hljs-number">10</span>;
+<span class="hljs-keyword">if</span> x &gt; <span class="hljs-number">5</span>
+foo(<span class="hljs-number">4</span>);
+<span class="hljs-keyword">while</span> x != <span class="hljs-keyword">true</span>
+<span class="hljs-keyword">for</span> x <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>:<span class="hljs-number">10</span>]
+<span class="hljs-number">4</span> + <span class="hljs-number">6</span>
+qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-number">0</span> |&gt;;</code></pre>
+
+<h3 id="blocks">Blocks</h3>
+
+<p>A block is defined to be inside curly braces <code>{ }</code>, which may include empty statements and variable declarations. </p>
+
+<p>A block looks like: </p>
+
+
+
+<pre class="prettyprint"><code class=" hljs haml">{
+<span class="hljs-tag">    %</span> statements here
+}</code></pre>
+
+<h3 id="return-statement">Return Statement</h3>
+
+<p>The return keyword accepts an expression, and exits out of the nearest calling block or smallest containing function.</p>
+
+
+
+<h3 id="if-else-statement">If else Statement</h3>
+
+<p>If statements take expressions that reduce to a boolean, and followed by a colon <code>:</code> and a statement block. If the following statement is only one line, curly braces are unnecessary. </p>
+
+<pre class="prettyprint"><code class=" hljs matlab"><span class="hljs-keyword">if</span> p == <span class="hljs-number">1</span>:
+    <span class="hljs-keyword">return</span> a;
+
+<span class="hljs-keyword">if</span> (<span class="hljs-number">3</span> &gt; <span class="hljs-number">1</span>):
+<span class="hljs-cell">{
+    % multiple statements
+}</span></code></pre>
+
+
+
+<h3 id="while-loop">While Loop</h3>
+
+<p>A while loop is of the form:</p>
+
+
+
+<pre class="prettyprint"><code class=" hljs mel"><span class="hljs-keyword">while</span>(<span class="hljs-keyword">condition</span>): 
+{
+    % statement
+}</code></pre>
+
+<p>As with <code>if else</code> statements, if the following statement is only one line, curly braces <code>{}</code> are unnecessary.</p>
+
+
+
+<pre class="prettyprint"><code class=" hljs matlab"><span class="hljs-keyword">while</span> exp_mod(b, <span class="hljs-built_in">i</span>, M) != <span class="hljs-number">1</span>:
+    <span class="hljs-built_in">i</span> ++;</code></pre>
+
+<p>The condition of the while loop may not be empty.</p>
+
+<h3 id="for-statement">For Statement</h3>
+
+<p>QUARK supports two types of iterators, array and range.</p>
+
+<h4 id="array-iterator">Array Iterator</h4>
+
+<p>An array iterator allows you to sweep a variable across an array, evaluating the inner statement with identifiers assigned to a new value before each iteration. The identifier after <code>for</code> is assigned to the value of each element of the array sequentially.</p>
+
+<pre class="prettyprint"><code class=" hljs matlab">int<span class="hljs-matrix">[]</span> arr = <span class="hljs-matrix">[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>]</span>;
+<span class="hljs-keyword">for</span> int <span class="hljs-built_in">i</span> in arr:
+    print <span class="hljs-built_in">i</span>;
+
+<span class="hljs-comment">% 1</span>
+<span class="hljs-comment">% 2</span>
+<span class="hljs-comment">% 3</span></code></pre>
+
+<h4 id="range-iterator">Range Iterator</h4>
+
+<p>A range iterator allows you to sweep a variable across an array, evaluating the inner statement with identifiers assigned to a new value before each iteration. The identifier after <code>for</code> is assigned to each integer in the range.</p>
+
+<p>The identifier may be declared ahead of time or within the for statement itself.</p>
+
+<pre class="prettyprint"><code class=" hljs cs"><span class="hljs-keyword">int</span> i;
+<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>:<span class="hljs-number">10</span>]
+<span class="hljs-keyword">for</span> <span class="hljs-keyword">int</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>:<span class="hljs-number">10</span>:<span class="hljs-number">2</span>]</code></pre>
+
+<p>A range consists of three integers separated by colons: <br>
+<code>[start : stop : step]</code>. Start denotes the start of the range, stop denotes the exclusive end of a range, and step denotes the step size of the range. If the step and the last colon is excluded, the step is defaulted to 1. If the start value is excluded, it is defaulted to 0. The following are various ways of declaring ranges:</p>
+
+
+
+<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-number">0</span>:<span class="hljs-number">5</span>:<span class="hljs-number">2</span> <span class="hljs-comment">% this gives us 0, 2, 4</span>
+:<span class="hljs-number">5</span> <span class="hljs-comment">% 0, 1, 2, 3, 4</span>
+<span class="hljs-number">1</span>:<span class="hljs-number">3</span> <span class="hljs-comment">% 1, 2</span></code></pre>
+
+
+
+<h3 id="break-and-continue">Break and Continue</h3>
+
+<p>The break statement causes a while loop or for loop to terminate. </p>
+
+<p>The continue statement provides a way to jump back to the top of a loop earlier than normal; it may be used to bypass the remainder of a loop for an iteration.</p>
+
+
+
+<h3 id="functions">Functions</h3>
+
+
+
+<h4 id="function-declaration">Function Declaration</h4></div></body>
 </html>
