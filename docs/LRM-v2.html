@@ -68,9 +68,17 @@
 <li><a href="#qreg">qreg</a></li>
 <li><a href="#matrix">matrix</a></li>
 <li><a href="#array">array</a></li>
+<li><a href="#void">void</a></li>
 </ul>
 </li>
-<li><a href="#declarations">Declarations</a></li>
+<li><a href="#function-types">Function types</a></li>
+<li><a href="#declarations">Declarations</a><ul>
+<li><a href="#declaring-a-variable">Declaring a Variable</a></li>
+<li><a href="#declaring-an-array">Declaring an Array</a></li>
+<li><a href="#declaring-a-matrix">Declaring a Matrix</a></li>
+</ul>
+</li>
+<li><a href="#operators">Operators</a></li>
 <li><a href="#iterators">Iterators</a></li>
 </ul>
 </li>
@@ -306,22 +314,85 @@ complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span cl
 
 <h4 id="array">array</h4>
 
-<p>QUARK allows arrays of any of the above data types. Arrays are variable length and are arbitrarily dimensional. Array indices can be accessed with an integer such as:</p>
+<p>QUARK allows arrays of any of the above data types. Arrays are of variable length and are arbitrarily dimensional. </p>
 
-<pre class="prettyprint"><code class=" hljs css"><span class="hljs-tag">arr</span><span class="hljs-attr_selector">[0]</span>; </code></pre>
+<p>Arrays can be initialized using a comma-separated list delimited by square brackets [ ]. Additionally, arrays can be declared with a size to create an array of uninitialized elements. </p>
+
+<p>Arrays may be concatenated with the <code>&amp;</code> operator. </p>
+
+
+
+<pre class="prettyprint"><code class=" hljs lua">int[<span class="hljs-number">5</span>]; % gives us [<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]
+int[] a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]; % array initialization
+int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="hljs-number">2</span>-d array
+
+[<span class="hljs-number">11</span>, <span class="hljs-number">22</span>, <span class="hljs-number">33</span>] &amp; int[<span class="hljs-number">3</span>]
+% gives us [<span class="hljs-number">11</span>, <span class="hljs-number">22</span>, <span class="hljs-number">33</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>]</code></pre>
+
+<p>Array indices can be accessed using the square bracket notation with an integer such as:</p>
+
+<pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">int[] arr </span>=<span class="hljs-string"> [0, 1, 2];
+arr[0]; </span></code></pre>
 
 <p>or</p>
 
+<pre class="prettyprint"><code class=" hljs cs"><span class="hljs-keyword">int</span>[] arr = [<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>];
+<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>;
+arr[i];</code></pre>
+
+<p>Indices of multidimensional arrays may be accessed by separating the dimensional index numbers by commas:</p>
+
+<pre class="prettyprint"><code class=" hljs markdown">int[][] arr = [[0,1,2],[3,4,5]]
+arr[<span class="hljs-link_label">1</span>][<span class="hljs-link_reference">1</span>]; % accesses 4</code></pre>
+
+<p>The built-in <code>len</code> function returns an <code>int</code> representing the length of the array.</p>
+
+<h4 id="void">void</h4>
+
+<p>Void is a type for a function that returns normally, but does not provide a result value to the caller.</p>
 
 
-<pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">int i </span>=<span class="hljs-string"> 0;
-arr[i];</span></code></pre>
 
+<h3 id="function-types">Function types</h3>
 
+<p>Functions take in zero or more variables of primitive or array types and optionally return a variable of primitive or array type. A function declaration always begins with <code>def</code>, the return type of the function, a colon <code>:</code>, and a list of formal parameters which may be empty.</p>
+
+<pre class="prettyprint"><code class=" hljs python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">void</span> <span class="hljs-title">main</span>:</span> int x
+{
+    % statement
+}</code></pre>
 
 <h3 id="declarations">Declarations</h3>
 
 
+
+<h4 id="declaring-a-variable">Declaring a Variable</h4>
+
+<p>Variables can be defined within individual functions or in the global scope. Variables may be declared and then defined, or declared and defined simultaneously. An expression to which a value may be assigned is called an LValue.</p>
+
+
+
+<pre class="prettyprint"><code class=" hljs perl"><span class="hljs-keyword">int</span> <span class="hljs-keyword">x</span>; % definition
+<span class="hljs-keyword">x</span> = <span class="hljs-number">5</span>; % declaration
+<span class="hljs-keyword">int</span> <span class="hljs-keyword">y</span> = <span class="hljs-number">6</span>; % definition <span class="hljs-keyword">and</span> declaration</code></pre>
+
+<p>x and y are LValues. LValues are named as such because they can appear on the left side of an assignment (though they may also appear on the right side).</p>
+
+
+
+<h4 id="declaring-an-array">Declaring an Array</h4>
+
+<p>As previously shown, arrays can be multidimensional, and may be of variable length. Arrays may be declared on their own with a size to get an uninitialized array of the given size. They can also be initialized with values upon declaration.</p>
+
+
+
+<pre class="prettyprint"><code class=" hljs lua">int[<span class="hljs-number">5</span>]; % gives us [<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]
+int[] a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]; % array initialization
+int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="hljs-number">2</span>-d array</code></pre>
+
+<h4 id="declaring-a-matrix">Declaring a Matrix</h4>
+
+<h3 id="operators">Operators</h3>
 
 <h3 id="iterators">Iterators</h3>
 

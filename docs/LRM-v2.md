@@ -148,17 +148,81 @@ QUARK allows you to create matrices; a `matrix` uses a special bracket notation 
 `[| r00, r01; r10, r11; r20, r21 |]`
 
 ####array
-QUARK allows arrays of any of the above data types. Arrays are variable length and are arbitrarily dimensional. Array indices can be accessed with an integer such as:
+QUARK allows arrays of any of the above data types. Arrays are of variable length and are arbitrarily dimensional. 
+
+Arrays can be initialized using a comma-separated list delimited by square brackets [ ]. Additionally, arrays can be declared with a size to create an array of uninitialized elements. 
+
+Arrays may be concatenated with the `&` operator. 
+
 ```
+int[5]; % gives us [0,0,0,0,0]
+int[] a = [1, 2, 3]; % array initialization
+int[][] b = [[1,2,3], [4,5,6]]; % 2-d array
+
+[11, 22, 33] & int[3]
+% gives us [11, 22, 33, 0, 0, 0]
+```
+
+Array indices can be accessed using the square bracket notation with an integer such as:
+```
+int[] arr = [0, 1, 2];
 arr[0]; 
 ```
 or
 ```
+int[] arr = [0, 1, 2];
 int i = 0;
 arr[i];
 ```
 
+Indices of multidimensional arrays may be accessed by separating the dimensional index numbers by commas:
+
+```
+int[][] arr = [[0,1,2],[3,4,5]]
+arr[1][1]; % accesses 4
+```
+
+The built-in `len` function returns an `int` representing the length of the array.
+
+####void
+Void is a type for a function that returns normally, but does not provide a result value to the caller.
+
+###Function types
+Functions take in zero or more variables of primitive or array types and optionally return a variable of primitive or array type. A function declaration always begins with `def`, the return type of the function, a colon `:`, and a list of formal parameters which may be empty.
+
+```
+def void main: int x
+{
+	% statement
+}
+```
+
 ###Declarations
+
+####Declaring a Variable
+Variables can be defined within individual functions or in the global scope. Variables may be declared and then defined, or declared and defined simultaneously. An expression to which a value may be assigned is called an LValue.
+
+```
+int x; % definition
+x = 5; % declaration
+int y = 6; % definition and declaration
+```
+x and y are LValues. LValues are named as such because they can appear on the left side of an assignment (though they may also appear on the right side).
+
+####Declaring an Array
+As previously shown, arrays can be multidimensional, and may be of variable length. Arrays may be declared on their own with a size to get an uninitialized array of the given size. They can also be initialized with values upon declaration.
+
+```
+int[5]; % gives us [0,0,0,0,0]
+int[] a = [1, 2, 3]; % array initialization
+int[][] b = [[1,2,3], [4,5,6]]; % 2-d array
+```
+
+####Declaring a Matrix
+
+
+
+###Operators
 
 ###Iterators
 for i in [1:10]
