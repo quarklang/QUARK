@@ -72,6 +72,11 @@ The following identifiers are reserved for use as keywords, and may not be used 
 > not
 > or
 
+####Reserved Prefix
+There is only one reserved prefix in QUARK:
+
+`_QUARK_`
+
 ###Punctuation
 **Parenthesis** -- Expressions can include expressions inside parenthesis. Parenthesis can also indicate a function call.
 
@@ -165,7 +170,7 @@ q ? [2:10];  % measures qubit 2 to 10
 ####matrix
 QUARK allows you to create matrices; a `matrix` uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only `int`, `float`, or `complex`. Matrix elements may be accessed with a square bracket notation by separating the column and row index numbers by commas.
 
-```
+```matlab
 float[[]] mat = [| 1.2, 3.4; 5.6, 7.8 |];
 mat[2, 1];
 ```
@@ -177,7 +182,7 @@ Arrays can be initialized using a comma-separated list delimited by square brack
 
 Arrays may be concatenated with the `&` operator as long as there is a dimension and type match. 
 
-```
+```matlab
 int[5]; % gives us [0,0,0,0,0]
 int[] a = [1, 2, 3]; % array initialization
 int[][] b = [[1,2,3], [4,5,6]]; % 2-d array
@@ -187,6 +192,7 @@ int[][] b = [[1,2,3], [4,5,6]]; % 2-d array
 ```
 
 Array indices can be accessed using the square bracket notation with an integer such as:
+
 ```
 int[] arr = [0, 1, 2];
 arr[0]; 
@@ -474,7 +480,42 @@ def int addition: int x, int y
 }
 ```
 
+###Casting
+QUARK does not allow explicit type casting.
+
 ###Overloading
+QUARK keeps separate symbol tables for functions and types, and as such the same identifier may be used as a variable and a function at the same time. 
+
+Built-in functions are overridable because they are not stored in the function table, with the exception of the following built-in functions:
+
+> print  (with \n)
+> print_noline  
+> apply_oracle
+
+Otherwise, function overloading by itself is not supported.
+
+###Scoping
+In QUARK, there are both global and local scopes. QUARK uses block scoping. A block is a section of code contained by a function, a conditional (if/while), or looping construct (for). Variables defined in the global scope can be used in any function, as well as in any block within that function.  Each nested block creates a new scope, and variables declared in the new scope supersede variables declared in higher scopes.
+
+Below is an example of the subtleties of QUARK's scoping rules:
+
+```matlab
+int i = 1000;
+for i in [0:7:2]:
+{
+	% statement
+}
+
+% i changed.
+
+int i = 1000;
+for int i in [0:7]:
+{
+	% statement
+}
+    
+i; % still 1000
+```
 
 ###Grammar
 

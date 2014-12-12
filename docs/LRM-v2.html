@@ -53,7 +53,10 @@
 <li><a href="#whitespace">Whitespace</a></li>
 <li><a href="#tokens">Tokens</a></li>
 <li><a href="#identifiers">Identifiers</a></li>
-<li><a href="#keywords">Keywords</a></li>
+<li><a href="#keywords">Keywords</a><ul>
+<li><a href="#reserved-prefix">Reserved Prefix</a></li>
+</ul>
+</li>
 <li><a href="#punctuation">Punctuation</a></li>
 <li><a href="#escape-sequences">Escape Sequences</a></li>
 <li><a href="#data-types">Data Types</a><ul>
@@ -101,7 +104,9 @@
 <li><a href="#function-declaration">Function Declaration</a></li>
 </ul>
 </li>
+<li><a href="#casting">Casting</a></li>
 <li><a href="#overloading">Overloading</a></li>
+<li><a href="#scoping">Scoping</a></li>
 <li><a href="#grammar">Grammar</a></li>
 </ul>
 </li>
@@ -111,8 +116,6 @@
 </div>
 </div>
 </p>
-
-
 
 <h3 id="introduction">Introduction</h3>
 
@@ -200,6 +203,14 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
   not <br>
   or</p>
 </blockquote>
+
+
+
+<h4 id="reserved-prefix">Reserved Prefix</h4>
+
+<p>There is only one reserved prefix in QUARK:</p>
+
+<p><code>_QUARK_</code></p>
 
 <h3 id="punctuation">Punctuation</h3>
 
@@ -343,10 +354,8 @@ qreg q = &lt;|<span class="hljs-number">10</span>, <span class="hljs-number">3</
 
 
 
-<pre class="prettyprint"><code class=" hljs lua">float<span class="hljs-string">[[]]</span> mat = [| <span class="hljs-number">1.2</span>, <span class="hljs-number">3.4</span>; <span class="hljs-number">5.6</span>, <span class="hljs-number">7.8</span> |];
-mat[<span class="hljs-number">2</span>, <span class="hljs-number">1</span>];</code></pre>
-
-
+<pre class="prettyprint"><code class="language-matlab hljs ">float<span class="hljs-matrix">[[]</span>] mat = <span class="hljs-matrix">[| <span class="hljs-number">1.2</span>, <span class="hljs-number">3.4</span>; <span class="hljs-number">5.6</span>, <span class="hljs-number">7.8</span> |]</span>;
+mat<span class="hljs-matrix">[<span class="hljs-number">2</span>, <span class="hljs-number">1</span>]</span>;</code></pre>
 
 <h4 id="array">array</h4>
 
@@ -358,16 +367,14 @@ mat[<span class="hljs-number">2</span>, <span class="hljs-number">1</span>];</co
 
 
 
-<pre class="prettyprint"><code class=" hljs lua">int[<span class="hljs-number">5</span>]; % gives us [<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]
-int[] a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]; % array initialization
-int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="hljs-number">2</span>-d array
+<pre class="prettyprint"><code class="language-matlab hljs ">int<span class="hljs-matrix">[<span class="hljs-number">5</span>]</span>; <span class="hljs-comment">% gives us [0,0,0,0,0]</span>
+int<span class="hljs-matrix">[]</span> a = <span class="hljs-matrix">[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]</span>; <span class="hljs-comment">% array initialization</span>
+int<span class="hljs-matrix">[]</span><span class="hljs-matrix">[]</span> b = <span class="hljs-matrix">[[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>]</span>, <span class="hljs-matrix">[<span class="hljs-number">4</span>,<span class="hljs-number">5</span>,<span class="hljs-number">6</span>]</span>]; <span class="hljs-comment">% 2-d array</span>
 
-[<span class="hljs-number">11</span>, <span class="hljs-number">22</span>, <span class="hljs-number">33</span>] &amp; int[<span class="hljs-number">3</span>]
-% gives us [<span class="hljs-number">11</span>, <span class="hljs-number">22</span>, <span class="hljs-number">33</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>]</code></pre>
+<span class="hljs-matrix">[<span class="hljs-number">11</span>, <span class="hljs-number">22</span>, <span class="hljs-number">33</span>]</span> &amp; int<span class="hljs-matrix">[<span class="hljs-number">3</span>]</span>
+<span class="hljs-comment">% gives us [11, 22, 33, 0, 0, 0]</span></code></pre>
 
 <p>Array indices can be accessed using the square bracket notation with an integer such as:</p>
-
-
 
 <pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">int[] arr </span>=<span class="hljs-string"> [0, 1, 2];
 arr[0]; </span></code></pre>
@@ -913,9 +920,45 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 
 
 
+<h3 id="casting">Casting</h3>
+
+<p>QUARK does not allow explicit type casting.</p>
+
 <h3 id="overloading">Overloading</h3>
 
+<p>QUARK keeps separate symbol tables for functions and types, and as such the same identifier may be used as a variable and a function at the same time. </p>
 
+<p>Built-in functions are overridable because they are not stored in the function table, with the exception of the following built-in functions:</p>
+
+<blockquote>
+  <p>print  (with \n) <br>
+  print_noline <br>
+  apply_oracle</p>
+</blockquote>
+
+<p>Otherwise, function overloading by itself is not supported.</p>
+
+<h3 id="scoping">Scoping</h3>
+
+<p>In QUARK, there are both global and local scopes. QUARK uses block scoping. A block is a section of code contained by a function, a conditional (if/while), or looping construct (for). Variables defined in the global scope can be used in any function, as well as in any block within that function.  Each nested block creates a new scope, and variables declared in the new scope supersede variables declared in higher scopes.</p>
+
+<p>Below is an example of the subtleties of QUARK’s scoping rules:</p>
+
+<pre class="prettyprint"><code class="language-matlab hljs ">int <span class="hljs-built_in">i</span> = <span class="hljs-number">1000</span>;
+<span class="hljs-keyword">for</span> <span class="hljs-built_in">i</span> in <span class="hljs-matrix">[<span class="hljs-number">0</span>:<span class="hljs-number">7</span>:<span class="hljs-number">2</span>]</span>:
+<span class="hljs-cell">{
+    % statement
+}</span>
+
+<span class="hljs-comment">% i changed.</span>
+
+int <span class="hljs-built_in">i</span> = <span class="hljs-number">1000</span>;
+<span class="hljs-keyword">for</span> int <span class="hljs-built_in">i</span> in <span class="hljs-matrix">[<span class="hljs-number">0</span>:<span class="hljs-number">7</span>]</span>:
+<span class="hljs-cell">{
+    % statement
+}</span>
+
+<span class="hljs-built_in">i</span>; <span class="hljs-comment">% still 1000</span></code></pre>
 
 <h3 id="grammar">Grammar</h3>
 
