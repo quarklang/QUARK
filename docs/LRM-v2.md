@@ -143,16 +143,19 @@ qreg q = <| 1, 1 |>;
 ```
 
 ####matrix
-QUARK allows you to create matrices; a `matrix` uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only `int`, `float`, or `complex`.
+QUARK allows you to create matrices; a `matrix` uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only `int`, `float`, or `complex`. Matrix elements may be accessed with a square bracket notation by separating the column and row index numbers by commas.
 
-`[| r00, r01; r10, r11; r20, r21 |]`
+```
+float[[]] mat = [| 1.2, 3.4; 5.6, 7.8 |];
+mat[2, 1];
+```
 
 ####array
 QUARK allows arrays of any of the above data types. Arrays are of variable length and are arbitrarily dimensional. 
 
 Arrays can be initialized using a comma-separated list delimited by square brackets [ ]. Additionally, arrays can be declared with a size to create an array of uninitialized elements. 
 
-Arrays may be concatenated with the `&` operator. 
+Arrays may be concatenated with the `&` operator as long as there is a dimension and type match. 
 
 ```
 int[5]; % gives us [0,0,0,0,0]
@@ -183,6 +186,8 @@ arr[1][1]; % accesses 4
 ```
 
 The built-in `len` function returns an `int` representing the length of the array.
+
+Membership may be tested using the keyword `in`. 
 
 ####void
 Void is a type for a function that returns normally, but does not provide a result value to the caller.
@@ -219,10 +224,90 @@ int[][] b = [[1,2,3], [4,5,6]]; % 2-d array
 ```
 
 ####Declaring a Matrix
+A matrix declaration uses the special notation of piped square brackets.
 
-
+```
+float[|] floatmat = [| 1.2, 3.4; 5.6, 7.8 |];
+```
 
 ###Operators
+
+####Arithmetic
+
+|  	 Operator	 |         	 |
+|:---------- |------------------:|
+| `+`		 | addition 		 |
+| `-` 		 | subtraction 			 |
+| `++`		 | unary increment by one |
+| `--`		 | unary decrement by one |
+| `/` 		 | division				 |
+| `*`		 | multiplication
+| `mod`		 | modulo |
+| `**`		 | power
+
+####Concatenation
+|  	 Operator	 |         	 |
+|:---------- |------------------:|
+| `&`		 | String and array concatenation |
+
+####Assignment
+|  	 Operator	 |         	 |
+|:---------- |------------------:|
+| `=`		 	 | assigns value or right hand side to left hand side		 |
+| `+=`		 | addition assignment |
+| `-=` 		 | subtraction assignment |
+| `*=` 		 | multiplication assignment |
+| `/=`		 | division assignment |
+| `&=`		 | bitand assignment |
+
+Assignment has right to left precedence.
+
+####Logical
+|  	Operator	 |         	 |
+|:---------- |------------------:|
+| `!=`		 | not equal to |
+| `==` 		 | equal to |
+| `>`		 | greater than |
+| `>=`		 | greater than or equal to |
+| `<`		 | less than |
+| `<=`		 | less than or equal to |
+| `and`		 | unary and |
+| `or`		 | unary or |
+| `not`		 | unary not |
+
+####Bitwise Logical / Unary
+|  	 Operator	 |         	 |
+|:---------- |------------------:|
+| `~`		 | Bitwise not |
+| `&`		 | Bitwise and |
+| `^`		 | Bitwise xor |
+| <code>&#124;</code> | Bitwise or |
+| `<<`		 | Bitwise left shift |
+| `>>`		 | Bitwise right shift |			
+
+####Quantum 
+|  	 Operator	 |         	 |
+|:---------- |------------------:|
+| `?`		 | quantum measurement query
+
+####Operator Precedence and Associativity 
+|  	 Operator	 |  Associativity    |
+|:---------- |------------------:|
+| `*` `/` `mod` | left  |
+| `+` `-`		| left |
+| `>>` `<<`		| left |
+| `>` `>=` `<` `<=` | left |
+| `==` `!=`			| left |
+| `&`				| left  |
+| `^`				| left  |
+| <code>&#124;</code>| left |
+| `and`				| left |
+| `or`				| left |
+| `?`				| right |
+| `in`				| left |
+| `=` `+=` `-=` `*=` `/=` `&=` | right |
+
+Operators within the same row share the same precedence. Higher rows indicate higher precedence.
 
 ###Iterators
 for i in [1:10]

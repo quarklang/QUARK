@@ -78,7 +78,16 @@
 <li><a href="#declaring-a-matrix">Declaring a Matrix</a></li>
 </ul>
 </li>
-<li><a href="#operators">Operators</a></li>
+<li><a href="#operators">Operators</a><ul>
+<li><a href="#arithmetic">Arithmetic</a></li>
+<li><a href="#concatenation">Concatenation</a></li>
+<li><a href="#assignment">Assignment</a></li>
+<li><a href="#logical">Logical</a></li>
+<li><a href="#bitwise-logical-unary">Bitwise Logical / Unary</a></li>
+<li><a href="#quantum">Quantum</a></li>
+<li><a href="#operator-precedence-and-associativity">Operator Precedence and Associativity</a></li>
+</ul>
+</li>
 <li><a href="#iterators">Iterators</a></li>
 </ul>
 </li>
@@ -306,11 +315,10 @@ complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span cl
 
 <h4 id="matrix">matrix</h4>
 
-<p>QUARK allows you to create matrices; a <code>matrix</code> uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only <code>int</code>, <code>float</code>, or <code>complex</code>.</p>
+<p>QUARK allows you to create matrices; a <code>matrix</code> uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only <code>int</code>, <code>float</code>, or <code>complex</code>. Matrix elements may be accessed with a square bracket notation by separating the column and row index numbers by commas.</p>
 
-<p><code>[| r00, r01; r10, r11; r20, r21 |]</code></p>
-
-
+<pre class="prettyprint"><code class=" hljs lua">float<span class="hljs-string">[[]]</span> mat = [| <span class="hljs-number">1.2</span>, <span class="hljs-number">3.4</span>; <span class="hljs-number">5.6</span>, <span class="hljs-number">7.8</span> |];
+mat[<span class="hljs-number">2</span>, <span class="hljs-number">1</span>];</code></pre>
 
 <h4 id="array">array</h4>
 
@@ -318,9 +326,7 @@ complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span cl
 
 <p>Arrays can be initialized using a comma-separated list delimited by square brackets [ ]. Additionally, arrays can be declared with a size to create an array of uninitialized elements. </p>
 
-<p>Arrays may be concatenated with the <code>&amp;</code> operator. </p>
-
-
+<p>Arrays may be concatenated with the <code>&amp;</code> operator as long as there is a dimension and type match. </p>
 
 <pre class="prettyprint"><code class=" hljs lua">int[<span class="hljs-number">5</span>]; % gives us [<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]
 int[] a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]; % array initialization
@@ -331,10 +337,14 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
 
 <p>Array indices can be accessed using the square bracket notation with an integer such as:</p>
 
+
+
 <pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">int[] arr </span>=<span class="hljs-string"> [0, 1, 2];
 arr[0]; </span></code></pre>
 
 <p>or</p>
+
+
 
 <pre class="prettyprint"><code class=" hljs cs"><span class="hljs-keyword">int</span>[] arr = [<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>];
 <span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>;
@@ -342,10 +352,14 @@ arr[i];</code></pre>
 
 <p>Indices of multidimensional arrays may be accessed by separating the dimensional index numbers by commas:</p>
 
+
+
 <pre class="prettyprint"><code class=" hljs markdown">int[][] arr = [[0,1,2],[3,4,5]]
 arr[<span class="hljs-link_label">1</span>][<span class="hljs-link_reference">1</span>]; % accesses 4</code></pre>
 
 <p>The built-in <code>len</code> function returns an <code>int</code> representing the length of the array.</p>
+
+<p>Membership may be tested using the keyword <code>in</code>. </p>
 
 <h4 id="void">void</h4>
 
@@ -357,10 +371,14 @@ arr[<span class="hljs-link_label">1</span>][<span class="hljs-link_reference">1<
 
 <p>Functions take in zero or more variables of primitive or array types and optionally return a variable of primitive or array type. A function declaration always begins with <code>def</code>, the return type of the function, a colon <code>:</code>, and a list of formal parameters which may be empty.</p>
 
+
+
 <pre class="prettyprint"><code class=" hljs python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">void</span> <span class="hljs-title">main</span>:</span> int x
 {
     % statement
 }</code></pre>
+
+
 
 <h3 id="declarations">Declarations</h3>
 
@@ -390,9 +408,281 @@ arr[<span class="hljs-link_label">1</span>][<span class="hljs-link_reference">1<
 int[] a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]; % array initialization
 int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="hljs-number">2</span>-d array</code></pre>
 
+
+
 <h4 id="declaring-a-matrix">Declaring a Matrix</h4>
 
+<p>A matrix declaration uses the special notation of piped square brackets.</p>
+
+<pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">float[|] floatmat </span>=<span class="hljs-string"> [| 1.2, 3.4; 5.6, 7.8 |];</span></code></pre>
+
 <h3 id="operators">Operators</h3>
+
+
+
+<h4 id="arithmetic">Arithmetic</h4>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Operator</th>
+  <th align="right"></th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left"><code>+</code></td>
+  <td align="right">addition</td>
+</tr>
+<tr>
+  <td align="left"><code>-</code></td>
+  <td align="right">subtraction</td>
+</tr>
+<tr>
+  <td align="left"><code>++</code></td>
+  <td align="right">unary increment by one</td>
+</tr>
+<tr>
+  <td align="left"><code>--</code></td>
+  <td align="right">unary decrement by one</td>
+</tr>
+<tr>
+  <td align="left"><code>/</code></td>
+  <td align="right">division</td>
+</tr>
+<tr>
+  <td align="left"><code>*</code></td>
+  <td align="right">multiplication</td>
+</tr>
+<tr>
+  <td align="left"><code>mod</code></td>
+  <td align="right">modulo</td>
+</tr>
+<tr>
+  <td align="left"><code>**</code></td>
+  <td align="right">power</td>
+</tr>
+</tbody></table>
+
+
+<h4 id="concatenation">Concatenation</h4>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Operator</th>
+  <th align="right"></th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left"><code>&amp;</code></td>
+  <td align="right">String and array concatenation</td>
+</tr>
+</tbody></table>
+
+
+<h4 id="assignment">Assignment</h4>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Operator</th>
+  <th align="right"></th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left"><code>=</code></td>
+  <td align="right">assigns value or right hand side to left hand side</td>
+</tr>
+<tr>
+  <td align="left"><code>+=</code></td>
+  <td align="right">addition assignment</td>
+</tr>
+<tr>
+  <td align="left"><code>-=</code></td>
+  <td align="right">subtraction assignment</td>
+</tr>
+<tr>
+  <td align="left"><code>*=</code></td>
+  <td align="right">multiplication assignment</td>
+</tr>
+<tr>
+  <td align="left"><code>/=</code></td>
+  <td align="right">division assignment</td>
+</tr>
+<tr>
+  <td align="left"><code>&amp;=</code></td>
+  <td align="right">bitand assignment</td>
+</tr>
+</tbody></table>
+
+
+<p>Assignment has right to left precedence.</p>
+
+<h4 id="logical">Logical</h4>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Operator</th>
+  <th align="right"></th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left"><code>!=</code></td>
+  <td align="right">not equal to</td>
+</tr>
+<tr>
+  <td align="left"><code>==</code></td>
+  <td align="right">equal to</td>
+</tr>
+<tr>
+  <td align="left"><code>&gt;</code></td>
+  <td align="right">greater than</td>
+</tr>
+<tr>
+  <td align="left"><code>&gt;=</code></td>
+  <td align="right">greater than or equal to</td>
+</tr>
+<tr>
+  <td align="left"><code>&lt;</code></td>
+  <td align="right">less than</td>
+</tr>
+<tr>
+  <td align="left"><code>&lt;=</code></td>
+  <td align="right">less than or equal to</td>
+</tr>
+<tr>
+  <td align="left"><code>and</code></td>
+  <td align="right">unary and</td>
+</tr>
+<tr>
+  <td align="left"><code>or</code></td>
+  <td align="right">unary or</td>
+</tr>
+<tr>
+  <td align="left"><code>not</code></td>
+  <td align="right">unary not</td>
+</tr>
+</tbody></table>
+
+
+<h4 id="bitwise-logical-unary">Bitwise Logical / Unary</h4>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Operator</th>
+  <th align="right"></th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left"><code>~</code></td>
+  <td align="right">Bitwise not</td>
+</tr>
+<tr>
+  <td align="left"><code>&amp;</code></td>
+  <td align="right">Bitwise and</td>
+</tr>
+<tr>
+  <td align="left"><code>^</code></td>
+  <td align="right">Bitwise xor</td>
+</tr>
+<tr>
+  <td align="left"><code>|</code></td>
+  <td align="right">Bitwise or</td>
+</tr>
+<tr>
+  <td align="left"><code>&lt;&lt;</code></td>
+  <td align="right">Bitwise left shift</td>
+</tr>
+<tr>
+  <td align="left"><code>&gt;&gt;</code></td>
+  <td align="right">Bitwise right shift</td>
+</tr>
+</tbody></table>
+
+
+<h4 id="quantum">Quantum</h4>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Operator</th>
+  <th align="right"></th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left"><code>?</code></td>
+  <td align="right">quantum measurement query</td>
+</tr>
+</tbody></table>
+
+
+<h4 id="operator-precedence-and-associativity">Operator Precedence and Associativity</h4>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Operator</th>
+  <th align="right">Associativity</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left"><code>*</code> <code>/</code> <code>mod</code></td>
+  <td align="right">left</td>
+</tr>
+<tr>
+  <td align="left"><code>+</code> <code>-</code></td>
+  <td align="right">left</td>
+</tr>
+<tr>
+  <td align="left"><code>&gt;&gt;</code> <code>&lt;&lt;</code></td>
+  <td align="right">left</td>
+</tr>
+<tr>
+  <td align="left"><code>&gt;</code> <code>&gt;=</code> <code>&lt;</code> <code>&lt;=</code></td>
+  <td align="right">left</td>
+</tr>
+<tr>
+  <td align="left"><code>==</code> <code>!=</code></td>
+  <td align="right">left</td>
+</tr>
+<tr>
+  <td align="left"><code>&amp;</code></td>
+  <td align="right">left</td>
+</tr>
+<tr>
+  <td align="left"><code>^</code></td>
+  <td align="right">left</td>
+</tr>
+<tr>
+  <td align="left"><code>|</code></td>
+  <td align="right">left</td>
+</tr>
+<tr>
+  <td align="left"><code>and</code></td>
+  <td align="right">left</td>
+</tr>
+<tr>
+  <td align="left"><code>or</code></td>
+  <td align="right">left</td>
+</tr>
+<tr>
+  <td align="left"><code>?</code></td>
+  <td align="right">right</td>
+</tr>
+<tr>
+  <td align="left"><code>in</code></td>
+  <td align="right">left</td>
+</tr>
+<tr>
+  <td align="left"><code>=</code> <code>+=</code> <code>-=</code> <code>*=</code> <code>/=</code> <code>&amp;=</code></td>
+  <td align="right">right</td>
+</tr>
+</tbody></table>
+
+
+<p>Operators within the same row share the same precedence. Higher rows indicate higher precedence.</p>
 
 <h3 id="iterators">Iterators</h3>
 
