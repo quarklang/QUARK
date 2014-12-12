@@ -2,7 +2,7 @@
 ##Quark Language Reference Manual
 
 | Name    				| UNI      | 
-| :-------------------- | ------:  |
+| :-------------------- | :------  |
 | Daria Jung 			| djj2115  | 
 | Jamis Johnson    		| jmj2180  | 
 | Jim Fan     			| lf2422   |
@@ -51,6 +51,7 @@ Identifier -> letter (letter | digit)*
 ###Keywords
 The following identifiers are reserved for use as keywords, and may not be used otherwise:
 
+> def
 > bool
 > int
 > float
@@ -88,7 +89,7 @@ The following identifiers are reserved for use as keywords, and may not be used 
 Certain characters within strings need to be preceded by a backslash. These characters and the sequences to produce them in a string are:
 
 | Character | Sequence 	|
-| :--------:|:--------- |
+| :--------:| :-------- |
 |	\"		|	 "	   	|
 |   \n		|  linefeed |
 | \r		| carriage return |
@@ -142,6 +143,25 @@ A `qreg` type represents a quantum register. A `qreg` accepts two `int` types. T
 qreg q = <| 1, 1 |>;
 ```
 
+Qreg must be passed as an LValue to any function:
+
+```
+% disallowed
+hadamard(<|10, 3|>); 
+
+% allowed
+qreg q = <|10, 3|>;
+hadamard(q);
+```
+
+Additionally, qreg values may be measured using the `?` operator, and the `?` operator may only operate on an LValue of type qreg.
+
+The `?` operator may only be invoked on an LValue.
+
+```matlab
+q ? [2:10];  % measures qubit 2 to 10
+```
+
 ####matrix
 QUARK allows you to create matrices; a `matrix` uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only `int`, `float`, or `complex`. Matrix elements may be accessed with a square bracket notation by separating the column and row index numbers by commas.
 
@@ -180,7 +200,7 @@ arr[i];
 
 Indices of multidimensional arrays may be accessed by separating the dimensional index numbers by commas:
 
-```
+```matlab
 int[][] arr = [[0,1,2],[3,4,5]]
 arr[1][1]; % accesses 4
 ```
@@ -224,17 +244,18 @@ int[][] b = [[1,2,3], [4,5,6]]; % 2-d array
 ```
 
 ####Declaring a Matrix
-A matrix declaration uses the special notation of piped square brackets.
+A matrix declaration uses the special notation of piped square brackets. Matrix rows are distinguished using the `;` separator between elements of rows. Initializing an empty complex matrix initializes an all-zero 3-by-4 complex matrix.
 
-```
+```matlab
 float[|] floatmat = [| 1.2, 3.4; 5.6, 7.8 |];
+complex[|] mat; % this gives us complex[| 3, 4 |]
 ```
 
 ###Operators
 
 ####Arithmetic
 
-|  	 Operator	 |         	 |
+|  Operator	 |         	 |
 |:---------- |------------------:|
 | `+`		 | addition 		 |
 | `-` 		 | subtraction 			 |
@@ -289,6 +310,12 @@ Assignment has right to left precedence.
 |  	 Operator	 |         	 |
 |:---------- |------------------:|
 | `?`		 | quantum measurement query
+
+The `?` operator may only be invoked on an LValue.
+
+```matlab
+q ? [2:10];  % measures qubit 2 to 10
+```
 
 ####Operator Precedence and Associativity 
 |  	 Operator	 |  Associativity    |
@@ -367,10 +394,12 @@ while exp_mod(b, i, M) != 1:
 The condition of the while loop may not be empty.
 
 ###For Statement
-QUARK supports two types of iterators, array and range.
+QUARK supports two types of iterators, array and range, for its for statements.
 
 ####Array Iterator
 An array iterator allows you to sweep a variable across an array, evaluating the inner statement with identifiers assigned to a new value before each iteration. The identifier after `for` is assigned to the value of each element of the array sequentially.
+
+The identifier may be declared ahead of time or within the for statement itself.
 
 ```
 int[] arr = [1,2,3];
@@ -393,8 +422,9 @@ for i in [1:10]
 for int i in [1:10:2]
 ```
 
-A range consists of three integers separated by colons:
-`[start : stop : step]`. Start denotes the start of the range, stop denotes the exclusive end of a range, and step denotes the step size of the range. If the step and the last colon is excluded, the step is defaulted to 1. If the start value is excluded, it is defaulted to 0. The following are various ways of declaring ranges:
+A range consists of three integers separated by colons `[start : stop : step]`. Start denotes the start of the range, stop denotes the exclusive end of a range, and step denotes the step size of the range. If the step and the last colon is excluded, the step is defaulted to 1. If the start value is excluded, it is defaulted to 0. 
+
+The following are various ways of declaring ranges:
 
 ```matlab
 0:5:2 % this gives us 0, 2, 4
@@ -403,11 +433,220 @@ A range consists of three integers separated by colons:
 ```
 
 ###Break and Continue
-The break statement causes a while loop or for loop to terminate. 
+The `break` statement causes a while loop or for loop to terminate. 
 
-The continue statement provides a way to jump back to the top of a loop earlier than normal; it may be used to bypass the remainder of a loop for an iteration.
+The `continue` statement provides a way to jump back to the top of a loop earlier than normal; it may be used to bypass the remainder of a loop for an iteration.
 
 ###Functions
-####Function Declaration
+QUARK allows users to define functions. 
 
+####Function Declaration
+Functions are composed of the form:
+
+```
+def return_type func_name: type arg1, type arg2 
+{
+	% statements in function body
+	
+	return return_type
+}
+```
+
+Functions are defined only by identifying the block of code and the keyword `def`, giving the function a name, supplying it with zero or more formal arguments, and defining a function body. Function return types are of any data type previously described, or `void` for no value.
+
+Some examples of function declarations are:
+
+```
+def void hello: 
+{
+	print("hello world");
+}
+
+def int addition: int x, int y
+{
+	return x + y;
+}
+```
+
+###Overloading
+
+###Grammar
+
+Below is the grammar for QUARK. Words in capital letters are tokens passed in from the lexer.
+
+```ocaml
+ident:
+    ID { Ident($1) }
+
+vartype:
+    INT      { Int }
+  | FLOAT    { Float }
+  | BOOLEAN  { Bool }
+  | STRING   { String }
+  | QREG     { Qreg }
+  | FRACTION { Fraction }
+  | COMPLEX  { Complex }
+  | VOID     { Void }
+
+datatype:
+  | vartype { DataType($1) }
+  | datatype LSQUARE RSQUARE { ArrayType($1) }
+  | datatype LMATRIX RSQUARE { MatrixType($1) } /* int[|] */
+
+/* Variables that can be assigned a value */
+lvalue:
+  | ident                        { Variable($1) }
+  | ident LSQUARE expr_list RSQUARE 
+	  { ArrayElem($1, $3)}
+
+expr:
+  /* Logical */
+  | expr LT expr          { Binop($1, Less, $3) }
+  | expr LTE expr         { Binop($1, LessEq, $3) }
+  | expr GT expr          { Binop($1, Greater, $3) }
+  | expr GTE expr         { Binop($1, GreaterEq, $3) }
+  | expr EQUALS expr      { Binop($1, Eq, $3) }
+  | expr NOT_EQUALS expr  { Binop($1, NotEq, $3) }
+  | expr AND expr         { Binop($1, And, $3) }
+  | expr OR expr          { Binop($1, Or, $3) }
+  
+  /* Unary */
+  | BITNOT expr             { Unop(BitNot, $2) }
+  | MINUS expr %prec UMINUS { Unop(Neg, $2) }
+  | NOT expr                { Unop(Not, $2) }
+
+  /* Arithmetic */
+  | expr PLUS expr    { Binop($1, Add, $3) }
+  | expr MINUS expr   { Binop($1, Sub, $3) }
+  | expr TIMES expr   { Binop($1, Mul, $3) }
+  | expr DIVIDE expr  { Binop($1, Div, $3) }
+  | expr MODULO expr  { Binop($1, Mod, $3) }
+  | expr POWER expr   { Binop($1, Pow, $3) }
+
+  /* Bitwise */
+  | expr BITAND expr        { Binop($1, BitAnd, $3) }
+  | expr BITXOR expr        { Binop($1, BitXor, $3) }
+  | expr BITOR expr         { Binop($1, BitOr, $3) }
+  | expr LSHIFT expr        { Binop($1, Lshift, $3) }
+  | expr RSHIFT expr        { Binop($1, Rshift, $3) }
+
+  /* Query */
+  | expr QUERY expr         { Queryop($1, Query, $3, IntLit("QuerySingleBit")) }
+  | expr QUERY_UNREAL expr  { Queryop($1, QueryUnreal, $3, IntLit("QuerySingleBit")) }
+  | expr QUERY LSQUARE COLON expr RSQUARE { Queryop($1, Query, IntLit("0"), $5) }
+  | expr QUERY_UNREAL LSQUARE COLON expr RSQUARE  { Queryop($1, QueryUnreal, IntLit("0"), $5) }
+  | expr QUERY LSQUARE expr COLON expr RSQUARE         { Queryop($1, Query, $4, $6) }
+  | expr QUERY_UNREAL LSQUARE expr COLON expr RSQUARE  { Queryop($1, QueryUnreal, $4, $6) }
+
+  /* Parenthesis */
+  | LPAREN expr RPAREN { $2 }
+
+  /* Assignment */
+  | lvalue ASSIGN expr { Assign($1, $3) }
+  | lvalue             { Lval($1) }
+
+  /* Special assignment */
+  | lvalue PLUS_EQUALS expr { AssignOp($1, AddEq, $3) }
+  | lvalue MINUS_EQUALS expr { AssignOp($1, SubEq, $3) } 
+  | lvalue TIMES_EQUALS expr { AssignOp($1, MulEq, $3) }
+  | lvalue DIVIDE_EQUALS expr { AssignOp($1, DivEq, $3) }
+  | lvalue BITAND_EQUALS expr { AssignOp($1, BitAndEq, $3) }
+
+  /* Post operation */
+  | lvalue INCREMENT { PostOp($1, Inc) }
+  | lvalue DECREMENT { PostOp($1, Dec) }
+
+  /* Membership testing with keyword 'in' */
+  | expr IN expr    { Membership($1, $3) }
+
+  /* literals */
+  | INT_LITERAL                                 { IntLit($1) }
+  | FLOAT_LITERAL                               { FloatLit($1) }
+  | BOOLEAN_LITERAL                             { BoolLit($1) }
+  | expr DOLLAR expr                            { FractionLit($1, $3) }
+  | STRING_LITERAL                              { StringLit($1) }
+  | LSQUARE expr_list RSQUARE                   { ArrayLit($2) }
+  | datatype LSQUARE expr RSQUARE               { ArrayCtor($1, $3) }
+  | LMATRIX matrix_row_list RMATRIX             { MatrixLit($2) }
+  | datatype LMATRIX expr COMMA expr RMATRIX { MatrixCtor($1, $3, $5) }
+  | COMPLEX_SYM expr COMMA expr RPAREN          { ComplexLit($2, $4) }
+  | COMPLEX_SYM expr RPAREN                     { ComplexLit($2, FloatLit("0.0")) }
+  | LQREG expr COMMA expr RQREG                 { QRegLit($2, $4) }
+
+  /* function call */
+  | ident LPAREN RPAREN             { FunctionCall($1, []) }
+  | ident LPAREN expr_list RPAREN   { FunctionCall ($1, $3) }
+
+expr_list:
+  | expr COMMA expr_list { $1 :: $3 }
+  | expr                 { [$1] }
+
+/* [| r00, r01; r10, r11; r20, r21 |] */
+matrix_row_list:
+  | expr_list SEMICOLON matrix_row_list { $1 :: $3 }
+  | expr_list            { [$1] }
+
+decl:
+  | datatype ident ASSIGN expr SEMICOLON                { AssigningDecl($1, $2, $4) }
+  | datatype ident SEMICOLON                            { PrimitiveDecl($1, $2) }
+
+statement:
+  | IF expr COLON statement ELSE statement
+      { IfStatement($2, $4, $6) }
+  | IF expr COLON statement %prec IFX
+      { IfStatement($2, $4, EmptyStatement) }
+
+  | WHILE expr COLON statement { WhileStatement($2, $4) }
+  | FOR iterator COLON statement { ForStatement($2, $4) }
+
+  | LCURLY statement_seq RCURLY { CompoundStatement($2) }
+
+  | expr SEMICOLON { Expression($1) }
+  | SEMICOLON { EmptyStatement }
+  | decl { Declaration($1) }
+
+  | RETURN expr SEMICOLON { ReturnStatement($2) }
+  | RETURN SEMICOLON { VoidReturnStatement }
+  
+  /* Control flow */
+  | BREAK { BreakStatement }
+  | CONTINUE { ContinueStatement }
+
+iterator:
+  | ident IN LSQUARE range RSQUARE { RangeIterator(NoneType, $1, $4) }
+  | datatype ident IN LSQUARE range RSQUARE { RangeIterator($1, $2, $5) }
+  | datatype ident IN expr { ArrayIterator($1, $2, $4) }
+
+range:
+  | expr COLON expr COLON expr { Range($1, $3, $5) }
+  | expr COLON expr { Range($1, $3, IntLit("1")) }
+  | COLON expr COLON expr { Range(IntLit("0"), $2, $4) }
+  | COLON expr { Range(IntLit("0"), $2, IntLit("1")) }
+
+top_level_statement:
+  | DEF datatype ident COLON param_list LCURLY statement_seq RCURLY
+      { FunctionDecl($2, $3, $5, $7) }
+  | datatype ident COLON param_list SEMICOLON
+      { ForwardDecl($1, $2, $4) }
+  | decl { Declaration($1) }
+
+param:
+  | datatype ident { PrimitiveDecl($1, $2) }
+
+non_empty_param_list:
+  | param COMMA non_empty_param_list { $1 :: $3 }
+  | param { [$1] }
+
+param_list:
+  | non_empty_param_list { $1 }
+  | { [] }
+
+top_level:
+  | top_level_statement top_level {$1 :: $2}
+  | top_level_statement { [$1] }
+
+statement_seq:
+  | statement statement_seq {$1 :: $2 }
+  | { [] }
+```
 

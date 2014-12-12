@@ -13,28 +13,26 @@
 <thead>
 <tr>
   <th align="left">Name</th>
-  <th align="right">UNI</th>
+  <th align="left">UNI</th>
 </tr>
 </thead>
 <tbody><tr>
   <td align="left">Daria Jung</td>
-  <td align="right">djj2115</td>
+  <td align="left">djj2115</td>
 </tr>
 <tr>
   <td align="left">Jamis Johnson</td>
-  <td align="right">jmj2180</td>
+  <td align="left">jmj2180</td>
 </tr>
 <tr>
   <td align="left">Jim Fan</td>
-  <td align="right">lf2422</td>
+  <td align="left">lf2422</td>
 </tr>
 <tr>
   <td align="left">Parthiban Loganathan</td>
-  <td align="right">pl2487</td>
+  <td align="left">pl2487</td>
 </tr>
 </tbody></table>
-
-
 
 
 <h2 id="table-of-contents">Table of contents</h2>
@@ -103,6 +101,8 @@
 <li><a href="#function-declaration">Function Declaration</a></li>
 </ul>
 </li>
+<li><a href="#overloading">Overloading</a></li>
+<li><a href="#grammar">Grammar</a></li>
 </ul>
 </li>
 </ul>
@@ -179,7 +179,8 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
 <p>The following identifiers are reserved for use as keywords, and may not be used otherwise:</p>
 
 <blockquote>
-  <p>bool <br>
+  <p>def <br>
+  bool <br>
   int <br>
   float <br>
   fraction <br>
@@ -199,8 +200,6 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
   not <br>
   or</p>
 </blockquote>
-
-
 
 <h3 id="punctuation">Punctuation</h3>
 
@@ -250,8 +249,6 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
   <td align="left">backspace</td>
 </tr>
 </tbody></table>
-
-
 
 
 <h3 id="data-types">Data Types</h3>
@@ -325,14 +322,31 @@ complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span cl
 
 <pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">qreg q </span>=<span class="hljs-string"> &lt;| 1, 1 |&gt;;</span></code></pre>
 
+<p>Qreg must be passed as an LValue to any function:</p>
 
+<pre class="prettyprint"><code class=" hljs matlab"><span class="hljs-comment">% disallowed</span>
+<span class="hljs-built_in">hadamard</span>(&lt;|<span class="hljs-number">10</span>, <span class="hljs-number">3</span>|&gt;); 
+
+<span class="hljs-comment">% allowed</span>
+qreg q = &lt;|<span class="hljs-number">10</span>, <span class="hljs-number">3</span>|&gt;;
+<span class="hljs-built_in">hadamard</span>(q);</code></pre>
+
+<p>Additionally, qreg values may be measured using the <code>?</code> operator, and the <code>?</code> operator may only operate on an LValue of type qreg.</p>
+
+<p>The <code>?</code> operator may only be invoked on an LValue.</p>
+
+<pre class="prettyprint"><code class="language-matlab hljs ">q ? <span class="hljs-matrix">[<span class="hljs-number">2</span>:<span class="hljs-number">10</span>]</span>;  <span class="hljs-comment">% measures qubit 2 to 10</span></code></pre>
 
 <h4 id="matrix">matrix</h4>
 
 <p>QUARK allows you to create matrices; a <code>matrix</code> uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only <code>int</code>, <code>float</code>, or <code>complex</code>. Matrix elements may be accessed with a square bracket notation by separating the column and row index numbers by commas.</p>
 
+
+
 <pre class="prettyprint"><code class=" hljs lua">float<span class="hljs-string">[[]]</span> mat = [| <span class="hljs-number">1.2</span>, <span class="hljs-number">3.4</span>; <span class="hljs-number">5.6</span>, <span class="hljs-number">7.8</span> |];
 mat[<span class="hljs-number">2</span>, <span class="hljs-number">1</span>];</code></pre>
+
+
 
 <h4 id="array">array</h4>
 
@@ -341,6 +355,8 @@ mat[<span class="hljs-number">2</span>, <span class="hljs-number">1</span>];</co
 <p>Arrays can be initialized using a comma-separated list delimited by square brackets [ ]. Additionally, arrays can be declared with a size to create an array of uninitialized elements. </p>
 
 <p>Arrays may be concatenated with the <code>&amp;</code> operator as long as there is a dimension and type match. </p>
+
+
 
 <pre class="prettyprint"><code class=" hljs lua">int[<span class="hljs-number">5</span>]; % gives us [<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]
 int[] a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]; % array initialization
@@ -368,12 +384,14 @@ arr[i];</code></pre>
 
 
 
-<pre class="prettyprint"><code class=" hljs markdown">int[][] arr = [[0,1,2],[3,4,5]]
-arr[<span class="hljs-link_label">1</span>][<span class="hljs-link_reference">1</span>]; % accesses 4</code></pre>
+<pre class="prettyprint"><code class="language-matlab hljs ">int<span class="hljs-matrix">[]</span><span class="hljs-matrix">[]</span> arr = <span class="hljs-matrix">[[<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">2</span>]</span>,<span class="hljs-matrix">[<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>]</span>]
+arr<span class="hljs-matrix">[<span class="hljs-number">1</span>]</span><span class="hljs-matrix">[<span class="hljs-number">1</span>]</span>; <span class="hljs-comment">% accesses 4</span></code></pre>
 
 <p>The built-in <code>len</code> function returns an <code>int</code> representing the length of the array.</p>
 
 <p>Membership may be tested using the keyword <code>in</code>. </p>
+
+
 
 <h4 id="void">void</h4>
 
@@ -426,9 +444,14 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
 
 <h4 id="declaring-a-matrix">Declaring a Matrix</h4>
 
-<p>A matrix declaration uses the special notation of piped square brackets.</p>
+<p>A matrix declaration uses the special notation of piped square brackets. Matrix rows are distinguished using the <code>;</code> separator between elements of rows. Initializing an empty complex matrix initializes an all-zero 3-by-4 complex matrix.</p>
 
-<pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">float[|] floatmat </span>=<span class="hljs-string"> [| 1.2, 3.4; 5.6, 7.8 |];</span></code></pre>
+
+
+<pre class="prettyprint"><code class="language-matlab hljs ">float<span class="hljs-matrix">[|]</span> floatmat = <span class="hljs-matrix">[| <span class="hljs-number">1.2</span>, <span class="hljs-number">3.4</span>; <span class="hljs-number">5.6</span>, <span class="hljs-number">7.8</span> |]</span>;
+<span class="hljs-built_in">complex</span><span class="hljs-matrix">[|]</span> mat; <span class="hljs-comment">% this gives us complex[| 3, 4 |]</span></code></pre>
+
+
 
 <h3 id="operators">Operators</h3>
 
@@ -494,6 +517,8 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
 </tbody></table>
 
 
+
+
 <h4 id="assignment">Assignment</h4>
 
 <table>
@@ -531,6 +556,8 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
 
 
 <p>Assignment has right to left precedence.</p>
+
+
 
 <h4 id="logical">Logical</h4>
 
@@ -580,6 +607,8 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
 </tbody></table>
 
 
+
+
 <h4 id="bitwise-logical-unary">Bitwise Logical / Unary</h4>
 
 <table>
@@ -616,6 +645,8 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
 </tbody></table>
 
 
+
+
 <h4 id="quantum">Quantum</h4>
 
 <table>
@@ -630,6 +661,14 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
   <td align="right">quantum measurement query</td>
 </tr>
 </tbody></table>
+
+
+<p>The <code>?</code> operator may only be invoked on an LValue.</p>
+
+
+
+<pre class="prettyprint"><code class="language-matlab hljs ">q ? <span class="hljs-matrix">[<span class="hljs-number">2</span>:<span class="hljs-number">10</span>]</span>;  <span class="hljs-comment">% measures qubit 2 to 10</span></code></pre>
+
 
 
 <h4 id="operator-precedence-and-associativity">Operator Precedence and Associativity</h4>
@@ -704,6 +743,8 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
 
 <p>Statements are the smallest components of a program used to express that an action is to be carried out. Statements are used for variable declarations and assignment, control flow, loops, function calls, and expressions. All statements end with a semicolon <code>;</code>. Statements are used within blocks. The following are examples of statements and are by no means exhaustive:</p>
 
+
+
 <pre class="prettyprint"><code class=" hljs cs"><span class="hljs-keyword">string</span> hello = <span class="hljs-string">"hello world"</span>;
 <span class="hljs-keyword">int</span> x = <span class="hljs-number">10</span>;
 <span class="hljs-keyword">if</span> x &gt; <span class="hljs-number">5</span>
@@ -712,6 +753,8 @@ foo(<span class="hljs-number">4</span>);
 <span class="hljs-keyword">for</span> x <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>:<span class="hljs-number">10</span>]
 <span class="hljs-number">4</span> + <span class="hljs-number">6</span>
 qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-number">0</span> |&gt;;</code></pre>
+
+
 
 <h3 id="blocks">Blocks</h3>
 
@@ -725,6 +768,8 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 <span class="hljs-tag">    %</span> statements here
 }</code></pre>
 
+
+
 <h3 id="return-statement">Return Statement</h3>
 
 <p>The return keyword accepts an expression, and exits out of the nearest calling block or smallest containing function.</p>
@@ -734,6 +779,8 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 <h3 id="if-else-statement">If else Statement</h3>
 
 <p>If statements take expressions that reduce to a boolean, and followed by a colon <code>:</code> and a statement block. If the following statement is only one line, curly braces are unnecessary. </p>
+
+
 
 <pre class="prettyprint"><code class=" hljs matlab"><span class="hljs-keyword">if</span> p == <span class="hljs-number">1</span>:
     <span class="hljs-keyword">return</span> a;
@@ -765,13 +812,17 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 
 <p>The condition of the while loop may not be empty.</p>
 
+
+
 <h3 id="for-statement">For Statement</h3>
 
-<p>QUARK supports two types of iterators, array and range.</p>
+<p>QUARK supports two types of iterators, array and range, for its for statements.</p>
 
 <h4 id="array-iterator">Array Iterator</h4>
 
 <p>An array iterator allows you to sweep a variable across an array, evaluating the inner statement with identifiers assigned to a new value before each iteration. The identifier after <code>for</code> is assigned to the value of each element of the array sequentially.</p>
+
+<p>The identifier may be declared ahead of time or within the for statement itself.</p>
 
 <pre class="prettyprint"><code class=" hljs matlab">int<span class="hljs-matrix">[]</span> arr = <span class="hljs-matrix">[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>]</span>;
 <span class="hljs-keyword">for</span> int <span class="hljs-built_in">i</span> in arr:
@@ -780,6 +831,8 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 <span class="hljs-comment">% 1</span>
 <span class="hljs-comment">% 2</span>
 <span class="hljs-comment">% 3</span></code></pre>
+
+
 
 <h4 id="range-iterator">Range Iterator</h4>
 
@@ -791,10 +844,9 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>:<span class="hljs-number">10</span>]
 <span class="hljs-keyword">for</span> <span class="hljs-keyword">int</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>:<span class="hljs-number">10</span>:<span class="hljs-number">2</span>]</code></pre>
 
-<p>A range consists of three integers separated by colons: <br>
-<code>[start : stop : step]</code>. Start denotes the start of the range, stop denotes the exclusive end of a range, and step denotes the step size of the range. If the step and the last colon is excluded, the step is defaulted to 1. If the start value is excluded, it is defaulted to 0. The following are various ways of declaring ranges:</p>
+<p>A range consists of three integers separated by colons <code>[start : stop : step]</code>. Start denotes the start of the range, stop denotes the exclusive end of a range, and step denotes the step size of the range. If the step and the last colon is excluded, the step is defaulted to 1. If the start value is excluded, it is defaulted to 0. </p>
 
-
+<p>The following are various ways of declaring ranges:</p>
 
 <pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-number">0</span>:<span class="hljs-number">5</span>:<span class="hljs-number">2</span> <span class="hljs-comment">% this gives us 0, 2, 4</span>
 :<span class="hljs-number">5</span> <span class="hljs-comment">% 0, 1, 2, 3, 4</span>
@@ -804,15 +856,226 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 
 <h3 id="break-and-continue">Break and Continue</h3>
 
-<p>The break statement causes a while loop or for loop to terminate. </p>
+<p>The <code>break</code> statement causes a while loop or for loop to terminate. </p>
 
-<p>The continue statement provides a way to jump back to the top of a loop earlier than normal; it may be used to bypass the remainder of a loop for an iteration.</p>
-
-
+<p>The <code>continue</code> statement provides a way to jump back to the top of a loop earlier than normal; it may be used to bypass the remainder of a loop for an iteration.</p>
 
 <h3 id="functions">Functions</h3>
 
+<p>QUARK allows users to define functions. </p>
 
 
-<h4 id="function-declaration">Function Declaration</h4></div></body>
+
+<h4 id="function-declaration">Function Declaration</h4>
+
+<p>Functions are composed of the form:</p>
+
+
+
+<pre class="prettyprint"><code class=" hljs python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">return_type</span> <span class="hljs-title">func_name</span>:</span> type arg1, type arg2 
+{
+    % statements <span class="hljs-keyword">in</span> function body
+
+    <span class="hljs-keyword">return</span> return_type
+}</code></pre>
+
+<p>Functions are defined only by identifying the block of code and the keyword <code>def</code>, giving the function a name, supplying it with zero or more formal arguments, and defining a function body. Function return types are of any data type previously described, or <code>void</code> for no value.</p>
+
+<p>Some examples of function declarations are:</p>
+
+
+
+<pre class="prettyprint"><code class=" hljs python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">void</span> <span class="hljs-title">hello</span>:</span> 
+{
+    print(<span class="hljs-string">"hello world"</span>);
+}
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">int</span> <span class="hljs-title">addition</span>:</span> int x, int y
+{
+    <span class="hljs-keyword">return</span> x + y;
+}</code></pre>
+
+
+
+<h3 id="overloading">Overloading</h3>
+
+
+
+<h3 id="grammar">Grammar</h3>
+
+<p>Below is the grammar for QUARK. Words in capital letters are tokens passed in from the lexer.</p>
+
+<pre class="prettyprint"><code class="language-ocaml hljs ">ident:
+    ID { Ident($<span class="hljs-number">1</span>) }
+
+vartype:
+    INT      { Int }
+  | FLOAT    { Float }
+  | BOOLEAN  { Bool }
+  | STRING   { String }
+  | QREG     { Qreg }
+  | FRACTION { Fraction }
+  | COMPLEX  { Complex }
+  | VOID     { Void }
+
+datatype:
+  | vartype { DataType($<span class="hljs-number">1</span>) }
+  | datatype LSQUARE RSQUARE { ArrayType($<span class="hljs-number">1</span>) }
+  | datatype LMATRIX RSQUARE { MatrixType($<span class="hljs-number">1</span>) } <span class="hljs-comment">/* int[|] */</span>
+
+<span class="hljs-comment">/* Variables that can be assigned a value */</span>
+lvalue:
+  | ident                        { Variable($<span class="hljs-number">1</span>) }
+  | ident LSQUARE expr_list RSQUARE 
+      { ArrayElem($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>)}
+
+expr:
+  <span class="hljs-comment">/* Logical */</span>
+  | expr LT expr          { Binop($<span class="hljs-number">1</span>, Less, $<span class="hljs-number">3</span>) }
+  | expr LTE expr         { Binop($<span class="hljs-number">1</span>, LessEq, $<span class="hljs-number">3</span>) }
+  | expr GT expr          { Binop($<span class="hljs-number">1</span>, Greater, $<span class="hljs-number">3</span>) }
+  | expr GTE expr         { Binop($<span class="hljs-number">1</span>, GreaterEq, $<span class="hljs-number">3</span>) }
+  | expr EQUALS expr      { Binop($<span class="hljs-number">1</span>, Eq, $<span class="hljs-number">3</span>) }
+  | expr NOT_EQUALS expr  { Binop($<span class="hljs-number">1</span>, NotEq, $<span class="hljs-number">3</span>) }
+  | expr AND expr         { Binop($<span class="hljs-number">1</span>, And, $<span class="hljs-number">3</span>) }
+  | expr OR expr          { Binop($<span class="hljs-number">1</span>, Or, $<span class="hljs-number">3</span>) }
+
+  <span class="hljs-comment">/* Unary */</span>
+  | BITNOT expr             { Unop(BitNot, $<span class="hljs-number">2</span>) }
+  | MINUS expr %prec UMINUS { Unop(Neg, $<span class="hljs-number">2</span>) }
+  | NOT expr                { Unop(Not, $<span class="hljs-number">2</span>) }
+
+  <span class="hljs-comment">/* Arithmetic */</span>
+  | expr PLUS expr    { Binop($<span class="hljs-number">1</span>, Add, $<span class="hljs-number">3</span>) }
+  | expr MINUS expr   { Binop($<span class="hljs-number">1</span>, Sub, $<span class="hljs-number">3</span>) }
+  | expr TIMES expr   { Binop($<span class="hljs-number">1</span>, Mul, $<span class="hljs-number">3</span>) }
+  | expr DIVIDE expr  { Binop($<span class="hljs-number">1</span>, Div, $<span class="hljs-number">3</span>) }
+  | expr MODULO expr  { Binop($<span class="hljs-number">1</span>, Mod, $<span class="hljs-number">3</span>) }
+  | expr POWER expr   { Binop($<span class="hljs-number">1</span>, Pow, $<span class="hljs-number">3</span>) }
+
+  <span class="hljs-comment">/* Bitwise */</span>
+  | expr BITAND expr        { Binop($<span class="hljs-number">1</span>, BitAnd, $<span class="hljs-number">3</span>) }
+  | expr BITXOR expr        { Binop($<span class="hljs-number">1</span>, BitXor, $<span class="hljs-number">3</span>) }
+  | expr BITOR expr         { Binop($<span class="hljs-number">1</span>, BitOr, $<span class="hljs-number">3</span>) }
+  | expr LSHIFT expr        { Binop($<span class="hljs-number">1</span>, Lshift, $<span class="hljs-number">3</span>) }
+  | expr RSHIFT expr        { Binop($<span class="hljs-number">1</span>, Rshift, $<span class="hljs-number">3</span>) }
+
+  <span class="hljs-comment">/* Query */</span>
+  | expr QUERY expr         { Queryop($<span class="hljs-number">1</span>, Query, $<span class="hljs-number">3</span>, IntLit(<span class="hljs-string">"QuerySingleBit"</span>)) }
+  | expr QUERY_UNREAL expr  { Queryop($<span class="hljs-number">1</span>, QueryUnreal, $<span class="hljs-number">3</span>, IntLit(<span class="hljs-string">"QuerySingleBit"</span>)) }
+  | expr QUERY LSQUARE COLON expr RSQUARE { Queryop($<span class="hljs-number">1</span>, Query, IntLit(<span class="hljs-string">"0"</span>), $<span class="hljs-number">5</span>) }
+  | expr QUERY_UNREAL LSQUARE COLON expr RSQUARE  { Queryop($<span class="hljs-number">1</span>, QueryUnreal, IntLit(<span class="hljs-string">"0"</span>), $<span class="hljs-number">5</span>) }
+  | expr QUERY LSQUARE expr COLON expr RSQUARE         { Queryop($<span class="hljs-number">1</span>, Query, $<span class="hljs-number">4</span>, $<span class="hljs-number">6</span>) }
+  | expr QUERY_UNREAL LSQUARE expr COLON expr RSQUARE  { Queryop($<span class="hljs-number">1</span>, QueryUnreal, $<span class="hljs-number">4</span>, $<span class="hljs-number">6</span>) }
+
+  <span class="hljs-comment">/* Parenthesis */</span>
+  | LPAREN expr RPAREN { $<span class="hljs-number">2</span> }
+
+  <span class="hljs-comment">/* Assignment */</span>
+  | lvalue ASSIGN expr { Assign($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>) }
+  | lvalue             { Lval($<span class="hljs-number">1</span>) }
+
+  <span class="hljs-comment">/* Special assignment */</span>
+  | lvalue PLUS_EQUALS expr { AssignOp($<span class="hljs-number">1</span>, AddEq, $<span class="hljs-number">3</span>) }
+  | lvalue MINUS_EQUALS expr { AssignOp($<span class="hljs-number">1</span>, SubEq, $<span class="hljs-number">3</span>) } 
+  | lvalue TIMES_EQUALS expr { AssignOp($<span class="hljs-number">1</span>, MulEq, $<span class="hljs-number">3</span>) }
+  | lvalue DIVIDE_EQUALS expr { AssignOp($<span class="hljs-number">1</span>, DivEq, $<span class="hljs-number">3</span>) }
+  | lvalue BITAND_EQUALS expr { AssignOp($<span class="hljs-number">1</span>, BitAndEq, $<span class="hljs-number">3</span>) }
+
+  <span class="hljs-comment">/* Post operation */</span>
+  | lvalue INCREMENT { PostOp($<span class="hljs-number">1</span>, Inc) }
+  | lvalue DECREMENT { PostOp($<span class="hljs-number">1</span>, Dec) }
+
+  <span class="hljs-comment">/* Membership testing with keyword 'in' */</span>
+  | expr IN expr    { Membership($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>) }
+
+  <span class="hljs-comment">/* literals */</span>
+  | INT_LITERAL                                 { IntLit($<span class="hljs-number">1</span>) }
+  | FLOAT_LITERAL                               { FloatLit($<span class="hljs-number">1</span>) }
+  | BOOLEAN_LITERAL                             { BoolLit($<span class="hljs-number">1</span>) }
+  | expr DOLLAR expr                            { FractionLit($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>) }
+  | STRING_LITERAL                              { StringLit($<span class="hljs-number">1</span>) }
+  | LSQUARE expr_list RSQUARE                   { ArrayLit($<span class="hljs-number">2</span>) }
+  | datatype LSQUARE expr RSQUARE               { ArrayCtor($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>) }
+  | LMATRIX matrix_row_list RMATRIX             { MatrixLit($<span class="hljs-number">2</span>) }
+  | datatype LMATRIX expr COMMA expr RMATRIX { MatrixCtor($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>, $<span class="hljs-number">5</span>) }
+  | COMPLEX_SYM expr COMMA expr RPAREN          { ComplexLit($<span class="hljs-number">2</span>, $<span class="hljs-number">4</span>) }
+  | COMPLEX_SYM expr RPAREN                     { ComplexLit($<span class="hljs-number">2</span>, FloatLit(<span class="hljs-string">"0.0"</span>)) }
+  | LQREG expr COMMA expr RQREG                 { QRegLit($<span class="hljs-number">2</span>, $<span class="hljs-number">4</span>) }
+
+  <span class="hljs-comment">/* function call */</span>
+  | ident LPAREN RPAREN             { FunctionCall($<span class="hljs-number">1</span>, []) }
+  | ident LPAREN expr_list RPAREN   { FunctionCall ($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>) }
+
+expr_list:
+  | expr COMMA expr_list { $<span class="hljs-number">1</span> :: $<span class="hljs-number">3</span> }
+  | expr                 { [$<span class="hljs-number">1</span>] }
+
+<span class="hljs-comment">/* [| r00, r01; r10, r11; r20, r21 |] */</span>
+matrix_row_list:
+  | expr_list SEMICOLON matrix_row_list { $<span class="hljs-number">1</span> :: $<span class="hljs-number">3</span> }
+  | expr_list            { [$<span class="hljs-number">1</span>] }
+
+decl:
+  | datatype ident ASSIGN expr SEMICOLON                { AssigningDecl($<span class="hljs-number">1</span>, $<span class="hljs-number">2</span>, $<span class="hljs-number">4</span>) }
+  | datatype ident SEMICOLON                            { PrimitiveDecl($<span class="hljs-number">1</span>, $<span class="hljs-number">2</span>) }
+
+statement:
+  | IF expr COLON statement ELSE statement
+      { IfStatement($<span class="hljs-number">2</span>, $<span class="hljs-number">4</span>, $<span class="hljs-number">6</span>) }
+  | IF expr COLON statement %prec IFX
+      { IfStatement($<span class="hljs-number">2</span>, $<span class="hljs-number">4</span>, EmptyStatement) }
+
+  | WHILE expr COLON statement { WhileStatement($<span class="hljs-number">2</span>, $<span class="hljs-number">4</span>) }
+  | FOR iterator COLON statement { ForStatement($<span class="hljs-number">2</span>, $<span class="hljs-number">4</span>) }
+
+  | LCURLY statement_seq RCURLY { CompoundStatement($<span class="hljs-number">2</span>) }
+
+  | expr SEMICOLON { Expression($<span class="hljs-number">1</span>) }
+  | SEMICOLON { EmptyStatement }
+  | decl { Declaration($<span class="hljs-number">1</span>) }
+
+  | RETURN expr SEMICOLON { ReturnStatement($<span class="hljs-number">2</span>) }
+  | RETURN SEMICOLON { VoidReturnStatement }
+
+  <span class="hljs-comment">/* Control flow */</span>
+  | BREAK { BreakStatement }
+  | CONTINUE { ContinueStatement }
+
+iterator:
+  | ident IN LSQUARE range RSQUARE { RangeIterator(NoneType, $<span class="hljs-number">1</span>, $<span class="hljs-number">4</span>) }
+  | datatype ident IN LSQUARE range RSQUARE { RangeIterator($<span class="hljs-number">1</span>, $<span class="hljs-number">2</span>, $<span class="hljs-number">5</span>) }
+  | datatype ident IN expr { ArrayIterator($<span class="hljs-number">1</span>, $<span class="hljs-number">2</span>, $<span class="hljs-number">4</span>) }
+
+range:
+  | expr COLON expr COLON expr { Range($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>, $<span class="hljs-number">5</span>) }
+  | expr COLON expr { Range($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>, IntLit(<span class="hljs-string">"1"</span>)) }
+  | COLON expr COLON expr { Range(IntLit(<span class="hljs-string">"0"</span>), $<span class="hljs-number">2</span>, $<span class="hljs-number">4</span>) }
+  | COLON expr { Range(IntLit(<span class="hljs-string">"0"</span>), $<span class="hljs-number">2</span>, IntLit(<span class="hljs-string">"1"</span>)) }
+
+top_level_statement:
+  | DEF datatype ident COLON param_list LCURLY statement_seq RCURLY
+      { FunctionDecl($<span class="hljs-number">2</span>, $<span class="hljs-number">3</span>, $<span class="hljs-number">5</span>, $<span class="hljs-number">7</span>) }
+  | datatype ident COLON param_list SEMICOLON
+      { ForwardDecl($<span class="hljs-number">1</span>, $<span class="hljs-number">2</span>, $<span class="hljs-number">4</span>) }
+  | decl { Declaration($<span class="hljs-number">1</span>) }
+
+param:
+  | datatype ident { PrimitiveDecl($<span class="hljs-number">1</span>, $<span class="hljs-number">2</span>) }
+
+non_empty_param_list:
+  | param COMMA non_empty_param_list { $<span class="hljs-number">1</span> :: $<span class="hljs-number">3</span> }
+  | param { [$<span class="hljs-number">1</span>] }
+
+param_list:
+  | non_empty_param_list { $<span class="hljs-number">1</span> }
+  | { [] }
+
+top_level:
+  | top_level_statement top_level {$<span class="hljs-number">1</span> :: $<span class="hljs-number">2</span>}
+  | top_level_statement { [$<span class="hljs-number">1</span>] }
+
+statement_seq:
+  | statement statement_seq {$<span class="hljs-number">1</span> :: $<span class="hljs-number">2</span> }
+  | { [] }</code></pre></div></body>
 </html>
