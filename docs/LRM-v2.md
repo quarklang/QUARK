@@ -25,9 +25,6 @@ FILL OUT LATER
 ###Lexical Conventions
 A program in QUARK includes at least one function definition, though something trivial like a variable declaration or a string should compile. Programs are written using a basic source character set accepted by the C++ compiler in use. Refer to what source-code file encoding your compiler accepts. The QUARK compiler will only output ASCII.
 
-###Line Terminators
-?
-
 ###Comments
 MATLAB style commenting is supported. A MATLAB style comment begins with `%` and ends with `%`. Multi-line MATLAB comments start with `%{` and end with `}%`. Any sequence of characters can appear inside of a comment except the string `}%`. These comments do not nest. 
 
@@ -123,7 +120,24 @@ An `int` is a 64-bit signed integer.
 A `float` is a 64-bit signed floating-point number.
 
 ####fraction
-A `fraction` is denoted by two `int` types separated by `$`. 
+A `fraction` is denoted by two `int` types separated by `$`. The `int` value to the left of `$` represents the numerator, and the `int` value to the right of `$` represents the denominator. QUARK provides an inverse operator `~`. 
+
+```matlab
+frac foo = 2$3; % represents 4/6
+~foo; % 3$2
+```
+
+####Note on int, float, and fraction
+Fraction types may be compare to int and float types using the following comparators: `<`, `>`, `<=`, `>=`, `!=`, and `==`.
+
+```matlab
+int i = 3;
+float ft = 2.0;
+frac f = 2$3;
+
+i > f;
+ft <= f;
+```
 
 ####bool
 A `bool` value is denoted using the literals `true` or `false`.
@@ -139,12 +153,12 @@ complex cnum2 = i(9) % this gives us i(9, 0)
 ```
 
 ####string
-A `string` is a sequence of characters. String literals are placed between double quotations.
+A `string` is a sequence of characters. String literals are placed between double quotations. QUARK supports string  lexicographic comparison using `<`, `>`, `<=`, `>=`, `!=`, and `==`.
 
 ####qreg
 A `qreg` type represents a quantum register. A `qreg` accepts two `int` types. The left value denotes the initial size of a quantum register, and the right value denotes the initial bit.
 
-```
+```matlab
 qreg q = <| 1, 1 |>;
 ```
 
@@ -159,20 +173,22 @@ qreg q = <|10, 3|>;
 hadamard(q);
 ```
 
-Additionally, qreg values may be measured using the `?` operator, and the `?` operator may only operate on an LValue of type qreg.
-
-The `?` operator may only be invoked on an LValue.
+Additionally, qreg values may be measured using the destructive `?` operator and the non-destructive (but unrealistic) <code>?'</code> operator; the `?` and  <code>?'</code> operators may only operate on an LValue of type qreg.
 
 ```matlab
 q ? [2:10];  % measures qubit 2 to 10
 ```
 
 ####matrix
-QUARK allows you to create matrices; a `matrix` uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only `int`, `float`, or `complex`. Matrix elements may be accessed with a square bracket notation by separating the column and row index numbers by commas.
+QUARK allows you to create matrices; a `matrix` uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only `int`, `float`, or `complex`. Matrix elements may be accessed with a square bracket notation by separating the column and row index numbers by commas. 
+
+QUARK provides the prime operator <code>'</code> for matrix transposition.
 
 ```matlab
 float[[]] mat = [| 1.2, 3.4; 5.6, 7.8 |];
 mat[2, 1];
+
+mat'; % transpose matrix
 ```
 
 ####array
@@ -193,12 +209,12 @@ int[][] b = [[1,2,3], [4,5,6]]; % 2-d array
 
 Array indices can be accessed using the square bracket notation with an integer such as:
 
-```
+```matlab
 int[] arr = [0, 1, 2];
 arr[0]; 
 ```
 or
-```
+```matlab
 int[] arr = [0, 1, 2];
 int i = 0;
 arr[i];
@@ -227,7 +243,7 @@ Void is a type for a function that returns normally, but does not provide a resu
 ###Function types
 Functions take in zero or more variables of primitive or array types and optionally return a variable of primitive or array type. A function declaration always begins with `def`, the return type of the function, a colon `:`, and a list of formal parameters which may be empty.
 
-```
+```matlab
 def void main: int x
 {
 	% statement
@@ -239,7 +255,7 @@ def void main: int x
 ####Declaring a Variable
 Variables can be defined within individual functions or in the global scope. Variables may be declared and then defined, or declared and defined simultaneously. An expression to which a value may be assigned is called an LValue.
 
-```
+```matlab
 int x; % definition
 x = 5; % declaration
 int y = 6; % definition and declaration
@@ -249,7 +265,7 @@ x and y are LValues. LValues are named as such because they can appear on the le
 ####Declaring an Array
 As previously shown, arrays can be multidimensional, and may be of variable length. Arrays may be declared on their own with a size to get an uninitialized array of the given size. They can also be initialized with values upon declaration.
 
-```
+```matlab
 int[5]; % gives us [0,0,0,0,0]
 int[] a = [1, 2, 3]; % array initialization
 int[][] b = [[1,2,3], [4,5,6]]; % 2-d array
@@ -311,7 +327,7 @@ Assignment has right to left precedence.
 ####Bitwise Logical / Unary
 |  	 Operator	 |         	 |
 |:---------- |------------------:|
-| `~`		 | Bitwise not |
+| `~`		 | Bitwise not and fraction inversion |
 | `&`		 | Bitwise and |
 | `^`		 | Bitwise xor |
 | <code>&#124;</code> | Bitwise or |
@@ -321,13 +337,25 @@ Assignment has right to left precedence.
 ####Quantum 
 |  	 Operator	 |         	 |
 |:---------- |------------------:|
-| `?`		 | quantum measurement query
+| `?`		 | quantum measurement query (destructive) |
+| `?'`		 | quantum measurement query (non-destructive)
 
-The `?` operator may only be invoked on an LValue.
+The `?` and `?'` operators may only be invoked on an LValue.
 
 ```matlab
 q ? [2:10];  % measures qubit 2 to 10
 ```
+
+####Ternary Operator
+QUARK supports Python style ternary conditional operators:
+
+```python
+3 if true else 5;
+
+4 if 3 > 2 if not (1==1) else 3 < 2 else -2 if true else 3
+```
+
+Ternary operators are right associative.
 
 ####Operator Precedence and Associativity 
 |  	 Operator	 |  Associativity    |

@@ -48,7 +48,6 @@
 <li><a href="#reference-manual">Reference Manual</a><ul>
 <li><a href="#grammar-notation">Grammar Notation</a></li>
 <li><a href="#lexical-conventions">Lexical Conventions</a></li>
-<li><a href="#line-terminators">Line Terminators</a></li>
 <li><a href="#comments">Comments</a></li>
 <li><a href="#whitespace">Whitespace</a></li>
 <li><a href="#tokens">Tokens</a></li>
@@ -63,6 +62,7 @@
 <li><a href="#int">int</a></li>
 <li><a href="#float">float</a></li>
 <li><a href="#fraction">fraction</a></li>
+<li><a href="#note-on-int-float-and-fraction">Note on int, float, and fraction</a></li>
 <li><a href="#bool">bool</a></li>
 <li><a href="#complex">complex</a></li>
 <li><a href="#string">string</a></li>
@@ -86,6 +86,7 @@
 <li><a href="#logical">Logical</a></li>
 <li><a href="#bitwise-logical-unary">Bitwise Logical / Unary</a></li>
 <li><a href="#quantum">Quantum</a></li>
+<li><a href="#ternary-operator">Ternary Operator</a></li>
 <li><a href="#operator-precedence-and-associativity">Operator Precedence and Associativity</a></li>
 </ul>
 </li>
@@ -136,12 +137,6 @@
 <h3 id="lexical-conventions">Lexical Conventions</h3>
 
 <p>A program in QUARK includes at least one function definition, though something trivial like a variable declaration or a string should compile. Programs are written using a basic source character set accepted by the C++ compiler in use. Refer to what source-code file encoding your compiler accepts. The QUARK compiler will only output ASCII.</p>
-
-
-
-<h3 id="line-terminators">Line Terminators</h3>
-
-<p>?</p>
 
 
 
@@ -296,9 +291,25 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
 
 <h4 id="fraction">fraction</h4>
 
-<p>A <code>fraction</code> is denoted by two <code>int</code> types separated by <code>$</code>. </p>
+<p>A <code>fraction</code> is denoted by two <code>int</code> types separated by <code>$</code>. The <code>int</code> value to the left of <code>$</code> represents the numerator, and the <code>int</code> value to the right of <code>$</code> represents the denominator. QUARK provides an inverse operator <code>~</code>. </p>
 
 
+
+<pre class="prettyprint"><code class="language-matlab hljs ">frac foo = <span class="hljs-number">2</span>$<span class="hljs-number">3</span>; <span class="hljs-comment">% represents 4/6</span>
+~foo; <span class="hljs-comment">% 3$2</span></code></pre>
+
+
+
+<h4 id="note-on-int-float-and-fraction">Note on int, float, and fraction</h4>
+
+<p>Fraction types may be compare to int and float types using the following comparators: <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>!=</code>, and <code>==</code>.</p>
+
+<pre class="prettyprint"><code class="language-matlab hljs ">int <span class="hljs-built_in">i</span> = <span class="hljs-number">3</span>;
+float ft = <span class="hljs-number">2.0</span>;
+frac f = <span class="hljs-number">2</span>$<span class="hljs-number">3</span>;
+
+<span class="hljs-built_in">i</span> &gt; f;
+ft &lt;= f;</code></pre>
 
 <h4 id="bool">bool</h4>
 
@@ -321,7 +332,7 @@ complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span cl
 
 <h4 id="string">string</h4>
 
-<p>A <code>string</code> is a sequence of characters. String literals are placed between double quotations.</p>
+<p>A <code>string</code> is a sequence of characters. String literals are placed between double quotations. QUARK supports string  lexicographic comparison using <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>!=</code>, and <code>==</code>.</p>
 
 
 
@@ -331,9 +342,11 @@ complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span cl
 
 
 
-<pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">qreg q </span>=<span class="hljs-string"> &lt;| 1, 1 |&gt;;</span></code></pre>
+<pre class="prettyprint"><code class="language-matlab hljs ">qreg q = &lt;| <span class="hljs-number">1</span>, <span class="hljs-number">1</span> |&gt;;</code></pre>
 
 <p>Qreg must be passed as an LValue to any function:</p>
+
+
 
 <pre class="prettyprint"><code class=" hljs matlab"><span class="hljs-comment">% disallowed</span>
 <span class="hljs-built_in">hadamard</span>(&lt;|<span class="hljs-number">10</span>, <span class="hljs-number">3</span>|&gt;); 
@@ -342,20 +355,26 @@ complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span cl
 qreg q = &lt;|<span class="hljs-number">10</span>, <span class="hljs-number">3</span>|&gt;;
 <span class="hljs-built_in">hadamard</span>(q);</code></pre>
 
-<p>Additionally, qreg values may be measured using the <code>?</code> operator, and the <code>?</code> operator may only operate on an LValue of type qreg.</p>
-
-<p>The <code>?</code> operator may only be invoked on an LValue.</p>
+<p>Additionally, qreg values may be measured using the destructive <code>?</code> operator and the non-destructive (but unrealistic) <code>?'</code> operator; the <code>?</code> and  <code>?'</code> operators may only operate on an LValue of type qreg.</p>
 
 <pre class="prettyprint"><code class="language-matlab hljs ">q ? <span class="hljs-matrix">[<span class="hljs-number">2</span>:<span class="hljs-number">10</span>]</span>;  <span class="hljs-comment">% measures qubit 2 to 10</span></code></pre>
 
+
+
 <h4 id="matrix">matrix</h4>
 
-<p>QUARK allows you to create matrices; a <code>matrix</code> uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only <code>int</code>, <code>float</code>, or <code>complex</code>. Matrix elements may be accessed with a square bracket notation by separating the column and row index numbers by commas.</p>
+<p>QUARK allows you to create matrices; a <code>matrix</code> uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only <code>int</code>, <code>float</code>, or <code>complex</code>. Matrix elements may be accessed with a square bracket notation by separating the column and row index numbers by commas. </p>
+
+<p>QUARK provides the prime operator <code>'</code> for matrix transposition.</p>
 
 
 
 <pre class="prettyprint"><code class="language-matlab hljs ">float<span class="hljs-matrix">[[]</span>] mat = <span class="hljs-matrix">[| <span class="hljs-number">1.2</span>, <span class="hljs-number">3.4</span>; <span class="hljs-number">5.6</span>, <span class="hljs-number">7.8</span> |]</span>;
-mat<span class="hljs-matrix">[<span class="hljs-number">2</span>, <span class="hljs-number">1</span>]</span>;</code></pre>
+mat<span class="hljs-matrix">[<span class="hljs-number">2</span>, <span class="hljs-number">1</span>]</span>;
+
+<span class="hljs-transposed_variable">mat'</span>; <span class="hljs-comment">% transpose matrix</span></code></pre>
+
+
 
 <h4 id="array">array</h4>
 
@@ -376,16 +395,18 @@ int<span class="hljs-matrix">[]</span><span class="hljs-matrix">[]</span> b = <s
 
 <p>Array indices can be accessed using the square bracket notation with an integer such as:</p>
 
-<pre class="prettyprint"><code class=" hljs fix"><span class="hljs-attribute">int[] arr </span>=<span class="hljs-string"> [0, 1, 2];
-arr[0]; </span></code></pre>
+
+
+<pre class="prettyprint"><code class="language-matlab hljs ">int<span class="hljs-matrix">[]</span> arr = <span class="hljs-matrix">[<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>]</span>;
+arr<span class="hljs-matrix">[<span class="hljs-number">0</span>]</span>; </code></pre>
 
 <p>or</p>
 
 
 
-<pre class="prettyprint"><code class=" hljs cs"><span class="hljs-keyword">int</span>[] arr = [<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>];
-<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>;
-arr[i];</code></pre>
+<pre class="prettyprint"><code class="language-matlab hljs ">int<span class="hljs-matrix">[]</span> arr = <span class="hljs-matrix">[<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>]</span>;
+int <span class="hljs-built_in">i</span> = <span class="hljs-number">0</span>;
+arr<span class="hljs-matrix">[i]</span>;</code></pre>
 
 <p>Indices of multidimensional arrays may be accessed by separating the dimensional index numbers by commas:</p>
 
@@ -404,6 +425,8 @@ arr<span class="hljs-matrix">[<span class="hljs-number">1</span>]</span><span cl
 <span class="hljs-keyword">if</span> x in <span class="hljs-matrix">[<span class="hljs-number">1</span>:<span class="hljs-number">10</span>]</span>:
     <span class="hljs-comment">% statement here is executed</span></code></pre>
 
+
+
 <h4 id="void">void</h4>
 
 <p>Void is a type for a function that returns normally, but does not provide a result value to the caller.</p>
@@ -416,10 +439,10 @@ arr<span class="hljs-matrix">[<span class="hljs-number">1</span>]</span><span cl
 
 
 
-<pre class="prettyprint"><code class=" hljs python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">void</span> <span class="hljs-title">main</span>:</span> int x
-{
+<pre class="prettyprint"><code class="language-matlab hljs ">def void main: int x
+<span class="hljs-cell">{
     % statement
-}</code></pre>
+}</span></code></pre>
 
 
 
@@ -433,9 +456,9 @@ arr<span class="hljs-matrix">[<span class="hljs-number">1</span>]</span><span cl
 
 
 
-<pre class="prettyprint"><code class=" hljs perl"><span class="hljs-keyword">int</span> <span class="hljs-keyword">x</span>; % definition
-<span class="hljs-keyword">x</span> = <span class="hljs-number">5</span>; % declaration
-<span class="hljs-keyword">int</span> <span class="hljs-keyword">y</span> = <span class="hljs-number">6</span>; % definition <span class="hljs-keyword">and</span> declaration</code></pre>
+<pre class="prettyprint"><code class="language-matlab hljs ">int x; <span class="hljs-comment">% definition</span>
+x = <span class="hljs-number">5</span>; <span class="hljs-comment">% declaration</span>
+int y = <span class="hljs-number">6</span>; <span class="hljs-comment">% definition and declaration</span></code></pre>
 
 <p>x and y are LValues. LValues are named as such because they can appear on the left side of an assignment (though they may also appear on the right side).</p>
 
@@ -447,9 +470,9 @@ arr<span class="hljs-matrix">[<span class="hljs-number">1</span>]</span><span cl
 
 
 
-<pre class="prettyprint"><code class=" hljs lua">int[<span class="hljs-number">5</span>]; % gives us [<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]
-int[] a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]; % array initialization
-int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="hljs-number">2</span>-d array</code></pre>
+<pre class="prettyprint"><code class="language-matlab hljs ">int<span class="hljs-matrix">[<span class="hljs-number">5</span>]</span>; <span class="hljs-comment">% gives us [0,0,0,0,0]</span>
+int<span class="hljs-matrix">[]</span> a = <span class="hljs-matrix">[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]</span>; <span class="hljs-comment">% array initialization</span>
+int<span class="hljs-matrix">[]</span><span class="hljs-matrix">[]</span> b = <span class="hljs-matrix">[[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>]</span>, <span class="hljs-matrix">[<span class="hljs-number">4</span>,<span class="hljs-number">5</span>,<span class="hljs-number">6</span>]</span>]; <span class="hljs-comment">% 2-d array</span></code></pre>
 
 
 
@@ -633,7 +656,7 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
 </thead>
 <tbody><tr>
   <td align="left"><code>~</code></td>
-  <td align="right">Bitwise not</td>
+  <td align="right">Bitwise not and fraction inversion</td>
 </tr>
 <tr>
   <td align="left"><code>&amp;</code></td>
@@ -658,8 +681,6 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
 </tbody></table>
 
 
-
-
 <h4 id="quantum">Quantum</h4>
 
 <table>
@@ -671,18 +692,30 @@ int[][] b = <span class="hljs-string">[[1,2,3], [4,5,6]]</span>; % <span class="
 </thead>
 <tbody><tr>
   <td align="left"><code>?</code></td>
-  <td align="right">quantum measurement query</td>
+  <td align="right">quantum measurement query (destructive)</td>
+</tr>
+<tr>
+  <td align="left"><code>?'</code></td>
+  <td align="right">quantum measurement query (non-destructive)</td>
 </tr>
 </tbody></table>
 
 
-<p>The <code>?</code> operator may only be invoked on an LValue.</p>
-
-
+<p>The <code>?</code> and <code>?'</code> operators may only be invoked on an LValue.</p>
 
 <pre class="prettyprint"><code class="language-matlab hljs ">q ? <span class="hljs-matrix">[<span class="hljs-number">2</span>:<span class="hljs-number">10</span>]</span>;  <span class="hljs-comment">% measures qubit 2 to 10</span></code></pre>
 
 
+
+<h4 id="ternary-operator">Ternary Operator</h4>
+
+<p>QUARK supports Python style ternary conditional operators:</p>
+
+<pre class="prettyprint"><code class="language-python hljs "><span class="hljs-number">3</span> <span class="hljs-keyword">if</span> true <span class="hljs-keyword">else</span> <span class="hljs-number">5</span>;
+
+<span class="hljs-number">4</span> <span class="hljs-keyword">if</span> <span class="hljs-number">3</span> &gt; <span class="hljs-number">2</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> (<span class="hljs-number">1</span>==<span class="hljs-number">1</span>) <span class="hljs-keyword">else</span> <span class="hljs-number">3</span> &lt; <span class="hljs-number">2</span> <span class="hljs-keyword">else</span> -<span class="hljs-number">2</span> <span class="hljs-keyword">if</span> true <span class="hljs-keyword">else</span> <span class="hljs-number">3</span></code></pre>
+
+<p>Ternary operators are right associative.</p>
 
 <h4 id="operator-precedence-and-associativity">Operator Precedence and Associativity</h4>
 
@@ -803,8 +836,6 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
     % multiple statements
 }</span></code></pre>
 
-
-
 <h3 id="while-loop">While Loop</h3>
 
 <p>A while loop is of the form:</p>
@@ -924,6 +955,8 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 
 <p>QUARK does not allow explicit type casting.</p>
 
+
+
 <h3 id="overloading">Overloading</h3>
 
 <p>QUARK keeps separate symbol tables for functions and types, and as such the same identifier may be used as a variable and a function at the same time. </p>
@@ -938,11 +971,15 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 
 <p>Otherwise, function overloading by itself is not supported.</p>
 
+
+
 <h3 id="scoping">Scoping</h3>
 
 <p>In QUARK, there are both global and local scopes. QUARK uses block scoping. A block is a section of code contained by a function, a conditional (if/while), or looping construct (for). Variables defined in the global scope can be used in any function, as well as in any block within that function.  Each nested block creates a new scope, and variables declared in the new scope supersede variables declared in higher scopes.</p>
 
 <p>Below is an example of the subtleties of QUARK’s scoping rules:</p>
+
+
 
 <pre class="prettyprint"><code class="language-matlab hljs ">int <span class="hljs-built_in">i</span> = <span class="hljs-number">1000</span>;
 <span class="hljs-keyword">for</span> <span class="hljs-built_in">i</span> in <span class="hljs-matrix">[<span class="hljs-number">0</span>:<span class="hljs-number">7</span>:<span class="hljs-number">2</span>]</span>:
@@ -959,6 +996,8 @@ int <span class="hljs-built_in">i</span> = <span class="hljs-number">1000</span>
 }</span>
 
 <span class="hljs-built_in">i</span>; <span class="hljs-comment">% still 1000</span></code></pre>
+
+
 
 <h3 id="grammar">Grammar</h3>
 
