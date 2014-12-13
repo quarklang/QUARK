@@ -9,5 +9,5 @@ def void test_add:
     int x = 7;
     int y = 20;
 
-    print add(x, y);
+    print(add(x, y));
 }

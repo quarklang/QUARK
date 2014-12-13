@@ -3,5 +3,5 @@ def void range_test:
 {
     int x;
     for x in [0:5]:
-        print x;
+        print(x);
 }
