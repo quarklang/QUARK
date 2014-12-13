@@ -75,7 +75,7 @@ let gen_temp_var _ =
         | 2 -> Char.chr (97 + Random.int 26)
         | _ -> '_'
       in
-      acc ^ Char.escaped rand_char
+      acc ^ String.make 1 rand_char
   ) Builtin.forbidden_prefix (seq 10)
 
 
