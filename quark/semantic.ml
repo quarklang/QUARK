@@ -335,8 +335,13 @@ let rec gen_s_expr env = function
           | T.Int,   T.Int 
           | T.Float, T.Float 
           | T.Int,   T.Float 
-          | T.Float, T.Int -> T.Bool, S.OpVerbatim
-          (* | T.Fraction, T.Fraction -> T.Bool *)
+          | T.Float, T.Int 
+          | T.Fraction, T.Fraction
+          | T.String, T.String -> T.Bool, S.OpVerbatim
+          | T.Int, T.Fraction
+          | T.Float, T.Fraction -> T.Bool, S.CastFraction1
+          | T.Fraction, T.Int
+          | T.Fraction, T.Float -> T.Bool, S.CastFraction2
           | t1, t2 -> failwith @@ err_msg op t1 t2
       in
       let binop_math op type1 type2 = 
@@ -609,7 +614,10 @@ let rec gen_s_expr env = function
         List.fold_right ( (* fold right so we don't have to List.rev *)
           fun ex (s_ex_list, is_matrix_list) -> 
             let _, s_ex, ex_type = gen_s_expr env ex in
-            s_ex :: s_ex_list, (is_matrix ex_type) :: is_matrix_list
+            if ex_type = A.DataType(T.Void) then
+              failwith "Cannot print void type"
+            else
+              s_ex :: s_ex_list, (is_matrix ex_type) :: is_matrix_list
         ) ex_list ([], [])
       in
       env, S.FunctionCall(fidstr, s_ex_list, is_matrix_list), finfo.f_return
@@ -680,6 +688,38 @@ let rec gen_s_expr env = function
           ^ A.str_of_datatype elem_type ^" -.- "^ A.str_of_datatype arr_elem_type
     in
     env, S.Membership(s_elem, s_array_ex), A.DataType(T.Bool)
+  
+  (* Python style tertiary *)
+  | A.Tertiary(true_ex, pred, false_ex) -> 
+    let env, s_pred, pred_type = gen_s_expr env pred in
+    if pred_type = A.DataType(T.Bool) then
+      let env, s_true_ex, true_type = gen_s_expr env true_ex in
+      let env, s_false_ex, false_type = gen_s_expr env false_ex in
+      let result_type, optag = match true_type, false_type with
+      | A.DataType(t), A.DataType(f) -> 
+        let ret, optag = match t,f with
+        | T.Int, T.Float
+        | T.Float, T.Int -> T.Float, S.OpVerbatim
+        | T.Int, T.Fraction
+        | T.Float, T.Fraction -> T.Fraction, S.CastFraction1
+        | T.Fraction, T.Int
+        | T.Fraction, T.Float -> T.Fraction, S.CastFraction2
+        | T.Int, T.Complex
+        | T.Float, T.Complex -> T.Complex, S.CastComplex1
+        | T.Complex, T.Int
+        | T.Complex, T.Float -> T.Complex, S.CastComplex2
+        | t', f' when t' = f' -> t', S.OpVerbatim
+        | _ -> failwith @@ "Tertiary expression has incompatible types: " 
+                  ^ T.str_of_type t ^" -.- "^ T.str_of_type f
+        in A.DataType(ret), optag
+      | true', false' when true' = false' -> true', S.OpVerbatim
+      | _ -> failwith @@ "Tertiary expression has incompatible types: " 
+          ^ A.str_of_datatype true_type ^" -.- "^ A.str_of_datatype false_type
+      in
+      env, S.Tertiary(s_true_ex, s_pred, s_false_ex, optag), result_type
+    else
+      failwith @@ 
+        "Tertiary predicate must be bool, but "^ A.str_of_datatype pred_type ^" provided"
     
   | _ -> failwith "INTERNAL some expr not properly checked"
 

@@ -17,6 +17,7 @@
 
 # Repo specific
 scanner.ml
+preprocessor.ml
 parser.mli
 parser.ml
 quarkc

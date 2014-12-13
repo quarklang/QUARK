@@ -75,7 +75,7 @@ let gen_temp_var _ =
         | 2 -> Char.chr (97 + Random.int 26)
         | _ -> '_'
       in
-      acc ^ Char.escaped rand_char
+      acc ^ String.make 1 rand_char
   ) Builtin.forbidden_prefix (seq 10)
 
 
@@ -102,6 +102,12 @@ let more_arg_helper left_delimiter right_delimiter func code_list =
 let more_arg = more_arg_helper "(" ")"
 
 let array_arg = more_arg_helper "{ " " }"
+
+let cast_complex ex_code = 
+  two_arg "complex<float>" ex_code "0.0"
+
+let cast_fraction ex_code = 
+  two_arg "Frac" ex_code "1"
   
 (* common error msg: unhandled case that shouldn't happen *)
 let fail_unhandle msg = 
@@ -151,10 +157,6 @@ let rec gen_expr = function
     let expr1_code = gen_expr expr1 in
     let expr2_code = gen_expr expr2 in
     (* cast helpers *)
-    let cast_complex ex_code = 
-      two_arg "complex<float>" ex_code "0.0" in
-    let cast_fraction ex_code = 
-      two_arg "Frac" ex_code "1" in
     let parenthize code1 op code2 =
       surr @@ code1 ^" "^ gen_binop op ^" "^ code2
     in begin
@@ -263,6 +265,23 @@ let rec gen_expr = function
   | S.Membership(elem, array) -> 
     (* from quarklang.h *)
     two_arg "membership_in" (gen_expr elem) (gen_expr array)
+    
+  (* python-style tertiary operator *)
+  | S.Tertiary(true_ex, pred, false_ex, optag) -> 
+    let true_code = gen_expr true_ex in
+    let true_code = match optag with
+    | S.CastFraction1 -> cast_fraction true_code
+    | S.CastComplex1 -> cast_complex true_code
+    | _ -> true_code
+    in
+    let false_code = gen_expr false_ex in
+    let false_code = match optag with
+    | S.CastFraction2 -> cast_fraction false_code
+    | S.CastComplex2 -> cast_complex false_code
+    | _ -> false_code
+    in
+    let pred_code = gen_expr pred in
+    surr @@ pred_code ^" ? "^ true_code ^" : "^ false_code
     
   | _ -> fail_unhandle "expr"
 
