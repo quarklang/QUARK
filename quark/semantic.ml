@@ -378,7 +378,9 @@ let rec gen_s_expr env = function
       let logic_equal op type1 type2 = 
         match type1, type2 with
           | T.Float, T.Int
-          | T.Int,   T.Float -> T.Bool, S.OpVerbatim
+          | T.Int,   T.Float 
+          | T.Float, T.Float
+          | T.Complex, T.Complex -> T.Bool, S.OpFloatComparison
           | t1, t2 when t1 = t2 -> T.Bool, S.OpVerbatim
           | t1, t2 -> failwith @@ err_msg op t1 t2
       in
@@ -420,7 +422,9 @@ let rec gen_s_expr env = function
       let result_type, optag =
         match op with
         | A.Eq  | A.NotEq when type1 = type2 -> 
-            A.DataType(T.Bool), S.OpVerbatim
+            A.DataType(T.Bool), 
+            if is_matrix type1 then (* matrix floats should be compared with tol *)
+               S.OpFloatComparison else S.OpVerbatim 
         | A.Add | A.Sub | A.Mul | A.Pow when type1 = type2 && is_matrix type1 -> 
             type1, if op = A.Pow then S.OpMatrixKronecker else S.OpVerbatim
         | A.BitAnd when type1 = type2 -> 
