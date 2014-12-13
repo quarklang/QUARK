@@ -1,5 +1,8 @@
 open Semantic
 
+(* g++ compilation flags *)
+let gpp_command = "g++ -std=c++11 -O3"
+
 let _ =
   (* from http://rosettacode.org/wiki/Command-line_arguments#OCaml *)
   let srcfile = ref "" 
@@ -62,4 +65,31 @@ let _ =
     output_string (open_out !cppfile) code
   in
   (* Compile to binary executable with g++ *)
-  3
+  if !exefile <> "" then
+    if !cppfile = "" then
+      failwith "Please specify -c <output.cpp> before compiling to executable"
+    else
+      let lib_folder = Filename.concat (Filename.dirname Sys.argv.(0)) "../lib" in
+      let lib_path name = Filename.concat lib_folder name in
+      let lib_exists name = Sys.file_exists (lib_path name) in
+      if Sys.file_exists lib_folder then
+        begin
+        if not (lib_exists "Eigen") then
+          (* extract from Eigen.tar library *)
+          if lib_exists "Eigen.tar" then
+            let cmd = "tar xzf " 
+              ^ lib_path "Eigen.tar" ^ " -C " ^ lib_folder in
+            prerr_endline @@ "Extracting Eigen library from tar:\n" ^ cmd ^"\n";
+            ignore @@ Sys.command cmd
+          else
+            failwith "Neither lib/Eigen/ nor lib/Eigen.tar found" 
+        ;
+        (* Invokes g++ *)
+        let cmd = gpp_command ^ " -I " ^ lib_folder
+            ^ " -static " ^ !cppfile ^ " -L " ^ lib_folder
+            ^ " -lquark -o " ^ !exefile in
+        prerr_endline @@ "Invoking g++ command: \n" ^ cmd;
+        ignore @@ Sys.command cmd;
+        end
+      else
+        failwith "Library folder ../lib doesn't exist. Cannot compile to executable. "
