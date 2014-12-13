@@ -7,6 +7,9 @@ let gpp_command = "g++ -std=c++11 -O3"
 (* where to find the libraries, relative to the executable *)
 let relative_lib_path = "../lib"
 
+(* detect OS and select the appropriate quark static library *)
+let quark_static_lib = "quark_" ^ String.lowercase (Sys.os_type)
+
 (*********** Main entry of Quark compiler ***********)
 let _ =
   (* from http://rosettacode.org/wiki/Command-line_arguments#OCaml *)
@@ -95,7 +98,7 @@ let _ =
         (* Invokes g++ *)
         let cmd = gpp_command ^ " -I " ^ lib_folder
             ^ " -static " ^ !cppfile ^ " -L " ^ lib_folder
-            ^ " -lquark -o " ^ !exefile in
+            ^ " -l" ^ quark_static_lib ^ " -o " ^ !exefile in
         prerr_endline @@ "Invoking g++ command: \n" ^ cmd;
         ignore @@ Sys.command cmd;
         end
