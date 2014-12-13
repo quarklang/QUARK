@@ -62,7 +62,9 @@ let _ =
   let _ = if !cppfile = "" then (* print to stdout *)
     print_endline code
   else
-    output_string (open_out !cppfile) code
+    let file_channel = open_out !cppfile in
+      output_string file_channel code;
+      close_out file_channel
   in
   (* Compile to binary executable with g++ *)
   if !exefile <> "" then
