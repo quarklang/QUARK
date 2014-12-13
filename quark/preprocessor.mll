@@ -4,13 +4,15 @@
 }
 
 let white = [' ' '\t' '\r' '\n']  
+let nonwhite = [^ ' ' '\t' '\r' '\n' ';']  
 
 (* code: string,  imports: string[] of file paths *)
 rule process code imports = parse
     (* we shouldn't preprocess anything in a string literal *)
   | ('"' ('\\' _ | [^ '"'])* '"') as s { process (code ^ s) imports lexbuf }
-  | "import"  { 
-      let import_file = (get_import "" lexbuf) ^ extension in
+    (* gets the import file name *)
+  | "import" white* ((nonwhite [^';']* nonwhite) as filename) white* ';' { 
+      let import_file = filename ^ extension in
       process code (import_file :: imports) lexbuf
     }
   | "import" white* ';'  { failwith "Empty import statement" }
@@ -20,8 +22,3 @@ rule process code imports = parse
   | _ as c  { process (code ^ Char.escaped c) imports lexbuf }
     (* returns both the processed code and list of imported files *)
   | eof  { (code, List.rev imports) }
-
-(* gets the import file name *)
-and get_import filename = parse
-  | white* ((_* [^' ' '\t' '\r' '\n' ';']) as filename) white* ';'  {  filename  }
-  | eof  { failwith "import statement must be terminated by ;" }

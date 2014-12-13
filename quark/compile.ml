@@ -13,10 +13,10 @@ let read_file filename =
 
 let _ =
 
-  let lexbuf = Lexing.from_string "elif shit; import    asdf  \"import\"    ; " in
+  let lexbuf = Lexing.from_string "elif shit; import     \t\t  asdf  \"import\"; import elif asdf; elif import shit     ; " in
   let processed_code, imports = Preprocessor.process "" [] lexbuf in
-  let imports = List.fold_left (fun acc x -> acc ^x^ "; ") "" imports in
-  print_endline @@ processed_code ^"\nimported: "^ imports
+  let importss = List.fold_left (fun acc x -> acc ^x^ ":: ") "" imports in
+  print_endline @@ processed_code ^"\nimported("^string_of_int (List.length imports)^ "): "^ importss
   
   (*
   let lexbuf = Lexing.from_channel stdin in
