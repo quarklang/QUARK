@@ -1,3 +1,17 @@
+int M = 221;
+
+def int gcd: int a, int b
+{
+    int c;
+    while a != 0:
+    {
+        c = a;
+        a = b mod a;
+        b = c;
+    }
+    return b;
+}
+
 def int exp_mod: int b, int e, int m
 {
     int remainder;
@@ -70,9 +84,8 @@ def fraction to_fraction: int[] cfrac, int size
 {
 	if size < 1:
 		size = len(cfrac);
-	ans = 1$cfrac[size - 1];
-    int i;
-	for i in [(size - 1):0] :
+	fraction ans = 1$cfrac[size - 1];
+	for int i in [size-2 :0 :-1] :
 	{
 		ans += cfrac[i];
 		ans = ~ans;
@@ -80,7 +93,6 @@ def fraction to_fraction: int[] cfrac, int size
 	return ans + cfrac[0];
 }
 
-int M = 17 * 13;
 int nbit = log2_int(M) + 1;
 
 % This is the user defined function that should be passed as a string argument
@@ -102,7 +114,7 @@ def int main:
 
 		if gcd(b, M) != 1: continue;
 
-		qreg q = qclone(q);
+		qreg q = qclone(q0);
 
 		apply_oracle(q, "shor_oracle", nbit);
 
@@ -114,12 +126,11 @@ def int main:
 		while mTrial < 10:
 		{
             mTrial ++;
-			measured = q ?' nbit;
+			measured = q ?' [:nbit];
 			if measured != 0:
 			{
 				int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
-                int size;
-				for size in [len(cfrac):0] :
+				for int size in [len(cfrac):0:-1] :
 				{
 					int p = num(to_fraction(cfrac, size));
 					int P = p;
@@ -160,6 +171,6 @@ def int main:
 		}
 	}
 	print("FAIL");
-	return 1;
+	return 0;
 }
 

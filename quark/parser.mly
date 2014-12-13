@@ -23,10 +23,13 @@
 
 %right ASSIGN PLUS_EQUALS MINUS_EQUALS TIMES_EQUALS DIVIDE_EQUALS BITAND_EQUALS
 
+%nonassoc IFX
+%nonassoc ELSE
+
 %left IN 
 %right QUERY QUERY_UNREAL
 
-%left FRACTION
+%right IF
 %left COMPLEX_SYM
 %left OR
 %left AND
@@ -42,9 +45,7 @@
 %left DEF
 
 %right NOT BITNOT POWER UMINUS
-
-%nonassoc IFX
-%nonassoc ELSE
+%left PRIME /* matrix tranpose */
 
 %start top_level
 %type <Ast.statement list> top_level
@@ -89,6 +90,7 @@ expr:
   | BITNOT expr             { Unop(BitNot, $2) }
   | MINUS expr %prec UMINUS { Unop(Neg, $2) }
   | NOT expr                { Unop(Not, $2) }
+  | expr PRIME              { Unop(Transpose, $1) }
 
   /* Arithmetic */
   | expr PLUS expr    { Binop($1, Add, $3) }
@@ -133,6 +135,9 @@ expr:
 
   /* Membership testing with keyword 'in' */
   | expr IN expr    { Membership($1, $3) }
+
+  /* Python-style tertiary */
+  | expr IF expr ELSE expr   { Tertiary($1, $3, $5) }
 
   /* literals */
   | INT_LITERAL                                 { IntLit($1) }

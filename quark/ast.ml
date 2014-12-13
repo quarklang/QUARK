@@ -34,6 +34,7 @@ type unop =
   | Neg 
   | Not 
   | BitNot
+  | Transpose
 
 type postop = 
   | Dec 
@@ -72,6 +73,7 @@ and expr =
   | Lval of lvalue
   | Membership of expr * expr
   | FunctionCall of ident * expr list
+  | Tertiary of expr * expr * expr
 
 type decl =
   | PrimitiveDecl of datatype * ident
@@ -151,6 +153,7 @@ let str_of_unop = function
 | Neg -> "-"
 | Not -> "not"
 | BitNot -> "~"
+| Transpose -> "transpose"
 | _ -> failwith "INTERNAL unhandled unop"
 
 let str_of_postop = function

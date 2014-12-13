@@ -11,6 +11,7 @@ type op_tag =
   | OpArrayConcat
   | OpStringConcat
   | OpMatrixKronecker
+  | OpMatrixTranspose
   | OpQuerySingleBit (* measure only a single bit, not a range *)
 
 type lvalue =
@@ -35,9 +36,10 @@ and expr =
   | ArrayCtor of A.datatype * expr (* int size of new array *)
   | MatrixLit of A.datatype * expr list * int (* column dimension. Flattened *)
   | MatrixCtor of A.datatype * expr * expr (* int, int of new Matrix::Zeros() *)
-  | FunctionCall of string * expr list
+  | FunctionCall of string * expr list * bool list (* is_matrix, for pretty print *)
   | Lval of lvalue
-  | Membership of expr * expr (* not yet supported *)
+  | Membership of expr * expr
+  | Tertiary of expr * expr * expr * op_tag
 
 type decl =
   | AssigningDecl of A.datatype * string * expr
