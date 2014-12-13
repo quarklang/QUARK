@@ -2,7 +2,9 @@ open Semantic
 
 let _ =
   (* from http://rosettacode.org/wiki/Command-line_arguments#OCaml *)
-  let srcfile = ref "" and outfile = ref "" in
+  let srcfile = ref "" 
+    and cppfile = ref "" 
+    and exefile = ref "" in
   let speclist = [
       ("-s", Arg.String(fun src -> 
               let srclen = String.length src in
@@ -18,10 +20,13 @@ let _ =
                 failwith @@ "Source file doesn't exist: " ^ src),
         ": quark source file");
 
-      ("-o", Arg.String(fun out -> outfile := out), 
-        ": output C++ file. If unspecified, the generated code will print to stdout");
+      ("-c", Arg.String(fun cpp -> cppfile := cpp), 
+        ": generated C++ file. If unspecified, print generated code to stdout");
+
+      ("-o", Arg.String(fun exe -> exefile := exe), 
+        ": compile to executable. Requires g++ (version >= 4.7)");
   ] in
-  let usage = "usage: quarkc -s source.qk [-o output.cpp]" in
+  let usage = "usage: quarkc -s source.qk [-c output.cpp ] [-o executable]" in
   let _ = Arg.parse speclist
     (* handle anonymous args *)
     (fun arg -> failwith @@ "Unrecognized arg: " ^ arg)
@@ -50,8 +55,11 @@ let _ =
   (* Code generator: converts SAST to C++ code *)
   let code = Generator.gen_code sast in
   let code = Generator.header_code ^ code in
-  (* Output *)
-  if !outfile = "" then (* print to stdout *)
+  (* Output the generated code *)
+  let _ = if !cppfile = "" then (* print to stdout *)
     print_endline code
   else
-    output_string (open_out !outfile) code
+    output_string (open_out !cppfile) code
+  in
+  (* Compile to binary executable with g++ *)
+  3
