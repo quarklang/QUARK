@@ -17,7 +17,7 @@ rule scan code imports = parse
     }
   | "import" white* ';'  { failwith "Empty import statement" }
     (* supports python-style elif by simple string replacement!  *)
-  | "elif"  { scan (code ^ "else if") imports lexbuf }
+  | white+ "elif" white+ { scan (code ^ " else if ") imports lexbuf }
     (* copy anything else verbatim *)
   | _ as c  { scan (code ^ String.make 1 c) imports lexbuf }
     (* returns both the processed code and list of imported files *)
