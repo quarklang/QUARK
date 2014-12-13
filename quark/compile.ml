@@ -1,8 +1,13 @@
 open Semantic
 
+(*********** Configs ***********)
 (* g++ compilation flags *)
 let gpp_command = "g++ -std=c++11 -O3"
 
+(* where to find the libraries, relative to the executable *)
+let relative_lib_path = "../lib"
+
+(*********** Main entry of Quark compiler ***********)
 let _ =
   (* from http://rosettacode.org/wiki/Command-line_arguments#OCaml *)
   let srcfile = ref "" 
@@ -71,7 +76,8 @@ let _ =
     if !cppfile = "" then
       failwith "Please specify -c <output.cpp> before compiling to executable"
     else
-      let lib_folder = Filename.concat (Filename.dirname Sys.argv.(0)) "../lib" in
+      let lib_folder = Filename.concat 
+            (Filename.dirname Sys.argv.(0)) relative_lib_path in
       let lib_path name = Filename.concat lib_folder name in
       let lib_exists name = Sys.file_exists (lib_path name) in
       if Sys.file_exists lib_folder then
