@@ -28,3 +28,4 @@ quarkc
 # OSX
 .DS_Store
 
+lib/Eigen
