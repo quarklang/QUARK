@@ -4,7 +4,6 @@
 }
 
 let white = [' ' '\t' '\r' '\n']  
-let nonwhite = [^' ' '\t' '\r' '\n']  
 
 (* code: string,  imports: string[] of file paths *)
 rule process code imports = parse
@@ -14,6 +13,7 @@ rule process code imports = parse
       let import_file = (get_import "" lexbuf) ^ extension in
       process code (import_file :: imports) lexbuf
     }
+  | "import" white* ';'  { failwith "Empty import statement" }
     (* supports python-style elif by simple string replacement!  *)
   | "elif"  { process (code ^ "else if") imports lexbuf }
     (* copy anything else verbatim *)
@@ -23,7 +23,5 @@ rule process code imports = parse
 
 (* gets the import file name *)
 and get_import filename = parse
-  | white* ((_* nonwhite) as filename) white* ';'  { filename }
-  (*| ';'  { filename }
-  | _ as c  { get_import (filename ^ Char.escaped c) lexbuf } *)
+  | white* ((_* [^' ' '\t' '\r' '\n' ';']) as filename) white* ';'  {  filename  }
   | eof  { failwith "import statement must be terminated by ;" }
