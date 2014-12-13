@@ -1,17 +1,10 @@
 open Semantic
 
 let _ =
-
-  print_endline @@ Preprocessor.process "../what.qk"
-  (*
-  let lexbuf = Lexing.from_string "elif shit; import     \t\t  asdf  \"import\"; import elif asdf; elif import shit     ; " in
-  let processed_code, imports = Preprocessor.process "" [] lexbuf in
-  let importss = List.fold_left (fun acc x -> acc ^x^ ":: ") "" imports in
-  let _ = 
-    print_endline @@ processed_code ^"\nimported("^string_of_int (List.length imports)^ "): "^ importss in
-  print_endline @@ Preprocessor.read_file_str "../what.qk"
-  
-  let lexbuf = Lexing.from_channel stdin in
+  let file = "../what.qk" in
+  let processed_code = Preprocessor.process file in
+  (* let lexbuf = Lexing.from_channel stdin in *)
+  let lexbuf = Lexing.from_string processed_code in
   let ast = Parser.top_level Scanner.token lexbuf in
   let env = { 
     var_table = StrMap.empty; 
@@ -27,4 +20,3 @@ let _ =
   let code = Generator.header_code ^ code in
   let _ = print_endline code in
   output_string (open_out "output.cpp") code
-  *)
