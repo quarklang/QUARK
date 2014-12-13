@@ -614,7 +614,10 @@ let rec gen_s_expr env = function
         List.fold_right ( (* fold right so we don't have to List.rev *)
           fun ex (s_ex_list, is_matrix_list) -> 
             let _, s_ex, ex_type = gen_s_expr env ex in
-            s_ex :: s_ex_list, (is_matrix ex_type) :: is_matrix_list
+            if ex_type = A.DataType(T.Void) then
+              failwith "Cannot print void type"
+            else
+              s_ex :: s_ex_list, (is_matrix ex_type) :: is_matrix_list
         ) ex_list ([], [])
       in
       env, S.FunctionCall(fidstr, s_ex_list, is_matrix_list), finfo.f_return
