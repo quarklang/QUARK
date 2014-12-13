@@ -69,7 +69,7 @@ let process filename =
           fun (code, seen) import_file_base -> 
             let import_file = Filename.concat filedir import_file_base in
             if filename = import_file then
-              failwith @@ "Cannot import the source itself: " ^ import_file_base
+              failwith @@ "Circular import the source itself: " ^ import_file_base
             else if StrSet.mem import_file seen then
               (* repeated import. Don't do anything *)
               code, seen
