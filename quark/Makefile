@@ -1,7 +1,7 @@
 EIGEN_PATH = E:\\Dropbox\\Programming\\C\\Eigen-3.2.1
 QUARK_PATH = E:\\Dropbox\\Programming\\Compiler\\Quark\\Quark++
 
-OBJS = type.cmo ast.cmo sast.cmo parser.cmo scanner.cmo \
+OBJS = type.cmo ast.cmo sast.cmo parser.cmo scanner.cmo preprocessor.cmo \
 	   builtin.cmo semantic.cmo generator.cmo compile.cmo
 
 TESTS = arith1 arith2 arith3 arith4 \
@@ -17,7 +17,7 @@ TESTS = arith1 arith2 arith3 arith4 \
 	stmts1 \
 	while1
 
-TARFILES = Makefile testall.sh scanner.mll parser.mly \
+TARFILES = Makefile testall.sh scanner.mll preprocessor.mll parser.mly \
 	type.ml ast.ml sast.ml builtin.ml semantic.ml generator.ml compile.ml \
 	$(TESTS:%=tests/test-%.mc) \
 	$(TESTS:%=tests/test-%.out)
@@ -31,6 +31,9 @@ test : quarkc testall.sh
 
 scanner.ml : scanner.mll
 	ocamllex scanner.mll
+
+preprocessor.ml : preprocessor.mll
+	ocamllex preprocessor.mll
 
 parser.ml parser.mli : parser.mly
 	ocamlyacc parser.mly
@@ -57,8 +60,8 @@ ast.cmo : type.cmo
 ast.cmx : type.cmx
 builtin.cmo : type.cmo ast.cmo
 builtin.cmx : type.cmx ast.cmx
-compile.cmo : semantic.cmo scanner.cmo parser.cmi
-compile.cmx : semantic.cmx scanner.cmx parser.cmx
+compile.cmo : semantic.cmo scanner.cmo parser.cmi preprocessor.cmi
+compile.cmx : semantic.cmx scanner.cmx parser.cmx preprocessor.cmx
 generator.cmo : type.cmo sast.cmo ast.cmo
 generator.cmx : type.cmx sast.cmx ast.cmx
 old_gen.cmo : type.cmo ast.cmo
@@ -69,6 +72,8 @@ sast.cmo : type.cmo ast.cmo
 sast.cmx : type.cmx ast.cmx
 scanner.cmo : parser.cmi
 scanner.cmx : parser.cmx
+preprocessor.cmo : 
+preprocessor.cmx : 
 semantic.cmo : type.cmo sast.cmo builtin.cmo ast.cmo
 semantic.cmx : type.cmx sast.cmx builtin.cmx ast.cmx
 type.cmo :
