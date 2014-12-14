@@ -35,6 +35,8 @@
 </tbody></table>
 
 
+
+
 <h2 id="table-of-contents">Table of contents</h2>
 
 <p><div class="toc"><div class="toc">
@@ -93,7 +95,7 @@
 <li><a href="#statements">Statements</a></li>
 <li><a href="#blocks">Blocks</a></li>
 <li><a href="#return-statement">Return Statement</a></li>
-<li><a href="#if-else-statement">If else Statement</a></li>
+<li><a href="#if-elif-else-statement">If elif else Statement</a></li>
 <li><a href="#while-loop">While Loop</a></li>
 <li><a href="#for-statement">For Statement</a><ul>
 <li><a href="#array-iterator">Array Iterator</a></li>
@@ -105,6 +107,7 @@
 <li><a href="#function-declaration">Function Declaration</a></li>
 </ul>
 </li>
+<li><a href="#imports">Imports</a></li>
 <li><a href="#casting">Casting</a></li>
 <li><a href="#overloading">Overloading</a></li>
 <li><a href="#scoping">Scoping</a></li>
@@ -117,6 +120,8 @@
 </div>
 </div>
 </p>
+
+
 
 <h3 id="introduction">Introduction</h3>
 
@@ -207,6 +212,8 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
 
 <p><code>_QUARK_</code></p>
 
+
+
 <h3 id="punctuation">Punctuation</h3>
 
 <p><strong>Parenthesis</strong> – Expressions can include expressions inside parenthesis. Parenthesis can also indicate a function call.</p>
@@ -257,6 +264,8 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
 </tbody></table>
 
 
+
+
 <h3 id="data-types">Data Types</h3>
 
 <p>The data types available in QUARK are:</p>
@@ -285,9 +294,7 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
 
 <h4 id="float">float</h4>
 
-<p>A <code>float</code> is a 64-bit signed floating-point number.</p>
-
-
+<p>A <code>float</code> is a 64-bit signed floating-point number. Comparing two floats is done to a tolerance of 1e-6.</p>
 
 <h4 id="fraction">fraction</h4>
 
@@ -304,12 +311,16 @@ Identifier<span class="hljs-function"> -&gt;</span> letter (letter | digit)* </c
 
 <p>Fraction types may be compare to int and float types using the following comparators: <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>!=</code>, and <code>==</code>.</p>
 
+
+
 <pre class="prettyprint"><code class="language-matlab hljs ">int <span class="hljs-built_in">i</span> = <span class="hljs-number">3</span>;
 float ft = <span class="hljs-number">2.0</span>;
 frac f = <span class="hljs-number">2</span>$<span class="hljs-number">3</span>;
 
 <span class="hljs-built_in">i</span> &gt; f;
 ft &lt;= f;</code></pre>
+
+
 
 <h4 id="bool">bool</h4>
 
@@ -328,7 +339,7 @@ real(cnum); % <span class="hljs-number">3.0</span>
 im(cnum); % <span class="hljs-number">1</span>
 complex cnum2 = i(<span class="hljs-number">9</span>) % this gives us i(<span class="hljs-number">9</span>, <span class="hljs-number">0</span>)</code></pre>
 
-
+<p>Comparing two complex numbers is done with a tolerance of 1e-6.</p>
 
 <h4 id="string">string</h4>
 
@@ -356,6 +367,8 @@ qreg q = &lt;|<span class="hljs-number">10</span>, <span class="hljs-number">3</
 <span class="hljs-built_in">hadamard</span>(q);</code></pre>
 
 <p>Additionally, qreg values may be measured using the destructive <code>?</code> operator and the non-destructive (but unrealistic) <code>?'</code> operator; the <code>?</code> and  <code>?'</code> operators may only operate on an LValue of type qreg.</p>
+
+
 
 <pre class="prettyprint"><code class="language-matlab hljs ">q ? <span class="hljs-matrix">[<span class="hljs-number">2</span>:<span class="hljs-number">10</span>]</span>;  <span class="hljs-comment">% measures qubit 2 to 10</span></code></pre>
 
@@ -681,6 +694,8 @@ int<span class="hljs-matrix">[]</span><span class="hljs-matrix">[]</span> b = <s
 </tbody></table>
 
 
+
+
 <h4 id="quantum">Quantum</h4>
 
 <table>
@@ -703,6 +718,8 @@ int<span class="hljs-matrix">[]</span><span class="hljs-matrix">[]</span> b = <s
 
 <p>The <code>?</code> and <code>?'</code> operators may only be invoked on an LValue.</p>
 
+
+
 <pre class="prettyprint"><code class="language-matlab hljs ">q ? <span class="hljs-matrix">[<span class="hljs-number">2</span>:<span class="hljs-number">10</span>]</span>;  <span class="hljs-comment">% measures qubit 2 to 10</span></code></pre>
 
 
@@ -711,11 +728,15 @@ int<span class="hljs-matrix">[]</span><span class="hljs-matrix">[]</span> b = <s
 
 <p>QUARK supports Python style ternary conditional operators:</p>
 
+
+
 <pre class="prettyprint"><code class="language-python hljs "><span class="hljs-number">3</span> <span class="hljs-keyword">if</span> true <span class="hljs-keyword">else</span> <span class="hljs-number">5</span>;
 
 <span class="hljs-number">4</span> <span class="hljs-keyword">if</span> <span class="hljs-number">3</span> &gt; <span class="hljs-number">2</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> (<span class="hljs-number">1</span>==<span class="hljs-number">1</span>) <span class="hljs-keyword">else</span> <span class="hljs-number">3</span> &lt; <span class="hljs-number">2</span> <span class="hljs-keyword">else</span> -<span class="hljs-number">2</span> <span class="hljs-keyword">if</span> true <span class="hljs-keyword">else</span> <span class="hljs-number">3</span></code></pre>
 
 <p>Ternary operators are right associative.</p>
+
+
 
 <h4 id="operator-precedence-and-associativity">Operator Precedence and Associativity</h4>
 
@@ -822,19 +843,26 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 
 
 
-<h3 id="if-else-statement">If else Statement</h3>
+<h3 id="if-elif-else-statement">If elif else Statement</h3>
 
-<p>If statements take expressions that reduce to a boolean, and followed by a colon <code>:</code> and a statement block. If the following statement is only one line, curly braces are unnecessary. </p>
+<p>If statements take expressions that reduce to a boolean, and followed by a colon <code>:</code> and a statement block. If the following statement is only one line, curly braces are unnecessary.</p>
 
+<p>QUARK allows elif statements, similarly to Python. The else and elif statements are optional. </p>
 
-
-<pre class="prettyprint"><code class=" hljs matlab"><span class="hljs-keyword">if</span> p == <span class="hljs-number">1</span>:
+<pre class="prettyprint"><code class="language-matlab hljs "><span class="hljs-keyword">if</span> p == <span class="hljs-number">1</span>:
     <span class="hljs-keyword">return</span> a;
 
 <span class="hljs-keyword">if</span> (<span class="hljs-number">3</span> &gt; <span class="hljs-number">1</span>):
 <span class="hljs-cell">{
     % multiple statements
-}</span></code></pre>
+}</span>
+
+<span class="hljs-keyword">if</span> (x == <span class="hljs-number">3</span>):
+    <span class="hljs-comment">% do something</span>
+elif (x == <span class="hljs-number">4</span>):
+    <span class="hljs-comment">% do something</span>
+<span class="hljs-keyword">else</span>:
+    <span class="hljs-comment">% do something</span></code></pre>
 
 <h3 id="while-loop">While Loop</h3>
 
@@ -951,6 +979,22 @@ qreg q0 = &lt;| nbit * <span class="hljs-number">2</span>, <span class="hljs-num
 
 
 
+<h3 id="imports">Imports</h3>
+
+<p>QUARK allows users to import qk files containing QUARK statements and definitions. QUARK supports relative file paths. All files are presumed to have the <code>.qk</code> extension.</p>
+
+<pre class="prettyprint"><code class=" hljs actionscript"><span class="hljs-preprocessor"><span class="hljs-keyword">import</span> ../lib/mylib1;</span>
+<span class="hljs-preprocessor"><span class="hljs-keyword">import</span> ../lib/herlib2;</span></code></pre>
+
+<pre class="prettyprint"><code class=" hljs python"><span class="hljs-keyword">import</span> imported_file;
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">int</span> <span class="hljs-title">main</span>:</span>
+{
+    <span class="hljs-keyword">return</span> imported_file.function(<span class="hljs-number">5</span>);
+}</code></pre>
+
+
+
 <h3 id="casting">Casting</h3>
 
 <p>QUARK does not allow explicit type casting.</p>
@@ -1025,9 +1069,8 @@ datatype:
 
 <span class="hljs-comment">/* Variables that can be assigned a value */</span>
 lvalue:
-  | ident                        { Variable($<span class="hljs-number">1</span>) }
-  | ident LSQUARE expr_list RSQUARE 
-      { ArrayElem($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>)}
+  | ident                           { Variable($<span class="hljs-number">1</span>) }
+  | ident LSQUARE expr_list RSQUARE { ArrayElem($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>) }
 
 expr:
   <span class="hljs-comment">/* Logical */</span>
@@ -1044,6 +1087,7 @@ expr:
   | BITNOT expr             { Unop(BitNot, $<span class="hljs-number">2</span>) }
   | MINUS expr %prec UMINUS { Unop(Neg, $<span class="hljs-number">2</span>) }
   | NOT expr                { Unop(Not, $<span class="hljs-number">2</span>) }
+  | expr PRIME              { Unop(Transpose, $<span class="hljs-number">1</span>) }
 
   <span class="hljs-comment">/* Arithmetic */</span>
   | expr PLUS expr    { Binop($<span class="hljs-number">1</span>, Add, $<span class="hljs-number">3</span>) }
@@ -1088,6 +1132,9 @@ expr:
 
   <span class="hljs-comment">/* Membership testing with keyword 'in' */</span>
   | expr IN expr    { Membership($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>) }
+
+  <span class="hljs-comment">/* Python-style tertiary */</span>
+  | expr IF expr ELSE expr   { Tertiary($<span class="hljs-number">1</span>, $<span class="hljs-number">3</span>, $<span class="hljs-number">5</span>) }
 
   <span class="hljs-comment">/* literals */</span>
   | INT_LITERAL                                 { IntLit($<span class="hljs-number">1</span>) }
@@ -1142,6 +1189,11 @@ statement:
   | BREAK { BreakStatement }
   | CONTINUE { ContinueStatement }
 
+
+<span class="hljs-comment">/* iterator_list:
+  | iterator COMMA iterator_list { $1 :: $3 }
+  | iterator { [$1] } */</span>
+
 iterator:
   | ident IN LSQUARE range RSQUARE { RangeIterator(NoneType, $<span class="hljs-number">1</span>, $<span class="hljs-number">4</span>) }
   | datatype ident IN LSQUARE range RSQUARE { RangeIterator($<span class="hljs-number">1</span>, $<span class="hljs-number">2</span>, $<span class="hljs-number">5</span>) }
@@ -1177,5 +1229,6 @@ top_level:
 
 statement_seq:
   | statement statement_seq {$<span class="hljs-number">1</span> :: $<span class="hljs-number">2</span> }
-  | { [] }</code></pre></div></body>
+  | { [] }
+</code></pre></div></body>
 </html>

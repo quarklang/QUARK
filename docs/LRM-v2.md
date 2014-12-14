@@ -117,7 +117,7 @@ Additionally, the aggregate data type of array is available to the user.
 An `int` is a 64-bit signed integer.
 
 ####float
-A `float` is a 64-bit signed floating-point number.
+A `float` is a 64-bit signed floating-point number. Comparing two floats is done to a tolerance of 1e-6.
 
 ####fraction
 A `fraction` is denoted by two `int` types separated by `$`. The `int` value to the left of `$` represents the numerator, and the `int` value to the right of `$` represents the denominator. QUARK provides an inverse operator `~`. 
@@ -151,6 +151,8 @@ real(cnum); % 3.0
 im(cnum); % 1
 complex cnum2 = i(9) % this gives us i(9, 0)
 ```
+
+Comparing two complex numbers is done with a tolerance of 1e-6.
 
 ####string
 A `string` is a sequence of characters. String literals are placed between double quotations. QUARK supports string  lexicographic comparison using `<`, `>`, `<=`, `>=`, `!=`, and `==`.
@@ -403,10 +405,12 @@ A block looks like:
 ###Return Statement
 The return keyword accepts an expression, and exits out of the nearest calling block or smallest containing function.
 
-###If else Statement
-If statements take expressions that reduce to a boolean, and followed by a colon `:` and a statement block. If the following statement is only one line, curly braces are unnecessary. 
+###If elif else Statement
+If statements take expressions that reduce to a boolean, and followed by a colon `:` and a statement block. If the following statement is only one line, curly braces are unnecessary.
 
-```
+QUARK allows elif statements, similarly to Python. The else and elif statements are optional. 
+
+```matlab
 if p == 1:
 	return a;
 		
@@ -414,6 +418,13 @@ if (3 > 1):
 {
 	% multiple statements
 }
+
+if (x == 3):
+	% do something
+elif (x == 4):
+	% do something
+else:
+	% do something
 ```
 
 ###While Loop
@@ -508,6 +519,23 @@ def int addition: int x, int y
 }
 ```
 
+###Imports
+QUARK allows users to import qk files containing QUARK statements and definitions. QUARK supports relative file paths. All files are presumed to have the `.qk` extension.
+
+```
+import ../lib/mylib1;
+import ../lib/herlib2;
+```
+
+```
+import imported_file;
+
+def int main:
+{
+	return imported_file.function(5);
+}
+```
+
 ###Casting
 QUARK does not allow explicit type casting.
 
@@ -570,9 +598,8 @@ datatype:
 
 /* Variables that can be assigned a value */
 lvalue:
-  | ident                        { Variable($1) }
-  | ident LSQUARE expr_list RSQUARE 
-	  { ArrayElem($1, $3)}
+  | ident                           { Variable($1) }
+  | ident LSQUARE expr_list RSQUARE { ArrayElem($1, $3) }
 
 expr:
   /* Logical */
@@ -589,6 +616,7 @@ expr:
   | BITNOT expr             { Unop(BitNot, $2) }
   | MINUS expr %prec UMINUS { Unop(Neg, $2) }
   | NOT expr                { Unop(Not, $2) }
+  | expr PRIME              { Unop(Transpose, $1) }
 
   /* Arithmetic */
   | expr PLUS expr    { Binop($1, Add, $3) }
@@ -633,6 +661,9 @@ expr:
 
   /* Membership testing with keyword 'in' */
   | expr IN expr    { Membership($1, $3) }
+
+  /* Python-style tertiary */
+  | expr IF expr ELSE expr   { Tertiary($1, $3, $5) }
 
   /* literals */
   | INT_LITERAL                                 { IntLit($1) }
@@ -687,6 +718,11 @@ statement:
   | BREAK { BreakStatement }
   | CONTINUE { ContinueStatement }
 
+
+/* iterator_list:
+  | iterator COMMA iterator_list { $1 :: $3 }
+  | iterator { [$1] } */
+
 iterator:
   | ident IN LSQUARE range RSQUARE { RangeIterator(NoneType, $1, $4) }
   | datatype ident IN LSQUARE range RSQUARE { RangeIterator($1, $2, $5) }
@@ -723,5 +759,6 @@ top_level:
 statement_seq:
   | statement statement_seq {$1 :: $2 }
   | { [] }
+
 ```
 
