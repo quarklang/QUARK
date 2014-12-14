@@ -1,7 +1,9 @@
 
-def void range_test: 
+def int main: 
 {
     int x;
     for x in [0:5]:
         print(x);
+
+    return 0;
 }

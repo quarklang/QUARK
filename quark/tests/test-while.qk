@@ -1,9 +1,12 @@
 
-def void test:
+def int main:
 {
     int x = 10;
     
-    while x > 0:
+    while x > 0: {
         print(x);
-        x = x - 1;  
+        x = x - 1;
+    }
+
+    return 0;  
 }

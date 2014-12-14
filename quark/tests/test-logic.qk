@@ -1,5 +1,5 @@
 
-def void main:
+def int main:
 {
     if 3 == 3:
         print("3 == 3");
@@ -21,4 +21,6 @@ def void main:
 
     if 1 <= 4:
         print("1 <= 4");
+
+    return 0;
 }

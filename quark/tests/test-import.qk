@@ -1,0 +1,8 @@
+import import-test;
+
+def int main:
+{
+    int y = test(5);
+    print(y);
+    return y;
+}
