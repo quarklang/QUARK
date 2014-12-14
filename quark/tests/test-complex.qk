@@ -2,7 +2,7 @@
 def void print_complex: complex x 
 {
     print(real(x));
-    print(im(x));
+    print(imag(x));
     
 }
 
