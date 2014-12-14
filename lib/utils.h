@@ -188,10 +188,10 @@ INLINE uint64_t bit_reverse(uint64_t n)
 }
 
 template <bool builtin> // use hardware built-in or not
-INLINE int bit_count(size_t b); // Count the bits in a bitmap
+INLINE int bit_count(uint64_t b); // Count the bits in a bitmap
 // count all the way up to 64. Used less than count to 15
 template<>
-INLINE int bit_count<false>(size_t b)
+INLINE int bit_count<false>(uint64_t b)
 {
 	b -= (b >> 1) & 0x5555555555555555ULL;
 	b = ((b >> 2) & 0x3333333333333333ULL) + (b & 0x3333333333333333ULL);
@@ -200,7 +200,7 @@ INLINE int bit_count<false>(size_t b)
 }
 // Assembly code that works for both FULL and MAX15
 template<>
-INLINE int bit_count<true>(size_t b)
+INLINE int bit_count<true>(uint64_t b)
 {
 #if defined(_MSC_VER)
 	return (int)__popcnt64(b);
@@ -210,7 +210,7 @@ INLINE int bit_count<true>(size_t b)
 #endif
 }
 
-INLINE int bit_count(size_t b)
+INLINE int bit_count(uint64_t b)
 {
 	return bit_count<true>(b);
 }
