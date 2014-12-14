@@ -180,6 +180,11 @@ let rec gen_expr = function
       parenthize expr1_code A.Add expr2_code
     | S.OpMatrixKronecker -> 
       two_arg "kronecker_mat" expr1_code expr2_code
+    | S.OpFloatComparison -> 
+      let equal_func = if op = A.Eq then
+        "equal_tolerance" else "unequal_tolerance"
+      in
+      two_arg equal_func expr1_code expr2_code
     | _ -> fail_unhandle "optag in binop"
     end
     

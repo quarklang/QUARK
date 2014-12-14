@@ -1,8 +1,23 @@
 open Semantic
 
+(*********** Configs ***********)
+(* g++ compilation flags *)
+let gpp_command = "g++ -std=c++11 -O3"
+
+(* where to find the libraries, relative to the executable *)
+let relative_lib_path = "../lib"
+
+(* detect OS and select the appropriate quark static/dynamic library *)
+(* let quark_static_lib = "quark_" ^ String.lowercase (Sys.os_type) *)
+
+let quark_shared_libs = ["libquark.dylib"; "libquark.so"]
+
+(*********** Main entry of Quark compiler ***********)
 let _ =
   (* from http://rosettacode.org/wiki/Command-line_arguments#OCaml *)
-  let srcfile = ref "" and outfile = ref "" in
+  let srcfile = ref "" 
+    and cppfile = ref "" 
+    and exefile = ref "" in
   let speclist = [
       ("-s", Arg.String(fun src -> 
               let srclen = String.length src in
@@ -18,10 +33,13 @@ let _ =
                 failwith @@ "Source file doesn't exist: " ^ src),
         ": quark source file");
 
-      ("-o", Arg.String(fun out -> outfile := out), 
-        ": output C++ file. If unspecified, the generated code will print to stdout");
+      ("-c", Arg.String(fun cpp -> cppfile := cpp), 
+        ": generated C++ file. If unspecified, print generated code to stdout");
+
+      ("-o", Arg.String(fun exe -> exefile := exe), 
+        ": compile to executable. Requires g++ (version >= 4.7)");
   ] in
-  let usage = "usage: quarkc -s source.qk [-o output.cpp]" in
+  let usage = "usage: quarkc -s source.qk [-c output.cpp ] [-o executable]" in
   let _ = Arg.parse speclist
     (* handle anonymous args *)
     (fun arg -> failwith @@ "Unrecognized arg: " ^ arg)
@@ -50,8 +68,55 @@ let _ =
   (* Code generator: converts SAST to C++ code *)
   let code = Generator.gen_code sast in
   let code = Generator.header_code ^ code in
-  (* Output *)
-  if !outfile = "" then (* print to stdout *)
+  (* Output the generated code *)
+  let _ = if !cppfile = "" then (* print to stdout *)
     print_endline code
   else
-    output_string (open_out !outfile) code
+    let file_channel = open_out !cppfile in
+      output_string file_channel code;
+      close_out file_channel
+  in
+  (* Compile to binary executable with g++ *)
+  if !exefile <> "" then
+    if !cppfile = "" then
+      failwith "Please specify -c <output.cpp> before compiling to executable"
+    else
+      let lib_folder = Filename.concat 
+            (Filename.dirname Sys.argv.(0)) relative_lib_path in
+      let lib_path name = Filename.concat lib_folder name in
+      let lib_exists name = Sys.file_exists (lib_path name) in
+      if Sys.file_exists lib_folder then
+        begin
+        if not (lib_exists "Eigen") then
+          (* extract from Eigen.tar library *)
+          if lib_exists "Eigen.tar" then
+            let cmd = "tar xzf " 
+              ^ lib_path "Eigen.tar" ^ " -C " ^ lib_folder in
+            prerr_endline @@ "Extracting Eigen library from tar:\n" ^ cmd ^"\n";
+            ignore @@ Sys.command cmd
+          else
+            failwith "Neither lib/Eigen/ nor lib/Eigen.tar found" 
+        ;
+        (* Invokes g++ *)
+	  (* static lib works on cygwin but not Mac *)
+	  (*
+	  let cmd = gpp_command ^ " -I " ^ lib_folder
+	      ^ " -static " ^ !cppfile ^ " -L " ^ lib_folder
+	      ^ " -l" ^ quark_static_lib ^ " -o " ^ !exefile in *)
+	let cmd = gpp_command ^ " -I " ^ lib_folder
+	    ^ " " ^ !cppfile 
+	    (* ^ " -Wl,-rpath," ^ Filename.concat (Filename.current_dir_name) lib_folder (* gcc rpath option doesn't work with relative path *)*)
+	    ^ " -L " ^ lib_folder
+	    ^ " -l" ^ "quark" ^ " -o " ^ !exefile in
+        prerr_endline @@ "Invoking g++ command: \n" ^ cmd;
+	(* copy required shared libs to the exefile folder *)
+	ignore @@ List.map (
+	  fun libfile -> 
+	    let cpcmd = "cp " ^ lib_path libfile ^ " "
+		^ Filename.dirname !exefile in
+	    ignore @@ Sys.command cpcmd
+	) quark_shared_libs;
+        ignore @@ Sys.command cmd;
+        end
+      else
+        failwith "Library folder ../lib doesn't exist. Cannot compile to executable. "

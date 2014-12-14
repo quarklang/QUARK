@@ -6,7 +6,6 @@
 *.cmo
 *.cma
 *.cmi
-*.a
 *.o
 *.cmx
 *.cmxs
@@ -29,3 +28,4 @@ quarkc
 # OSX
 .DS_Store
 
+lib/Eigen
