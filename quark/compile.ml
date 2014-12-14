@@ -130,9 +130,8 @@ let _ =
             ) quark_shared_lib in
           gpp_command ^ " -I " ^ lib_folder
               ^ " " ^ !cppfile 
-              (* ^ " -Wl,-rpath," ^ Filename.concat (Filename.current_dir_name) lib_folder *)
-              (* (* gcc rpath option doesn't work with relative path *)*)
               ^ " -L " ^ lib_folder
+              ^ " -Wl,-rpath -Wl,." (*^ Filename.concat (Filename.current_dir_name) lib_folder*)
               ^ " -l" ^ "quark" ^ " -o " ^ !exefile
         in 
         prerr_endline @@ "Invoking g++ command: \n" ^ cmd;
