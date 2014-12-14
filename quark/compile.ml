@@ -7,6 +7,8 @@ let gpp_command = "g++ -std=c++11 -O3"
 (* where to find the libraries, relative to the executable *)
 let relative_lib_path = "../lib"
 
+let ext = Preprocessor.extension (* enforce .qk *)
+
 (* detect OS and select the appropriate quark static/dynamic library *)
 let is_win = Sys.os_type <> "Unix"
 
@@ -32,19 +34,17 @@ let _ =
     and exefile = ref ""
     (* Use static lib or dynamic lib? *)
     and is_static = ref false in
+  let check_src_format src = 
+    if Sys.file_exists src then
+      if Filename.check_suffix src ext then
+        srcfile := src
+      else
+        failwith @@ "Quark source file must have extension " ^ ext
+    else
+      failwith @@ "Source file doesn't exist: " ^ src
+  in
   let speclist = [
-      ("-s", Arg.String(fun src -> 
-              let srclen = String.length src in
-              if Sys.file_exists src then
-                let ext = Preprocessor.extension in (* enforce .qk extension *)
-                let extlen = String.length ext in
-                if srclen > extlen && 
-                  String.sub src (srclen - extlen) extlen = ext then
-                  srcfile := src
-                else
-                  failwith @@ "Quark source file must have extension " ^ ext
-              else
-                failwith @@ "Source file doesn't exist: " ^ src),
+      ("-s", Arg.String(fun src -> check_src_format src),
         ": quark source file");
 
       ("-c", Arg.String(fun cpp -> cppfile := cpp), 
@@ -52,11 +52,18 @@ let _ =
 
       ("-o", Arg.String(fun exe -> exefile := exe), 
         ": compile to executable. Requires g++ (version >= 4.8)");
+        
+      ("-sco", Arg.String(fun src -> 
+          check_src_format src;
+          let name = Filename.chop_suffix src ext in
+            cppfile := name ^ ".cpp";
+            exefile := name
+        ), ": shorthand for -s <file>.qk -c <file>.cpp -o <file>");
 
       ("-static", Arg.Unit(fun () -> is_static := true), 
         ": compile with static lib (otherwise with dynamic lib). Does NOT work on Mac");
   ] in
-  let usage = "usage: quarkc -s source.qk [-c output.cpp ] [-o executable]" in
+  let usage = "usage: quarkc -s source.qk [-c output.cpp ] [-o executable] [-static] " in
   let _ = Arg.parse speclist
     (* handle anonymous args *)
     (fun arg -> failwith @@ "Unrecognized arg: " ^ arg)
