@@ -30,6 +30,9 @@ let find_builtin = function
    (* fraction numerator/denominator *)
   | "num" -> [frac], i
   | "denom" -> [frac], i
+   (* complex real/imag parts *)
+  | "real" -> [cx], f
+  | "imag" -> [cx], f
   (***** math section *****)
   | "sqrt" -> [f], f
   | "rand_int" -> [i; i], i
