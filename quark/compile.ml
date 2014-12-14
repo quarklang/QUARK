@@ -8,16 +8,30 @@ let gpp_command = "g++ -std=c++11 -O3"
 let relative_lib_path = "../lib"
 
 (* detect OS and select the appropriate quark static/dynamic library *)
-(* let quark_static_lib = "quark_" ^ String.lowercase (Sys.os_type) *)
+let is_win = Sys.os_type <> "Unix"
 
-let quark_shared_libs = ["libquark.dylib"; "libquark.so"]
+let quark_shared_lib = 
+  if is_win then
+    [ "libquark.dll" ]
+  else
+    (* can't really tell if the OS is Mac or Linux *)
+    ["libquark.dylib"; "libquark.so"]
+
+let quark_static_lib = 
+  if is_win then
+    "quark_win" (* libquark_win.a *)
+  else
+    "quark_unix" (* libquark_unix.a *)
+
 
 (*********** Main entry of Quark compiler ***********)
 let _ =
   (* from http://rosettacode.org/wiki/Command-line_arguments#OCaml *)
   let srcfile = ref "" 
     and cppfile = ref "" 
-    and exefile = ref "" in
+    and exefile = ref ""
+    (* Use static lib or dynamic lib? *)
+    and is_static = ref false in
   let speclist = [
       ("-s", Arg.String(fun src -> 
               let srclen = String.length src in
@@ -37,7 +51,10 @@ let _ =
         ": generated C++ file. If unspecified, print generated code to stdout");
 
       ("-o", Arg.String(fun exe -> exefile := exe), 
-        ": compile to executable. Requires g++ (version >= 4.7)");
+        ": compile to executable. Requires g++ (version >= 4.8)");
+
+      ("-static", Arg.Unit(fun () -> is_static := true), 
+        ": compile with static lib (otherwise with dynamic lib). Does NOT work on Mac");
   ] in
   let usage = "usage: quarkc -s source.qk [-c output.cpp ] [-o executable]" in
   let _ = Arg.parse speclist
@@ -98,24 +115,27 @@ let _ =
             failwith "Neither lib/Eigen/ nor lib/Eigen.tar found" 
         ;
         (* Invokes g++ *)
-	  (* static lib works on cygwin but not Mac *)
-	  (*
-	  let cmd = gpp_command ^ " -I " ^ lib_folder
-	      ^ " -static " ^ !cppfile ^ " -L " ^ lib_folder
-	      ^ " -l" ^ quark_static_lib ^ " -o " ^ !exefile in *)
-	let cmd = gpp_command ^ " -I " ^ lib_folder
-	    ^ " " ^ !cppfile 
-	    (* ^ " -Wl,-rpath," ^ Filename.concat (Filename.current_dir_name) lib_folder (* gcc rpath option doesn't work with relative path *)*)
-	    ^ " -L " ^ lib_folder
-	    ^ " -l" ^ "quark" ^ " -o " ^ !exefile in
+    	  (* static lib works on cygwin but not Mac *)
+        let cmd = if !is_static then
+      	  gpp_command ^ " -I " ^ lib_folder
+      	      ^ " -static " ^ !cppfile ^ " -L " ^ lib_folder
+      	      ^ " -l" ^ quark_static_lib ^ " -o " ^ !exefile
+        else
+          let _ = (* copy required shared libs to the exefile folder *)
+            List.map (
+              fun libfile -> 
+                let cpcmd = "cp " ^ lib_path libfile ^ " "
+                    ^ Filename.dirname !exefile in
+                ignore @@ Sys.command cpcmd
+            ) quark_shared_lib in
+          gpp_command ^ " -I " ^ lib_folder
+              ^ " " ^ !cppfile 
+              (* ^ " -Wl,-rpath," ^ Filename.concat (Filename.current_dir_name) lib_folder *)
+              (* (* gcc rpath option doesn't work with relative path *)*)
+              ^ " -L " ^ lib_folder
+              ^ " -l" ^ "quark" ^ " -o " ^ !exefile
+        in 
         prerr_endline @@ "Invoking g++ command: \n" ^ cmd;
-	(* copy required shared libs to the exefile folder *)
-	ignore @@ List.map (
-	  fun libfile -> 
-	    let cpcmd = "cp " ^ lib_path libfile ^ " "
-		^ Filename.dirname !exefile in
-	    ignore @@ Sys.command cpcmd
-	) quark_shared_libs;
         ignore @@ Sys.command cmd;
         end
       else
