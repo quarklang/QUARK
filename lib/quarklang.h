@@ -105,9 +105,13 @@ GEN_EQUAL_TOL(MatrixBase<T>&, MatrixBase<T>&&)
 GEN_EQUAL_TOL(MatrixBase<T>&&, MatrixBase<T>&)
 GEN_EQUAL_TOL(MatrixBase<T>&&, MatrixBase<T>&&)
 
-//**** Fraction getter
+//**** Fraction getter ****/
 int num(Frac f) { return f.num; }
 int denom(Frac f) { return f.denom; }
+
+//**** Complex getter ****/
+float real(CX f) { return f.real(); }
+float imag(CX f) { return f.imag(); }
 
 ///////************** Qureg specific **************///////
 int qsize(Qureg& q) { return q.nqubit; }

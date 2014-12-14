@@ -21,6 +21,7 @@ int mygate: qreg q, bool b;
 
 def int main:
 {
+    print(real(i(-3)), "-test-real/imag", imag(i(3, 5)));
     print((4 if true and false else i(9)) + (0 if "sh" == "sh" else 3));
     print(4 if 3>2 if not (1==1) else 3<2 else -2 if true else 3);
 
