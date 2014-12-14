@@ -200,7 +200,7 @@ INLINE int bit_count<false>(size_t b)
 }
 // Assembly code that works for both FULL and MAX15
 template<>
-INLINE int bit_count<true>(uint64_t b)
+INLINE int bit_count<true>(size_t b)
 {
 #if defined(_MSC_VER)
 	return (int)__popcnt64(b);
@@ -210,7 +210,7 @@ INLINE int bit_count<true>(uint64_t b)
 #endif
 }
 
-INLINE int bit_count(uint64_t b)
+INLINE int bit_count(size_t b)
 {
 	return bit_count<true>(b);
 }
