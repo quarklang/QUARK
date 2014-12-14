@@ -7,8 +7,10 @@ let gpp_command = "g++ -std=c++11 -O3"
 (* where to find the libraries, relative to the executable *)
 let relative_lib_path = "../lib"
 
-(* detect OS and select the appropriate quark static library *)
-let quark_static_lib = "quark_" ^ String.lowercase (Sys.os_type)
+(* detect OS and select the appropriate quark static/dynamic library *)
+(* let quark_static_lib = "quark_" ^ String.lowercase (Sys.os_type) *)
+
+let quark_shared_libs = ["libquark.dylib"; "libquark.so"]
 
 (*********** Main entry of Quark compiler ***********)
 let _ =
@@ -96,10 +98,24 @@ let _ =
             failwith "Neither lib/Eigen/ nor lib/Eigen.tar found" 
         ;
         (* Invokes g++ *)
-        let cmd = gpp_command ^ " -I " ^ lib_folder
-            ^ " -static " ^ !cppfile ^ " -L " ^ lib_folder
-            ^ " -l" ^ quark_static_lib ^ " -o " ^ !exefile in
+	  (* static lib works on cygwin but not Mac *)
+	  (*
+	  let cmd = gpp_command ^ " -I " ^ lib_folder
+	      ^ " -static " ^ !cppfile ^ " -L " ^ lib_folder
+	      ^ " -l" ^ quark_static_lib ^ " -o " ^ !exefile in *)
+	let cmd = gpp_command ^ " -I " ^ lib_folder
+	    ^ " " ^ !cppfile 
+	    (* ^ " -Wl,-rpath," ^ Filename.concat (Filename.current_dir_name) lib_folder (* gcc rpath option doesn't work with relative path *)*)
+	    ^ " -L " ^ lib_folder
+	    ^ " -l" ^ "quark" ^ " -o " ^ !exefile in
         prerr_endline @@ "Invoking g++ command: \n" ^ cmd;
+	(* copy required shared libs to the exefile folder *)
+	ignore @@ List.map (
+	  fun libfile -> 
+	    let cpcmd = "cp " ^ lib_path libfile ^ " "
+		^ Filename.dirname !exefile in
+	    ignore @@ Sys.command cpcmd
+	) quark_shared_libs;
         ignore @@ Sys.command cmd;
         end
       else
