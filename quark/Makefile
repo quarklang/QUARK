@@ -1,5 +1,6 @@
-EIGEN_PATH = E:\\Dropbox\\Programming\\C\\Eigen-3.2.1
-QUARK_PATH = E:\\Dropbox\\Programming\\Compiler\\Quark\\Quark++
+#EIGEN_PATH = E:\\Dropbox\\Programming\\C\\Eigen-3.2.1
+#QUARK_PATH = E:\\Dropbox\\Programming\\Compiler\\Quark\\Quark++
+QUARK_LIB_PATH = ../lib
 
 OBJS = type.cmo ast.cmo sast.cmo parser.cmo scanner.cmo preprocessor.cmo \
 	   builtin.cmo semantic.cmo generator.cmo compile.cmo
@@ -46,9 +47,10 @@ DISABLE_WARN = -4-39-11-27
 %.cmi : %.mli
 	ocamlc -w +a$(DISABLE_WARN) -c $<
 
+#g++ -std=c++11 -I $(EIGEN_PATH) -I $(QUARK_PATH) -static output.cpp -L./ -lquark -o output
 .PHONY : cpp
-cpp: libquark.a output.cpp
-	g++ -std=c++11 -I $(EIGEN_PATH) -I $(QUARK_PATH) -static output.cpp -L./ -lquark -o output
+cpp: output.cpp
+	g++ -std=c++11 -I $(QUARK_LIB_PATH) -static output.cpp -L../lib -lquark -o output
 
 .PHONY : clean
 clean :

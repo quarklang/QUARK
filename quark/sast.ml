@@ -8,6 +8,7 @@ type op_tag =
   | CastComplex2 (* cast the second arg to complex *)
   | CastFraction1 (* cast the first arg to fraction *)
   | CastFraction2 (* cast the second arg to fraction *)
+  | OpFloatComparison (* equality/inequality with tolerance *)
   | OpArrayConcat
   | OpStringConcat
   | OpMatrixKronecker
