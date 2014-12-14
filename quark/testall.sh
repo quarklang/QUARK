@@ -16,7 +16,7 @@ do
     ./"$EXECUTABLENAME" > "$OUTFILENAME"
     if (diff "$OUTFILENAME" "$TESTFILENAME") 
     then
-        echo "      ----- SUCESS -----"
+        echo "      ----- SUCCESS -----"
     else
         echo "      ------- FAIL -----"
     fi
