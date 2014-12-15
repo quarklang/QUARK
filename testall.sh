@@ -1,6 +1,6 @@
 #!/bin/bash
 #script used for reg testing
-COMPILER="./quarkc"
+COMPILER="quark/quarkc"
 
 for TESTFILE in tests/*.qk;
 do
@@ -12,7 +12,7 @@ do
     OUTFILENAME="${TESTFILE:0:$LEN}.coutput"
     TESTFILENAME="${TESTFILE:0:$LEN}.output"
 
-    "$COMPILER" -s "$TESTFILE" -c "$CPPOUTNAME" -o "$EXECUTABLENAME"
+    ./"$COMPILER" -s "$TESTFILE" -c "$CPPOUTNAME" -o "$EXECUTABLENAME"
     ./"$EXECUTABLENAME" > "$OUTFILENAME"
     if (diff "$OUTFILENAME" "$TESTFILENAME") 
     then
