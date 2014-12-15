@@ -344,7 +344,9 @@ def int main:
 | test-matrix.qk | ensures matrices can both be written to and read from 
 | test-range.qk | ensures range iteration works correctly
 | test-while.qk | ensures while loops correctly execute based on condition
-
+| test-float.qk | ensures float arithmetic works
+| test-elif.qk | ensures else-if works correctly
+| test-multi-array.qk | ensures we are able to access and write to multi-dimensional arrays
 
 Lessons Learned
 ===============
