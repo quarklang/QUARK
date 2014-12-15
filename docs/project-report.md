@@ -57,6 +57,19 @@ We also used an external simulator that Jim created over the summer. Our compile
 output is C++ specifically designed to work with the simulator.
 
 #####Project Timeline:
+These are goals we set for our project.
+| Date     | Goal                           |
+| -------- |:------------------------------:|
+| 11/21/14 | Complete scanner and parser    |
+| 12/5/14  | Complete semantic checking     |
+| 12/7/14  | Complete code generation       |
+| 12/8/14  | Complete test suite            |
+| 12/1/14  | Complete end-to-end            |
+| 12/5/14  | Finish testing and code freeze |
+| 12/8/14  | Complete project report        |
+
+#####Project Log:
+Actual progress of project.
 | Date     | Milestones                                   |
 | -------- |:--------------------------------------------:|
 | 9/8/14   | Team formed                                  |
@@ -69,7 +82,7 @@ output is C++ specifically designed to work with the simulator.
 | 11/21/14 | Scanner and parser complete                  |
 | 11/28/14 | Semantic checking started                    |
 | 12/5/14  | Semantic checking complete                   |
-| 12/7/14  | Codegen complete                             |
+| 12/7/14  | Code generation complete                     |
 | 12/8/14  | Test suite complete                          |
 | 12/9/14  | End-to-end working                           |
 | 12/10/14 | Modifications to simulator for compatibility |
@@ -77,7 +90,6 @@ output is C++ specifically designed to work with the simulator.
 | 12/15/14 | Project report complete                      |
 
 #####Roles and Responsibilities
-
 Here are our official roles for the project.
 
 | Role                      | Name                  | 
@@ -120,6 +132,8 @@ We tested each significant individual component of the language from the LRM wit
 
 Lessons Learned
 ===============
+
+#####Parthiban Loganathan
 1. We should have heeded the numerous numerous at the beginning of the class that we should start early. While we made good initial progress with team formation, setting up our environment and drafting a proposal, we failed to actually start working on the compiler till around the midterm - partly due to insufficient knowledge of how a compiler works. Slow and steady progress would have been much less stressful than working a large number of hours in the past few weeks.
 2. Project management is hard. It was difficult to get everyone to meet periodically to discuss progress and language design. Unlike a company, where your primary responsibility is to be developing software, as students with other classes and responsibilities, the project was not a priority till the end of the semester.
 3. Allocating work into sizable chunks was a challenge due to the interrelatedness of the different components. Even after defining interfaces, we often found minor specification differences between the parser and code generation led to issues.
