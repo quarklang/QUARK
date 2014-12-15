@@ -187,7 +187,7 @@ QUARK allows you to create matrices; a `matrix` uses a special bracket notation 
 QUARK provides the prime operator <code>'</code> for matrix transposition.
 
 ```matlab
-float[[]] mat = [| 1.2, 3.4; 5.6, 7.8 |];
+float[|] mat = [| 1.2, 3.4; 5.6, 7.8 |];
 mat[2, 1];
 
 mat'; % transpose matrix
