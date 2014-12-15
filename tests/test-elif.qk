@@ -1,0 +1,24 @@
+
+
+def void test: string x
+{
+    if x == "Parthi":
+        print("Loganathan");
+    elif x == "Daria":
+        print("Jung");
+    elif x == "Jamis":
+        print("Johnson");
+    elif x == "Jim":
+        print("Fan");
+
+}
+
+def int main:
+{
+    test("Jim");
+    test("Jamis");
+    test("Daria");
+    test("Parthi");
+
+    return 0;
+}
