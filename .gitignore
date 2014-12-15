@@ -22,6 +22,11 @@ parser.mli
 parser.ml
 quarkc
 
+# copied libs
+*.dylib
+*.dll
+*.so
+
 # Vagrant
 .vagrant
 
