@@ -143,12 +143,12 @@ ft <= f;
 A `bool` value is denoted using the literals `true` or `false`.
 
 ####complex
-A `complex` type is generated from two `int` or `float` values; if given a mix of `int` and `float` types, QUARK will implicitly type cast. A `complex` type can also be generated with one numerical value, which will be assigned to the real part of a complex number; imaginary will default to 0. The real and imaginary parts of a complex number can be accessed by `real` and `im` accessors.
+A `complex` type is generated from two `int` or `float` values; if given a mix of `int` and `float` types, QUARK will implicitly type cast. A `complex` type can also be generated with one numerical value, which will be assigned to the real part of a complex number; imaginary will default to 0. The real and imaginary parts of a complex number can be accessed by `real` and `imag` accessors.
 
 ```ocaml
 complex cnum = i(3.0, 1);
 real(cnum); % 3.0
-im(cnum); % 1
+imag(cnum); % 1
 complex cnum2 = i(9) % this gives us i(9, 0)
 ```
 
