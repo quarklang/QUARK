@@ -2,6 +2,10 @@
 #script used for reg testing
 COMPILER="quark/quarkc"
 
+cd quark
+make
+cd ../
+
 for TESTFILE in tests/*.qk;
 do
     echo "  TESTING $TESTFILE"
