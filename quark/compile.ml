@@ -149,7 +149,7 @@ let _ =
           !gppath ^ gpp_flags ^ "-I " ^ lib_folder
               ^ " " ^ !cppfile 
               ^ " -L " ^ lib_folder
-              ^ " -Wl,-rpath -Wl,." (*^ Filename.concat (Filename.current_dir_name) lib_folder*)
+              ^ " -Wl,-rpath,'$ORIGIN'" (*^ Filename.concat (Filename.current_dir_name) lib_folder*)
               ^ " -l" ^ "quark" ^ " -o " ^ !exefile
         in 
         prerr_endline @@ "Invoking g++ command: \n" ^ cmd;
