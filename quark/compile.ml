@@ -143,7 +143,7 @@ let _ =
             List.map (
               fun libfile -> 
                 let cpcmd = "cp " ^ lib_path libfile ^ " "
-                    ^ Filename.current_dir_name in
+                    ^ Filename.dirname !exefile in
                 ignore @@ Sys.command cpcmd
             ) quark_shared_lib in
           !gppath ^ gpp_flags ^ "-I " ^ lib_folder

@@ -14,7 +14,6 @@
 # Test files
 *.out
 *.diff
-tests/*.cpp
 
 # Repo specific
 scanner.ml
