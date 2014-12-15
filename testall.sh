@@ -3,6 +3,7 @@
 COMPILER="quark/quarkc"
 
 cd quark
+make clean
 make
 cd ../
 

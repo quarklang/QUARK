@@ -1,0 +1,18 @@
+
+def int main: 
+{
+    int x = 3;
+    while x > 0:
+    {
+        fraction frac = 10$3;
+        print(frac);
+        x--;
+    }
+
+    fraction z = 1$2;
+    print(z*2);
+    print(~z);
+    print(z - 1$4);
+
+    return 0;
+}
