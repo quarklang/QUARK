@@ -2,11 +2,11 @@ Quark
 -----
 #####The Quantum Analysis and Realization Kit Language
 
-| Name    		| UNI       | 
+| Name          | UNI       | 
 | :-------------------- | :-------: |
-| Daria Jung 		| djj2115   | 
-| Jamis Johnson    	| jmj2180   | 
-| Jim Fan     		| lf2422    |
+| Daria Jung        | djj2115   | 
+| Jamis Johnson     | jmj2180   | 
+| Jim Fan           | lf2422    |
 | Parthiban Loganathan  | pl2487    |  
 
 December 14 2014
@@ -194,58 +194,58 @@ def int smallest_period: int b, int M
 
 def int long_pow: int a, int p
 {
-	if p == 1:
-		return a;
-	int partial = long_pow(a, p / 2);
-	if p mod 2 == 1:
-		return partial * partial * a;
-	else
-		return partial * partial;
+    if p == 1:
+        return a;
+    int partial = long_pow(a, p / 2);
+    if p mod 2 == 1:
+        return partial * partial * a;
+    else
+        return partial * partial;
 }
 
 def int log2_int: int x
 {
-	int ans = 0;
-	while x > 0:
-	{
-		x = x >> 1;
+    int ans = 0;
+    while x > 0:
+    {
+        x = x >> 1;
         ans ++;
-	}
-	return ans;
+    }
+    return ans;
 }
 
 %{
-	If size == 0, continue until 0
+    If size == 0, continue until 0
 }%
 def int[] to_continued_fraction: fraction frac, int size
 {
-	int[] cfrac;
-	int i = 0;
-	while size < 1 or i < size:
-	{
+    int[] cfrac;
+    int i = 0;
+    while size < 1 or i < size:
+    {
         % array concatenation
         cfrac &= [num(frac) / denom(frac)];
-		frac -= cfrac[i];
-		if num(frac) == 0 : break;
+        frac -= cfrac[i];
+        if num(frac) == 0 : break;
 
         % denom/num built-in
-		frac = ~frac;
+        frac = ~frac;
         i ++;
-	}
-	return cfrac;
+    }
+    return cfrac;
 }
 
 def fraction to_fraction: int[] cfrac, int size
 {
-	if size < 1:
-		size = len(cfrac);
-	fraction ans = 1$cfrac[size - 1];
-	for int i in [size-2 :0 :-1] :
-	{
-		ans += cfrac[i];
-		ans = ~ans;
-	}
-	return ans + cfrac[0];
+    if size < 1:
+        size = len(cfrac);
+    fraction ans = 1$cfrac[size - 1];
+    for int i in [size-2 :0 :-1] :
+    {
+        ans += cfrac[i];
+        ans = ~ans;
+    }
+    return ans + cfrac[0];
 }
 
 int nbit = log2_int(M) + 1;
@@ -253,80 +253,80 @@ int nbit = log2_int(M) + 1;
 % This is the user defined function that should be passed as a string argument
 def int shor_oracle: int x
 {
-	return exp_mod(nbit, x, M);
+    return exp_mod(nbit, x, M);
 }
 
 def int main:
 {
-	qreg q0 = <| nbit * 2, 0 |>;
+    qreg q0 = <| nbit * 2, 0 |>;
 
-	qft(q0, 0, nbit);
+    qft(q0, 0, nbit);
 
-	int b; int i;
-	while true:
-	{
-		b = rand_int(2, M);
+    int b; int i;
+    while true:
+    {
+        b = rand_int(2, M);
 
-		if gcd(b, M) != 1: continue;
+        if gcd(b, M) != 1: continue;
 
-		qreg q = qclone(q0);
+        qreg q = qclone(q0);
 
-		apply_oracle(q, "shor_oracle", nbit);
+        apply_oracle(q, "shor_oracle", nbit);
 
-		qft(q, 0, nbit);
+        qft(q, 0, nbit);
 
-		int mTrial = 0;
-		int measured;
+        int mTrial = 0;
+        int measured;
 
-		while mTrial < 10:
-		{
+        while mTrial < 10:
+        {
             mTrial ++;
-			measured = q ?' [:nbit];
-			if measured != 0:
-			{
-				int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
-				for int size in [len(cfrac):0:-1] :
-				{
-					int p = num(to_fraction(cfrac, size));
-					int P = p;
+            measured = q ?' [:nbit];
+            if measured != 0:
+            {
+                int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
+                for int size in [len(cfrac):0:-1] :
+                {
+                    int p = num(to_fraction(cfrac, size));
+                    int P = p;
 
-					while P < 128 and P < M :
-					{
-						if P mod 2 == 0
-							and exp_mod(b, P, M) == 1 :
-						{
-							int check = exp_mod(b, P / 2, M);
-							if check != 1 and check != M - 1 :
-							{
-								int b_P_1 = long_pow(b, P / 2) - 1;
-								int prime = gcd(M, b_P_1);
+                    while P < 128 and P < M :
+                    {
+                        if P mod 2 == 0
+                            and exp_mod(b, P, M) == 1 :
+                        {
+                            int check = exp_mod(b, P / 2, M);
+                            if check != 1 and check != M - 1 :
+                            {
+                                int b_P_1 = long_pow(b, P / 2) - 1;
+                                int prime = gcd(M, b_P_1);
 
-								if prime != 1 and prime != -1 :
-								{
-									print("Found period r = ", P);
-									print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
-									print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
-									int prime2 = gcd(M, b_P_1 + 2);
-									print("gcd(", M, ", ", b_P_1, ") = ", prime);
-									print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
-									int other_prime;
-									if prime2 == 1 :
-										other_prime = M / prime;
-									else
-										other_prime = prime2;
-									print("\nFactorize ", M, " = ", prime, " * ", other_prime);
-									return 0;
-								}
-							}
-						}
-						P += p;
-					}
-				}
-			}
-		}
-	}
-	print("FAIL");
-	return 0;
+                                if prime != 1 and prime != -1 :
+                                {
+                                    print("Found period r = ", P);
+                                    print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
+                                    print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
+                                    int prime2 = gcd(M, b_P_1 + 2);
+                                    print("gcd(", M, ", ", b_P_1, ") = ", prime);
+                                    print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
+                                    int other_prime;
+                                    if prime2 == 1 :
+                                        other_prime = M / prime;
+                                    else
+                                        other_prime = prime2;
+                                    print("\nFactorize ", M, " = ", prime, " * ", other_prime);
+                                    return 0;
+                                }
+                            }
+                        }
+                        P += p;
+                    }
+                }
+            }
+        }
+    }
+    print("FAIL");
+    return 0;
 }
 ```
 
@@ -354,3 +354,10 @@ Lessons Learned
 2. Project management is hard. It was difficult to get everyone to meet periodically to discuss progress and language design. Unlike a company, where your primary responsibility is to be developing software, as students with other classes and responsibilities, the project was not a priority till the end of the semester.
 3. Allocating work into sizable chunks was a challenge due to the interrelatedness of the different components. Even after defining interfaces, we often found minor specification differences between the parser and code generation led to issues.
 4. Focus on the primary purpose of the language. We initially toyed with the idea of dynamic typing and other advanced features that did not come to fruition.
+
+#####Daria Jung
+Group projects are pretty frustrating when the group is comprised of several overworked university students. Real life can get in the way (one group member experienced a death in the family), things ALWAYS take longer than expected (programmers are the worst at estimating how long something will take), and writing a compiler can get pretty complicated. Communication, or lack thereof, was an impediment to our progress when we started to get going, so it is imperative to be transparent and crystal clear to other teammates about what is happening. I wish that we had had Bob Martin's talk earlier in the semester so we had a better sense of the sorts of things to watch out for. The pace of the project was much different than working on something at a company.
+
+Definitely start the project as early as you can, which I'm sure most people have said, or agree with. Things inevitably start to pile up (job interviews, school, midterms, personal issues), and if you have buffer time, then things won't be as hectic in the last few weeks of the semester. 
+
+It's pretty difficult to delegate/divide up work, so I would have liked to pair program more. Inevitably, some of the work fell on certain people throughout the project due to the nature of everyone's different schedules.
