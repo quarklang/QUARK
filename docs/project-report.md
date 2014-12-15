@@ -58,6 +58,7 @@ output is C++ specifically designed to work with the simulator.
 
 #####Project Timeline:
 These are goals we set for our project.
+
 | Date     | Goal                           |
 | -------- |:------------------------------:|
 | 11/21/14 | Complete scanner and parser    |
@@ -70,6 +71,7 @@ These are goals we set for our project.
 
 #####Project Log:
 Actual progress of project.
+
 | Date     | Milestones                                   |
 | -------- |:--------------------------------------------:|
 | 9/8/14   | Team formed                                  |
