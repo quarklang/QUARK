@@ -148,13 +148,13 @@ def int main:
 
 								if prime != 1 and prime != -1 :
 								{
-									print("Found period r = ", P);
-									print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
-									print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
+									%print("Found period r = ", P);
+									%print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
+									%print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
 									int prime2 = gcd(M, b_P_1 + 2);
-									print("gcd(", M, ", ", b_P_1, ") = ", prime);
-									print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
-									print("\nFactorize ", M, " = ", prime, " * ", M/prime if prime2==1 or prime2==-1 else prime2);
+									%print("gcd(", M, ", ", b_P_1, ") = ", prime);
+									%print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
+									print("Factorize ", M, " = ", prime, " * ", M/prime if prime2==1 or prime2==-1 else prime2);
 									return 0;
 								}
 							}
