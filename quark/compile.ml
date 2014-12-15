@@ -60,6 +60,12 @@ let _ =
             exefile := name
         ), ": shorthand for -s <file>.qk -c <file>.cpp -o <file>");
 
+      ("-sc", Arg.String(fun src -> 
+          check_src_format src;
+          let name = Filename.chop_suffix src ext in
+            cppfile := name ^ ".cpp"
+        ), ": shorthand for -s <file>.qk -c <file>.cpp");
+
       ("-static", Arg.Unit(fun () -> is_static := true), 
         ": compile with static lib (otherwise with dynamic lib). Does NOT work on Mac");
   ] in
