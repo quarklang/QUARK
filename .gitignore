@@ -11,8 +11,9 @@
 *.cmxs
 *.cmxa
 
-# Output files
+# Test files
 *.out
+*.diff
 
 # Repo specific
 scanner.ml
