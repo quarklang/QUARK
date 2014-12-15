@@ -1,0 +1,13 @@
+
+def int main: 
+{
+    float x = 3.0;
+    float y = 5.6;
+
+    print(x + y);
+    print(x - y);
+    print(x * y);
+    print(x / y);
+
+    return 0;
+}
