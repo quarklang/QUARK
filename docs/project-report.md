@@ -122,12 +122,226 @@ Architecture
 ============
 
 
-Testing
+Test Plan
 =======
 
-We created a set of test scripts in quark (with extension .qk) and expected output text files (with extension .output). The test suite script testall.sh compiles all test scripts and runs the output C++ using the simulator. If the output matches the corresponding expected output from the .output file, the test succeeds, else fails.
+The test suite for QUARK consisted of simple regression tests for language features, as well as longer tests to demonstrate target programs in the language.
+
+We created a set of test scripts in quark (with extension .qk) and expected output text files (with extension .output). The test suite script testall.sh compiles all test scripts and runs the output C++ using the simulator. If the output matches the corresponding expected output (.coutput) from the .output file, the test succeeds, else fails.
 
 We tested each significant individual component of the language from the LRM with a separate test.
+
+###Rationale
+We chose not to include unit testing and relied on OCaml's type system to detect major bugs or give us warnings about things such as missing cases in a pattern match.
+
+Tests were run frequently to detect changes or unimplemented features. The regression test system allowed us to utilize test-driven development. The test suite was run with tests that used unimplemented language features, simply failing until those features are implemented.
+
+###Implementation 
+We created a `tests` folder in the Quark source repository and a shell script `testall.sh` to implement the build procedure. 
+
+To run tests, in the top level directory of the Quark repository, run `./testall.sh` to:
+
+1. Using the QUARK compiler quarkc, compile all programs with the extension `.qk` in `tests` to C++ files. 
+2. Using `g++` 4.8, compile the generated C++ files to executables linked with the QUARK simulator libraries.
+3. Run the executables and compare the outputs (`.coutput`) to the expected output files (`.output`).  Any files with differing output are considered to be failing tests.
+
+Add a `.qk` file to the `tests` folder with a corresponding `.output` file to add a new test. 
+
+###Representative Program
+An example of a non-trivial program written in QUARK for Grover's Search:
+
+```
+int M = 221;
+
+def int gcd: int a, int b
+{
+    int c;
+    while a != 0:
+    {
+        c = a;
+        a = b mod a;
+        b = c;
+    }
+    return b;
+}
+
+def int exp_mod: int b, int e, int m
+{
+    int remainder;
+    int x = 1;
+
+    while e != 0:
+    {
+        remainder = e mod 2;
+        e = e >> 1;
+
+        if remainder == 1:
+            x = (x * b) mod m;
+        b = (b * b) mod m;
+    }
+    return x;
+}
+
+def int smallest_period: int b, int M
+{
+    int i = 1;
+    while exp_mod(b, i, M) != 1:
+        i ++;
+    return i;
+}
+
+def int long_pow: int a, int p
+{
+	if p == 1:
+		return a;
+	int partial = long_pow(a, p / 2);
+	if p mod 2 == 1:
+		return partial * partial * a;
+	else
+		return partial * partial;
+}
+
+def int log2_int: int x
+{
+	int ans = 0;
+	while x > 0:
+	{
+		x = x >> 1;
+        ans ++;
+	}
+	return ans;
+}
+
+%{
+	If size == 0, continue until 0
+}%
+def int[] to_continued_fraction: fraction frac, int size
+{
+	int[] cfrac;
+	int i = 0;
+	while size < 1 or i < size:
+	{
+        % array concatenation
+        cfrac &= [num(frac) / denom(frac)];
+		frac -= cfrac[i];
+		if num(frac) == 0 : break;
+
+        % denom/num built-in
+		frac = ~frac;
+        i ++;
+	}
+	return cfrac;
+}
+
+def fraction to_fraction: int[] cfrac, int size
+{
+	if size < 1:
+		size = len(cfrac);
+	fraction ans = 1$cfrac[size - 1];
+	for int i in [size-2 :0 :-1] :
+	{
+		ans += cfrac[i];
+		ans = ~ans;
+	}
+	return ans + cfrac[0];
+}
+
+int nbit = log2_int(M) + 1;
+
+% This is the user defined function that should be passed as a string argument
+def int shor_oracle: int x
+{
+	return exp_mod(nbit, x, M);
+}
+
+def int main:
+{
+	qreg q0 = <| nbit * 2, 0 |>;
+
+	qft(q0, 0, nbit);
+
+	int b; int i;
+	while true:
+	{
+		b = rand_int(2, M);
+
+		if gcd(b, M) != 1: continue;
+
+		qreg q = qclone(q0);
+
+		apply_oracle(q, "shor_oracle", nbit);
+
+		qft(q, 0, nbit);
+
+		int mTrial = 0;
+		int measured;
+
+		while mTrial < 10:
+		{
+            mTrial ++;
+			measured = q ?' [:nbit];
+			if measured != 0:
+			{
+				int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
+				for int size in [len(cfrac):0:-1] :
+				{
+					int p = num(to_fraction(cfrac, size));
+					int P = p;
+
+					while P < 128 and P < M :
+					{
+						if P mod 2 == 0
+							and exp_mod(b, P, M) == 1 :
+						{
+							int check = exp_mod(b, P / 2, M);
+							if check != 1 and check != M - 1 :
+							{
+								int b_P_1 = long_pow(b, P / 2) - 1;
+								int prime = gcd(M, b_P_1);
+
+								if prime != 1 and prime != -1 :
+								{
+									print("Found period r = ", P);
+									print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
+									print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
+									int prime2 = gcd(M, b_P_1 + 2);
+									print("gcd(", M, ", ", b_P_1, ") = ", prime);
+									print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
+									int other_prime;
+									if prime2 == 1 :
+										other_prime = M / prime;
+									else
+										other_prime = prime2;
+									print("\nFactorize ", M, " = ", prime, " * ", other_prime);
+									return 0;
+								}
+							}
+						}
+						P += p;
+					}
+				}
+			}
+		}
+	}
+	print("FAIL");
+	return 0;
+}
+```
+
+###Tests Used
+
+| Test name | Purpose |
+| :-------- | :------- |
+| gcd.qk |  ensures QUARK passes the GCD test
+| test-addition.qk | ensures integer arithmetic works
+| test-array.qk | ensures that arrays can both be written to and read from
+| test-complex.qk | ensures QUARK's support for complex numbers works correctly 
+| test-hello_world.qk | ensures basic print functionality works 
+| test-import.qk | ensures QUARK's import system can correctly access code in another `.qk` file
+| test-logic.qk | ensures boolean logic works correctly 
+| test-matrix.qk | ensures matrices can both be written to and read from 
+| test-range.qk | ensures range iteration works correctly
+| test-while.qk | ensures while loops correctly execute based on condition
 
 
 Lessons Learned
