@@ -2,7 +2,7 @@ open Semantic
 
 (*********** Configs ***********)
 (* g++ compilation flags *)
-let gpp_command = "g++ -std=c++11 -O3"
+let gpp_flags = " -std=c++11 -O3 "
 
 (* where to find the libraries, relative to the executable *)
 let relative_lib_path = "../lib"
@@ -32,6 +32,8 @@ let _ =
   let srcfile = ref "" 
     and cppfile = ref "" 
     and exefile = ref ""
+    (* User-defined g++ path *)
+    and gppath = ref "g++"
     (* Use static lib or dynamic lib? *)
     and is_static = ref false in
   let check_src_format src = 
@@ -60,10 +62,19 @@ let _ =
             exefile := name
         ), ": shorthand for -s <file>.qk -c <file>.cpp -o <file>");
 
+      ("-sc", Arg.String(fun src -> 
+          check_src_format src;
+          let name = Filename.chop_suffix src ext in
+            cppfile := name ^ ".cpp"
+        ), ": shorthand for -s <file>.qk -c <file>.cpp");
+
+      ("-g++", Arg.String(fun gpp -> gppath := gpp),
+        ": shorthand for -s <file>.qk -c <file>.cpp");
+
       ("-static", Arg.Unit(fun () -> is_static := true), 
         ": compile with static lib (otherwise with dynamic lib). Does NOT work on Mac");
   ] in
-  let usage = "usage: quarkc -s source.qk [-c output.cpp ] [-o executable] [-static] " in
+  let usage = "usage: quarkc -s source.qk [-c output.cpp ] [-o executable] [-static] [-g++ /path/to/g++]" in
   let _ = Arg.parse speclist
     (* handle anonymous args *)
     (fun arg -> failwith @@ "Unrecognized arg: " ^ arg)
@@ -124,7 +135,7 @@ let _ =
         (* Invokes g++ *)
     	  (* static lib works on cygwin but not Mac *)
         let cmd = if !is_static then
-      	  gpp_command ^ " -I " ^ lib_folder
+      	  !gppath ^ gpp_flags ^ "-I " ^ lib_folder
       	      ^ " -static " ^ !cppfile ^ " -L " ^ lib_folder
       	      ^ " -l" ^ quark_static_lib ^ " -o " ^ !exefile
         else
@@ -135,7 +146,7 @@ let _ =
                     ^ Filename.dirname !exefile in
                 ignore @@ Sys.command cpcmd
             ) quark_shared_lib in
-          gpp_command ^ " -I " ^ lib_folder
+          !gppath ^ gpp_flags ^ "-I " ^ lib_folder
               ^ " " ^ !cppfile 
               ^ " -L " ^ lib_folder
               ^ " -Wl,-rpath -Wl,." (*^ Filename.concat (Filename.current_dir_name) lib_folder*)
