@@ -727,186 +727,178 @@ Below is the grammar for QUARK. Words in capital letters are tokens passed in fr
 
 ```ocaml
 ident:
-    ID { Ident($1) }
+    ID
 
 vartype:
-    INT      { Int }
-  | FLOAT    { Float }
-  | BOOLEAN  { Bool }
-  | STRING   { String }
-  | QREG     { Qreg }
-  | FRACTION { Fraction }
-  | COMPLEX  { Complex }
-  | VOID     { Void }
+    INT 
+  | FLOAT
+  | BOOLEAN 
+  | STRING  
+  | QREG    
+  | FRACTION 
+  | COMPLEX 
+  | VOID     
 
 datatype:
-  | vartype { DataType($1) }
-  | datatype LSQUARE RSQUARE { ArrayType($1) }
-  | datatype LMATRIX RSQUARE { MatrixType($1) } /* int[|] */
+  | vartype
+  | datatype []
+  | datatype [|]
 
 /* Variables that can be assigned a value */
 lvalue:
-  | ident                           { Variable($1) }
-  | ident LSQUARE expr_list RSQUARE { ArrayElem($1, $3) }
+  | ident                           
+  | ident [expr_list]
 
 expr:
   /* Logical */
-  | expr LT expr          { Binop($1, Less, $3) }
-  | expr LTE expr         { Binop($1, LessEq, $3) }
-  | expr GT expr          { Binop($1, Greater, $3) }
-  | expr GTE expr         { Binop($1, GreaterEq, $3) }
-  | expr EQUALS expr      { Binop($1, Eq, $3) }
-  | expr NOT_EQUALS expr  { Binop($1, NotEq, $3) }
-  | expr AND expr         { Binop($1, And, $3) }
-  | expr OR expr          { Binop($1, Or, $3) }
+  | expr < expr          
+  | expr <= expr         
+  | expr > expr          
+  | expr >= expr         
+  | expr == expr      
+  | expr != expr  
+  | expr and expr        
+  | expr or expr          
   
   /* Unary */
-  | BITNOT expr             { Unop(BitNot, $2) }
-  | MINUS expr %prec UMINUS { Unop(Neg, $2) }
-  | NOT expr                { Unop(Not, $2) }
-  | expr PRIME              { Unop(Transpose, $1) }
+  | ~expr            
+  | -expr
+  | not expr                
+  | expr`             
 
   /* Arithmetic */
-  | expr PLUS expr    { Binop($1, Add, $3) }
-  | expr MINUS expr   { Binop($1, Sub, $3) }
-  | expr TIMES expr   { Binop($1, Mul, $3) }
-  | expr DIVIDE expr  { Binop($1, Div, $3) }
-  | expr MODULO expr  { Binop($1, Mod, $3) }
-  | expr POWER expr   { Binop($1, Pow, $3) }
+  | expr + expr    
+  | expr - expr   
+  | expr * expr  
+  | expr / expr  
+  | expr mod expr  
+  | expr ** expr  
 
   /* Bitwise */
-  | expr BITAND expr        { Binop($1, BitAnd, $3) }
-  | expr BITXOR expr        { Binop($1, BitXor, $3) }
-  | expr BITOR expr         { Binop($1, BitOr, $3) }
-  | expr LSHIFT expr        { Binop($1, Lshift, $3) }
-  | expr RSHIFT expr        { Binop($1, Rshift, $3) }
+  | expr & expr       
+  | expr ^ expr       
+  | expr | expr         
+  | expr << expr        
+  | expr >> expr        
 
   /* Query */
-  | expr QUERY expr         { Queryop($1, Query, $3, IntLit("QuerySingleBit")) }
-  | expr QUERY_UNREAL expr  { Queryop($1, QueryUnreal, $3, IntLit("QuerySingleBit")) }
-  | expr QUERY LSQUARE COLON expr RSQUARE { Queryop($1, Query, IntLit("0"), $5) }
-  | expr QUERY_UNREAL LSQUARE COLON expr RSQUARE  { Queryop($1, QueryUnreal, IntLit("0"), $5) }
-  | expr QUERY LSQUARE expr COLON expr RSQUARE         { Queryop($1, Query, $4, $6) }
-  | expr QUERY_UNREAL LSQUARE expr COLON expr RSQUARE  { Queryop($1, QueryUnreal, $4, $6) }
+  | expr ? expr         
+  | expr ?` expr 
+  | expr ? [ : expr ]
+  | expr ?` [ : expr ] 
+  | expr ? [expr : expr ]       
+  | expr ?` [expr : expr]
 
   /* Parenthesis */
-  | LPAREN expr RPAREN { $2 }
+  | (expr)
 
   /* Assignment */
-  | lvalue ASSIGN expr { Assign($1, $3) }
-  | lvalue             { Lval($1) }
-
+  | lvalue = expr
+  | lvalue   
+  
   /* Special assignment */
-  | lvalue PLUS_EQUALS expr { AssignOp($1, AddEq, $3) }
-  | lvalue MINUS_EQUALS expr { AssignOp($1, SubEq, $3) } 
-  | lvalue TIMES_EQUALS expr { AssignOp($1, MulEq, $3) }
-  | lvalue DIVIDE_EQUALS expr { AssignOp($1, DivEq, $3) }
-  | lvalue BITAND_EQUALS expr { AssignOp($1, BitAndEq, $3) }
+  | lvalue += expr 
+  | lvalue -= expr 
+  | lvalue *= expr
+  | lvalue /= expr
+  | lvalue &= expr
 
   /* Post operation */
-  | lvalue INCREMENT { PostOp($1, Inc) }
-  | lvalue DECREMENT { PostOp($1, Dec) }
+  | lvalue ++ 
+  | lvalue --
 
   /* Membership testing with keyword 'in' */
-  | expr IN expr    { Membership($1, $3) }
+  | expr in expr
 
   /* Python-style tertiary */
-  | expr IF expr ELSE expr   { Tertiary($1, $3, $5) }
+  | expr if expr else expr  
 
   /* literals */
-  | INT_LITERAL                                 { IntLit($1) }
-  | FLOAT_LITERAL                               { FloatLit($1) }
-  | BOOLEAN_LITERAL                             { BoolLit($1) }
-  | expr DOLLAR expr                            { FractionLit($1, $3) }
-  | STRING_LITERAL                              { StringLit($1) }
-  | LSQUARE expr_list RSQUARE                   { ArrayLit($2) }
-  | datatype LSQUARE expr RSQUARE               { ArrayCtor($1, $3) }
-  | LMATRIX matrix_row_list RMATRIX             { MatrixLit($2) }
-  | datatype LMATRIX expr COMMA expr RMATRIX { MatrixCtor($1, $3, $5) }
-  | COMPLEX_SYM expr COMMA expr RPAREN          { ComplexLit($2, $4) }
-  | COMPLEX_SYM expr RPAREN                     { ComplexLit($2, FloatLit("0.0")) }
-  | LQREG expr COMMA expr RQREG                 { QRegLit($2, $4) }
+  | INT_LITERAL              
+  | FLOAT_LITERAL                 
+  | BOOLEAN_LITERAL                    
+  | expr $ expr                          
+  | STRING_LITERAL                             
+  | [ expr_list ]                
+  | datatype [ expr ]       
+  | [| matrix_row_list ]          
+  | datatype [| expr , expr ]
+  | i( expr , expr )     
+  | i( expr )                  
+  | <| expr , expr |>                
 
   /* function call */
-  | ident LPAREN RPAREN             { FunctionCall($1, []) }
-  | ident LPAREN expr_list RPAREN   { FunctionCall ($1, $3) }
+  | ident ()            
+  | ident (expr_list) 
 
 expr_list:
-  | expr COMMA expr_list { $1 :: $3 }
-  | expr                 { [$1] }
+  | expr , expr_list
+  | expr      
 
 /* [| r00, r01; r10, r11; r20, r21 |] */
 matrix_row_list:
-  | expr_list SEMICOLON matrix_row_list { $1 :: $3 }
-  | expr_list            { [$1] }
+  | expr_list ; matrix_row_list
+  | expr_list  
 
 decl:
   | datatype ident ASSIGN expr SEMICOLON                { AssigningDecl($1, $2, $4) }
   | datatype ident SEMICOLON                            { PrimitiveDecl($1, $2) }
 
 statement:
-  | IF expr COLON statement ELSE statement
-      { IfStatement($2, $4, $6) }
-  | IF expr COLON statement %prec IFX
-      { IfStatement($2, $4, EmptyStatement) }
 
-  | WHILE expr COLON statement { WhileStatement($2, $4) }
-  | FOR iterator COLON statement { ForStatement($2, $4) }
+  | if expr : statement else statement
+  | if expr : statement
 
-  | LCURLY statement_seq RCURLY { CompoundStatement($2) }
+  | while expr : statement
+  | for iterator : statement
 
-  | expr SEMICOLON { Expression($1) }
-  | SEMICOLON { EmptyStatement }
-  | decl { Declaration($1) }
+  | {statement_seq}
 
-  | RETURN expr SEMICOLON { ReturnStatement($2) }
-  | RETURN SEMICOLON { VoidReturnStatement }
+  | expr;
+  | ;
+  | decl
+
+  | return expr;
+  | return;
   
   /* Control flow */
-  | BREAK { BreakStatement }
-  | CONTINUE { ContinueStatement }
-
-
-/* iterator_list:
-  | iterator COMMA iterator_list { $1 :: $3 }
-  | iterator { [$1] } */
+  | break
+  | continue
 
 iterator:
-  | ident IN LSQUARE range RSQUARE { RangeIterator(NoneType, $1, $4) }
-  | datatype ident IN LSQUARE range RSQUARE { RangeIterator($1, $2, $5) }
-  | datatype ident IN expr { ArrayIterator($1, $2, $4) }
+  | ident in [range]
+  | datatype ident in [range] 
+  | datatype ident in expr
 
 range:
-  | expr COLON expr COLON expr { Range($1, $3, $5) }
-  | expr COLON expr { Range($1, $3, IntLit("1")) }
-  | COLON expr COLON expr { Range(IntLit("0"), $2, $4) }
-  | COLON expr { Range(IntLit("0"), $2, IntLit("1")) }
+  | expr : expr : expr
+  | expr : expr 
+  | : expr : expr
+  | : expr
 
 top_level_statement:
-  | DEF datatype ident COLON param_list LCURLY statement_seq RCURLY
-      { FunctionDecl($2, $3, $5, $7) }
-  | datatype ident COLON param_list SEMICOLON
-      { ForwardDecl($1, $2, $4) }
-  | decl { Declaration($1) }
+  | def datatype ident : param_list {statement_seq}
+  | datatype ident : param_list ;
+  | decl 
 
 param:
-  | datatype ident { PrimitiveDecl($1, $2) }
+  | datatype ident
 
 non_empty_param_list:
-  | param COMMA non_empty_param_list { $1 :: $3 }
-  | param { [$1] }
+  | param, non_empty_param_list
+  | param
 
 param_list:
-  | non_empty_param_list { $1 }
-  | { [] }
+  | non_empty_param_list
+  | []
 
 top_level:
-  | top_level_statement top_level {$1 :: $2}
-  | top_level_statement { [$1] }
+  | top_level_statement top_level
+  | top_level_statement
 
 statement_seq:
-  | statement statement_seq {$1 :: $2 }
-  | { [] }
+  | statement statement_seq
+  | []
 
 ```
 
