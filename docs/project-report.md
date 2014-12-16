@@ -489,18 +489,21 @@ def int main:
 | Test name | Purpose |
 | :-------- | :------- |
 | gcd.qk |  ensures QUARK passes the GCD test
-| test-addition.qk | ensures integer arithmetic works
-| test-array.qk | ensures that arrays can both be written to and read from
-| test-complex.qk | ensures QUARK's support for complex numbers works correctly 
-| test-hello_world.qk | ensures basic print functionality works 
-| test-import.qk | ensures QUARK's import system can correctly access code in another `.qk` file
-| test-logic.qk | ensures boolean logic works correctly 
-| test-matrix.qk | ensures matrices can both be written to and read from 
-| test-range.qk | ensures range iteration works correctly
-| test-while.qk | ensures while loops correctly execute based on condition
-| test-float.qk | ensures float arithmetic works
-| test-elif.qk | ensures else-if works correctly
-| test-multi-array.qk | ensures we are able to access and write to multi-dimensional arrays
+| addition.qk | ensures integer arithmetic works
+| array.qk | ensures that arrays can both be written to and read from
+| complex.qk | ensures QUARK's support for complex numbers works correctly 
+| hello_world.qk | ensures basic print functionality works 
+| import.qk | ensures QUARK's import system can correctly access code in another `.qk` file
+| logic.qk | ensures boolean logic works correctly 
+| matrix.qk | ensures matrices can both be written to and read from 
+| range.qk | ensures range iteration works correctly
+| while.qk | ensures while loops correctly execute based on condition
+| float.qk | ensures float arithmetic works
+| elif.qk | ensures else-if works correctly
+| fraction.qk | ensures fraction arithmetic works
+| multi-array.qk | ensures we are able to access and write to multi-dimensional arrays
+| shor.qk | non-trivial program in QUARK
+| grover.qk | non-trivial program in QUARK
 
 Lessons Learned
 ===============

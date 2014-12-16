@@ -123,7 +123,7 @@ A `float` is a 64-bit signed floating-point number. Comparing two floats is done
 A `fraction` is denoted by two `int` types separated by `$`. The `int` value to the left of `$` represents the numerator, and the `int` value to the right of `$` represents the denominator. QUARK provides an inverse operator `~`. 
 
 ```matlab
-frac foo = 2$3; % represents 4/6
+frac foo = 2$3; % represents 2/3
 ~foo; % 3$2
 ```
 
@@ -435,7 +435,7 @@ while(condition):
 	% statement
 }
 ```
-As with `if else` statements, if the following statement is only one line, curly braces `{}` are unnecessary.
+As with `if elif else` statements, if the following statement is only one line, curly braces `{}` are unnecessary.
 
 ```
 while exp_mod(b, i, M) != 1:
