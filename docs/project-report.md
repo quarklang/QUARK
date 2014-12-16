@@ -23,7 +23,7 @@ In the early 1980's, Richard Feynman observed that certain quantum mechanical ef
 
 Classical computers require data to be encoded in binary bits, where each unit is always in a definite state of either 0 or 1. Quantum computation uses qubits, a special unit that can be 0 and 1 at the same time, i.e. a superposition of base states. Measuring a qubit will force it to collapse to either 0 or 1, with a probability distribution determined by its amplitude. 
 
-Qubits effectively operates on exponentially large number of entangled states simultaneously, though all of them will collapse as soon as we make a measurement. With carefully designed quantum algorithms, we are able to speed up certain classical problems dramatically by tapping into such massive computational resource. It is not unlike parallel computing, but powered by quantum mechanical laws. 
+Qubits effectively operate on exponentially large number of entangled states simultaneously, though all of them will collapse as soon as we make a measurement. With carefully designed quantum algorithms, we are able to speed up certain classical problems dramatically by tapping into such massive computational resources. It is not unlike parallel computing, but powered by quantum mechanical laws. 
 
 Though quantum computing is still in its infancy, the last two decades have witnessed two ingenious algorithms that produced much inspiration and motivation for quantum computing research. One is Shor's algorithm (1994) for integer factorization, which yields exponential speedup over the best classical alternative, and the other is Grover's search algorithm (1996), which provides quadratic speedup for unsorted database search. Once realized, the former would have significant impact on cryptography, while the latter would have great implication on NP-hard problems. 
 
@@ -37,8 +37,8 @@ A relatively efficient quantum circuit simulator is included as part of the QUAR
 Tutorial
 ========
 
-###Install
-Install [Vagrant](https://www.vagrantup.com/downloads.html), a tool for provisioning virtual machines and used to maintain a consistent environment. You will also need  to install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) which Vagrant uses for virtualization. Git clone the [Quark repository](https://github.com/quarklang/QUARK), navigate to the directory, and run `vagrant up`. This will provision and run a Ubuntu 14.04 LTS virtual machine instance as well as download and install dependencies such as OCaml and g++-4.8. Run `vagrant ssh` to ssh into the vm. Make sure you are in the `/vagrant` directory by running the command `pwd` and if you are not run `cd /vagrant`.
+###Environment Installation
+Install [Vagrant](https://www.vagrantup.com/downloads.html), a tool for provisioning virtual machines used to maintain a consistent environment. You will also need  to install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) which Vagrant uses for virtualization. Clone the [Quark repository](https://github.com/quarklang/QUARK), navigate to the directory and run `vagrant up`. This will provision and run a Ubuntu 14.04 LTS virtual instance as well as download and install dependencies such as OCaml and g++-4.8. Run `vagrant ssh` to ssh into the VM. Make sure you are in the `/vagrant` directory by running the command `pwd` and if you are not run `cd /vagrant`.
 
 ###Compiling and Running Quark Programs
 The following Hello World example Quark program is saved in `/tests/hello_world.qk`.
@@ -63,9 +63,8 @@ usage: quarkc -s source.qk [-c output.cpp ] [-o executable] [-static] [-g++ /pat
   -sco : shorthand for -s <file>.qk -c <file>.cpp -o <file>
   -sc : shorthand for -s <file>.qk -c <file>.cpp
   -g++ : shorthand for -s <file>.qk -c <file>.cpp
-  -static : compile with static lib (otherwise with dynamic lib). Does NOT work on Mac
+  -static : compile with static lib (otherwise with dynamic lib). Does NOT work on OSX
   -help  Display this list of options
-  --help  Display this list of options
 ```
 
 As stated above, to compile `tests/hello_world.qk` into C++ and an executable run `./quark/quarkc -s tests/hello_world.qk -c hello_world.cpp -o hello_world`. You can run the hello_world executable to get output, and the `cat` command shows the generated C++ as follows:
@@ -93,7 +92,7 @@ return 0;
 The C++ includes are referencing our quantum simulator and these files can be found in the `lib` directory.
 
 ###Essential Syntax
-Quark syntax resembles something along the lines of Python with static typing and if you already know a popular imperative language such as C, Python or Go you should be able to easily glean the majority of the syntax by simply reading through these examples. Our language manual provides a more explicit outline of the language spec.
+Quark syntax resembles something along the lines of Python with static typing. It is influenced by a number of languages including Python, MATLAB and C. If you already know a popular imperative language, you should be able to easily glean the majority of the syntax by simply reading through these examples. Our language manual provides a more explicit outline of the language spec.
 
 ```
 def int gcd: int x, int y
@@ -115,16 +114,18 @@ def int main:
 }
 ```
 
-The keyword `def` declares a function, followed by the return type of the function, the function name, `:`, and then comma-separated, typed parameters. The `main` function is the primary entry point to Quark programs. Quark allows for a certain degree of type inference as you can see when setting `x = y` and `y = r`. When the type of the expression on the right hand side is known, you do not need to declare the type when instantiating a variable. `print` is a builtin function and the full list of builtins and a description of their function can be found in the Language Manual section. Blocks are denoted using  brackets but are not required when the block is only composed of a single line of code. Statements are terminated with `;` and single-line comments written after `%`.
+The keyword `def` declares a function, followed by the return type of the function, the function name, `:`, and then comma-separated, typed parameters. The `main` function is the primary entry point to Quark programs. `print` is a builtin function and the full list of builtins and a description of their function can be found in the Language Manual section. Blocks are denoted using  brackets but are not required when the block is only composed of a single line of code. Statements are terminated with `;` and single-line comments written after `%`.
 
 ###Control Flow
-Conditional statements are supported via the `if` and `elif` keywords, for example,
+Conditional statements are supported via the `if`, `elif` and `else` keywords. There's also support for the dangling else case. For example,
 
 ```
 if x > 0:
     print("positive");
 elif x < 0:
     print("negative");
+else:
+    print("zero");
 ```
 
 Here is a simple `while` loop,
