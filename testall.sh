@@ -1,5 +1,4 @@
 #!/bin/bash
-#script used for reg testing
 COMPILER="quark/quarkc"
 
 cd quark
