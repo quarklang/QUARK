@@ -916,7 +916,7 @@ Tools used:
 - Trello for task assignment
 - Git for version control
 - GitHub for code management
-- Vagrant with Ubuntu 12.04 64-bit for consistent develoment environments
+- Vagrant with Ubuntu 14.04 LTS 64-bit for consistent development environments
 
 We also used an external simulator that Jim created over the summer. Our compiler's
 output is C++ specifically designed to work with the simulator.
@@ -926,10 +926,10 @@ These are goals we set for our project.
 
 | Date     | Goal                           |
 | -------- |:------------------------------:|
-| 11/21/14 | Complete scanner and parser    |
-| 12/5/14  | Complete semantic checking     |
-| 12/7/14  | Complete code generation       |
-| 12/8/14  | Complete test suite            |
+| 11/1/14  | Complete scanner and parser    |
+| 11/14/14 | Complete semantic checking     |
+| 11/25/14 | Complete code generation       |
+| 12/16/14 | Complete test suite            |
 | 12/1/14  | Complete end-to-end            |
 | 12/5/14  | Finish testing and code freeze |
 | 12/8/14  | Complete project report        |
@@ -1218,6 +1218,8 @@ def int main:
 | shor.qk | non-trivial program in QUARK
 | grover.qk | non-trivial program in QUARK
 
+Testing was primarily done by Daria Jung with help from Parthiban Loganathan and Jamis Johnson.
+
 Lessons Learned
 ===============
 
@@ -1235,11 +1237,11 @@ Definitely start the project as early as you can, which I'm sure most people hav
 It's pretty difficult to delegate/divide up work, so I would have liked to pair program more. Inevitably, some of the work fell on certain people throughout the project due to the nature of everyone's different schedules.
 
 ###Jamis Johnson
-Communication is vital. Pick a time to meet everyweek for an hour or two and don't leave without knowing specifically who is doing what before next week's meeting. Decide immediately how you will all communicate (email, sms, facebook messanger) and constantly inform your teammates of your progress!
+Communication is vital. Pick a time to meet everyweek for an hour or two and don't leave without knowing specifically who is doing what before next week's meeting. Decide immediately how you will all communicate (email, sms, facebook messenger) and constantly inform your teammates of your progress!
 
 Jump in and start coding stat! The language spec changes rapidly so don't dwell on the minutiae. What matters most is the core objective of your language. Complete the first edition of the LRM by your team's first or second meeting and move on to writing code.
 
-Team members will inevitably become overwhelmed with life, other school work, and with each other, and it's easy to get frusterated. Help each other out and go easy on one another (and see above: communicate!). Also, early progress will genrally ameliorate stress, as will clearly defined roles.
+Team members will inevitably become overwhelmed with life, other school work, and with each other, and it's easy to get frustrated. Help each other out and go easy on one another (and see above: communicate!). Also, early progress will generally ameliorate stress, as will clearly defined roles.
 
 #Appendix
 
