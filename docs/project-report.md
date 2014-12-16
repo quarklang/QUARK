@@ -441,3 +441,10 @@ Group projects are pretty frustrating when the group is comprised of several ove
 Definitely start the project as early as you can, which I'm sure most people have said, or agree with. Things inevitably start to pile up (job interviews, school, midterms, personal issues), and if you have buffer time, then things won't be as hectic in the last few weeks of the semester. 
 
 It's pretty difficult to delegate/divide up work, so I would have liked to pair program more. Inevitably, some of the work fell on certain people throughout the project due to the nature of everyone's different schedules.
+
+#####Jamis Johnson
+Communication is vital. Pick a time to meet everyweek for an hour or two and don't leave without knowing specifically who is doing what before next week's meeting. Decide immediately how you will all communicate (email, sms, facebook messanger) and constantly inform your teammates of your progress!
+
+Jump in and start coding stat! The language spec changes rapidly so don't dwell on the minutiae. What matters most is the core objective of your language. Complete the first edition of the LRM by your team's first or second meeting and move on to writing code.
+
+Team members will inevitably become overwhelmed with life, other school work, and with each other, and it's easy to get frusterated. Help each other out and go easy on one another (and see above: communicate!). Also, early progress will genrally ameliorate stress, as will clearly defined roles.
