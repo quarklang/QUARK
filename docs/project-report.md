@@ -838,8 +838,8 @@ matrix_row_list:
   | expr_list  
 
 decl:
-  | datatype ident ASSIGN expr SEMICOLON                { AssigningDecl($1, $2, $4) }
-  | datatype ident SEMICOLON                            { PrimitiveDecl($1, $2) }
+  | datatype ident = expr ;             
+  | datatype ident ;                          
 
 statement:
 
