@@ -163,9 +163,6 @@ Where the first value (10 in this case) indicates the number of bits in the quan
 Language Reference Manual
 =========================
 
-###Grammar Notation
-FILL OUT LATER
-
 ###Lexical Conventions
 A program in QUARK includes at least one function definition, though something trivial like a variable declaration or a string should compile. Programs are written using a basic source character set accepted by the C++ compiler in use. Refer to what source-code file encoding your compiler accepts. The QUARK compiler will only output ASCII.
 
