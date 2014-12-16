@@ -111,12 +111,88 @@ return 0;
 The C++ includes are referencing our quantum simulator and these files can be found 
 in the `lib` directory.
 
-###More Examples
-Quark sytax resembles something along the lines of Python with static typing and 
-if you already know an imperative language such as C, Python or Go you should be 
+###Essential Syntax
+Quark syntax resembles something along the lines of Python with static typing and 
+if you already know a popular imperative language such as C, Python or Go you should be 
 able to easily glean the majority of the syntax by simply reading through these 
-examples. For a more in-depth explanation of Quark syntax see the language manual.
+examples. Our language manual provides a more explicit outline of the language spec.
 
+```
+def int gcd: int x, int y
+{
+    while y != 0:
+    {
+        int r = x mod y;
+        x = y;
+        y = r;
+    }
+    return x;
+}
+
+def int main:
+{
+    % prints the greatest common divisor of 10 and 20
+    print(gcd(10, 20));
+    return 0;
+}
+```
+
+The keyword `def` declares a function, followed by the return type of the 
+function, the function name, `:`, and then comma-separated, typed parameters. 
+The `main` function is the primary entry point to Quark programs. Quark allows for 
+a certain degree of type inference as you can see when setting `x = y` and `y = r`.
+When the type of the expression on the right hand side is known, you do not need 
+to declare the type when instantiating a variable.
+`print` is a builtin function and the full list of builtins and a description of their 
+function can be found in the Language Manual section. Blocks are denoted using 
+brackets but are not required when the block is only composed of a single line of code.
+Statements are terminated with `;` and single-line comments written after `%`.
+
+###Control Flow
+Conditional statements are supported via the `if` and `elif` keywords, for example,
+
+```
+if x > 0:
+    print("positive");
+elif x < 0:
+    print("negative");
+```
+
+Here is a simple `while` loop,
+
+```
+while x > 42: {
+    print(x);
+    x = x - 1;
+}
+```
+
+`for val in arr:` will iterate over an array of any type. Or you can iterate over 
+an array created using the range syntax: `for val in [0:5]`; which iterates over
+`[0,1,2,3,4]`; and `for val in [0:10:3]` which iterates over `[0,3,6,9]`
+where 3 is the step size.
+
+###Declaration
+How you declare each type in Quark,
+
+```
+int i = 5;
+float f = 3.0;
+bool b = true;
+string s = "greetings earthling";
+fraction f = 10$3;
+complex c = i(1.0, 2.0);
+string[] arr = ["hi", "world"];
+int[][] matrix = [[1,2,3],[4,5,6]];
+```
+
+And last but definitely not least, the quantum register,
+
+`qreg q = <| 10, 0 |>;`
+
+Where the first value (10 in this case) indicates the number of bits in the quantum
+register, and the second value (0 in this case) is the binary value to which each 
+bit is initialized.
 
 Language Reference Manual
 =========================
