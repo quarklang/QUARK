@@ -68,7 +68,7 @@ usage: quarkc -s source.qk [-c output.cpp ] [-o executable] [-static] [-g++ /pat
   --help  Display this list of options
 ```
 
-As stated above, to compile `tests/hello_world.qk` into C++ and an executable run `./quark/quarkc -s tests/hello_world.qk -c hello_world.cpp -o hello_world`. You can run the hello_world executable and see the generated C++ as follows:
+As stated above, to compile `tests/hello_world.qk` into C++ and an executable run `./quark/quarkc -s tests/hello_world.qk -c hello_world.cpp -o hello_world`. You can run the hello_world executable to get output, and the `cat` command shows the generated C++ as follows:
 
 ```
 vagrant@vagrant-ubuntu-trusty-64:/vagrant$ ./hello_world
