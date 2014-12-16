@@ -149,7 +149,8 @@ string s = "greetings earthling";
 fraction f = 10$3;
 complex c = i(1.0, 2.0);
 string[] arr = ["hi", "world"];
-int[][] matrix = [[1,2,3],[4,5,6]];
+int[][] arr2 = [[1,2,3],[4,5,6]];
+float[|] = [|1.0, 2.1; 3.2, 42.1|];
 ```
 
 And last but definitely not least, the quantum register,
