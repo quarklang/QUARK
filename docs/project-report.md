@@ -954,7 +954,8 @@ Actual progress of project.
 | 12/9/14  | End-to-end working                           |
 | 12/10/14 | Modifications to simulator for compatibility |
 | 12/13/14 | Rewrote Language Reference Manual            |
-| 12/15/14 | Project report complete                      |
+| 12/15/14 | Complete testing and code freeze             |
+| 12/16/14 | Project report complete                      |
 
 ###Roles and Responsibilities
 Here are our official roles for the project.
