@@ -1,6 +1,6 @@
 Quark
------
-#####The Quantum Analysis and Realization Kit Language
+====
+The Quantum Analysis and Realization Kit Language
 
 | Name          | UNI       | 
 | :-------------------- | :-------: |
@@ -13,14 +13,7 @@ December 14, 2014
 
 Contents
 ========
-- Introduction
-- Tutorial
-- Language Reference Manual
-- Project Plan
-- Architecture
-- Testing
-- Lessons Learned
-- Appendix
+[toc]
 
 
 Introduction
@@ -45,15 +38,7 @@ Tutorial
 ========
 
 ###Install
-Install [Vagrant](https://www.vagrantup.com/downloads.html), a tool for provisioning
-virtual machines and used to maintain a consistent environment. You will also need 
-to install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) which Vagrant 
-uses for virtualization. Git clone the (Quark repository)[https://github.com/quarklang/QUARK],
-navigate to the directory, and run `vagrant up`. This will provision and run a 
-Ubuntu 14.04 LTS virtual machine instance as well as download and install dependencies 
-such as OCaml and g++-4.8. Run `vagrant ssh` to ssh into the vm. Make sure you 
-are in the `/vagrant` directory by running the command `pwd` and if you are not run 
-`cd /vagrant`.
+Install [Vagrant](https://www.vagrantup.com/downloads.html), a tool for provisioning virtual machines and used to maintain a consistent environment. You will also need  to install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) which Vagrant uses for virtualization. Git clone the [Quark repository](https://github.com/quarklang/QUARK), navigate to the directory, and run `vagrant up`. This will provision and run a Ubuntu 14.04 LTS virtual machine instance as well as download and install dependencies such as OCaml and g++-4.8. Run `vagrant ssh` to ssh into the vm. Make sure you are in the `/vagrant` directory by running the command `pwd` and if you are not run `cd /vagrant`.
 
 ###Compiling and Running Quark Programs
 The following Hello World example Quark program is saved in `/tests/hello_world.qk`.
@@ -67,9 +52,7 @@ def int main:
 }
 ```
 
-Before we can compile Quark programs into C++ we must build the Quark compiler `quarkc`.
-Navigate to `/vagrant/quark/` and run `make`. Ensure `quarkc` was properly built by 
-checking for error messages then running `./quarkc -h`  to see compilation options. 
+Before we can compile Quark programs into C++ we must build the Quark compiler `quarkc`. Navigate to `/vagrant/quark/` and run `make`. Ensure `quarkc` was properly built by  checking for error messages then running `./quarkc -h`  to see compilation options.
 You should see the following:
 
 ```
@@ -85,9 +68,7 @@ usage: quarkc -s source.qk [-c output.cpp ] [-o executable] [-static] [-g++ /pat
   --help  Display this list of options
 ```
 
-As stated above, to compile `tests/hello_world.qk` into C++ and an executable run
-`./quark/quarkc -s tests/hello_world.qk -c hello_world.cpp -o hello_world`. 
-You can run the hello_world executable and see the generated C++ as follows:
+As stated above, to compile `tests/hello_world.qk` into C++ and an executable run `./quark/quarkc -s tests/hello_world.qk -c hello_world.cpp -o hello_world`. You can run the hello_world executable and see the generated C++ as follows:
 
 ```
 vagrant@vagrant-ubuntu-trusty-64:/vagrant$ ./hello_world
@@ -109,14 +90,10 @@ return 0;
 } // end main()
 ```
 
-The C++ includes are referencing our quantum simulator and these files can be found 
-in the `lib` directory.
+The C++ includes are referencing our quantum simulator and these files can be found in the `lib` directory.
 
 ###Essential Syntax
-Quark syntax resembles something along the lines of Python with static typing and 
-if you already know a popular imperative language such as C, Python or Go you should be 
-able to easily glean the majority of the syntax by simply reading through these 
-examples. Our language manual provides a more explicit outline of the language spec.
+Quark syntax resembles something along the lines of Python with static typing and if you already know a popular imperative language such as C, Python or Go you should be able to easily glean the majority of the syntax by simply reading through these examples. Our language manual provides a more explicit outline of the language spec.
 
 ```
 def int gcd: int x, int y
@@ -138,16 +115,7 @@ def int main:
 }
 ```
 
-The keyword `def` declares a function, followed by the return type of the 
-function, the function name, `:`, and then comma-separated, typed parameters. 
-The `main` function is the primary entry point to Quark programs. Quark allows for 
-a certain degree of type inference as you can see when setting `x = y` and `y = r`.
-When the type of the expression on the right hand side is known, you do not need 
-to declare the type when instantiating a variable.
-`print` is a builtin function and the full list of builtins and a description of their 
-function can be found in the Language Manual section. Blocks are denoted using 
-brackets but are not required when the block is only composed of a single line of code.
-Statements are terminated with `;` and single-line comments written after `%`.
+The keyword `def` declares a function, followed by the return type of the function, the function name, `:`, and then comma-separated, typed parameters. The `main` function is the primary entry point to Quark programs. Quark allows for a certain degree of type inference as you can see when setting `x = y` and `y = r`. When the type of the expression on the right hand side is known, you do not need to declare the type when instantiating a variable. `print` is a builtin function and the full list of builtins and a description of their function can be found in the Language Manual section. Blocks are denoted using  brackets but are not required when the block is only composed of a single line of code. Statements are terminated with `;` and single-line comments written after `%`.
 
 ###Control Flow
 Conditional statements are supported via the `if` and `elif` keywords, for example,
@@ -168,10 +136,7 @@ while x > 42: {
 }
 ```
 
-`for val in arr:` will iterate over an array of any type. Or you can iterate over 
-an array created using the range syntax: `for val in [0:5]`; which iterates over
-`[0,1,2,3,4]`; and `for val in [0:10:3]` which iterates over `[0,3,6,9]`
-where 3 is the step size.
+`for val in arr:` will iterate over an array of any type. Or you can iterate over an array created using the range syntax: `for val in [0:5]`; which iterates over `[0,1,2,3,4]`; and `for val in [0:10:3]` which iterates over `[0,3,6,9]` where 3 is the step size.
 
 ###Declaration
 How you declare each type in Quark,
@@ -191,14 +156,10 @@ And last but definitely not least, the quantum register,
 
 `qreg q = <| 10, 0 |>;`
 
-Where the first value (10 in this case) indicates the number of bits in the quantum
-register, and the second value (0 in this case) is the binary value to which each 
-bit is initialized.
+Where the first value (10 in this case) indicates the number of bits in the quantum register, and the second value (0 in this case) is the binary value to which each  bit is initialized.
 
 Language Reference Manual
 =========================
-
-##Reference Manual
 
 ###Grammar Notation
 FILL OUT LATER
@@ -959,7 +920,7 @@ Tools used:
 We also used an external simulator that Jim created over the summer. Our compiler's
 output is C++ specifically designed to work with the simulator.
 
-#####Project Timeline:
+###Project Timeline:
 These are goals we set for our project.
 
 | Date     | Goal                           |
@@ -972,7 +933,7 @@ These are goals we set for our project.
 | 12/5/14  | Finish testing and code freeze |
 | 12/8/14  | Complete project report        |
 
-#####Project Log:
+###Project Log:
 Actual progress of project.
 
 | Date     | Milestones                                   |
@@ -994,7 +955,7 @@ Actual progress of project.
 | 12/13/14 | Rewrote Language Reference Manual            |
 | 12/15/14 | Project report complete                      |
 
-#####Roles and Responsibilities
+###Roles and Responsibilities
 Here are our official roles for the project.
 
 | Role                      | Name                  | 
@@ -3417,7 +3378,7 @@ handle_compound stmt =
   | _ -> gen_code [S.CompoundStatement([stmt])]
 ```
 
-#####A.8 preprocessor.ml
+###A.8 preprocessor.ml
 
 ```ocaml 
 {
