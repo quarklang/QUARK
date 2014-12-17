@@ -1175,9 +1175,11 @@ Architecture
 ####Global Overview
 The Quark architecture primarily consists of two major components, a compiler frontend and a simulator backend. The compiler translates Quark source code into C++ code, which is then compiled with Quark++ (simulator) headers by GNU g++.  
 
+
+
 When the program runs, it links with precompiled a Quark++ dynamic library and executes the quantum circuit simulation instructions. Optionally, the user can compile the generated C++ code with a static library to produce one portable executable, without any external dependencies. This option can be enabled with ```quarkc -static```. It only works on Windows and Linux. 
 
-The Quark compiler is OS aware and will extract the correct library automatically. It supports all major OSes (tested on Windows 7 & 8, Mac OS X 10.10 and Ubuntu 14.04).
+The Quark compiler is OS aware and will extract the correct library automatically. It supports all major OSes (tested on Windows 7 & 8, Mac OS X and Ubuntu 14.04).
 
 #### Compiler Architecture
 The compiler is written entirely in OCaml. This section outlines the compilation pipeline we design. 
@@ -1201,9 +1203,40 @@ The compiler is written entirely in OCaml. This section outlines the compilation
 
     The semantic checker ensures that no type conflicts, variable/function declaration/definition errors exist in a syntactically correct AST. It takes an AST as input and produces a similar recursive structure - the Semantic Abstract Syntax Tree (SAST). 
 
+	The struct ```var_info``` keeps information about a variable's type and depth in scope. A semantic exception is thrown if a variable with the same name is redeclared within the same scope.
+	```ocaml
+	type var_info = {
+	  v_type: A.datatype;
+	  v_depth: int;
+	}
+	```
+	The struct ```func_info``` keeps information about a function interface.
+	```ocaml
+	type func_info = {
+	  f_args: A.datatype list;
+	  f_return: A.datatype;
+	  f_defined: bool; (* for forward declaration *)
+	}
+	```
+	The environment struct is carried along every recursive call to the semantic checker. It contains a variable table, a function table, the current scope depth, ```is_returned``` to check whether a function is properly returned, and ```in_loop``` to ensure that ```continue``` and ```break``` statements appear only in loops.
+	```ocaml
+	type environment = {
+	    var_table: var_info StrMap.t;
+	    func_table: func_info StrMap.t;
+	    (* current function name waiting for 'return' *)
+	    (* if "", we are not inside any function *)
+	    func_current: string; 
+	    depth: int;
+	    is_returned: bool;
+	    in_loop: bool;  (* check break/continue validity *)
+	}
+	```
+
     Our SAST is carefully designed to minimize code generation efforts. A major discovery is that the SAST does not need to carry the type information. Instead, a special ```op_tag``` is added, which contains all the information the code generator requires to produce C++. 
 
     For example, the binary ampersand ```&``` in Quark is used for both integer bitwise ```and``` and array/string concatenation. The SAST does not need to carry along the operands' type information to tell the code generator which meaning of ```&``` to translate. It only needs to tag the binary operator expression with either ```OpVerbatim``` or ```OpConcat```. 
+
+	A separate source file ```builtin.ml```
 
 5. *Code Generation*
 
@@ -1529,6 +1562,7 @@ Team members will inevitably become overwhelmed with life, other school work, an
 #Appendix
 
 ###A.1 scanner.mll
+Primary authors: Parthiban Loganathan, Daria Jung
 ```ocaml
 { open Parser }
 
@@ -1648,6 +1682,8 @@ and inline_comments = parse
 ```
 
 ###A.2 parser.mly
+Primary authors: Parthiban Loganathan, Daria Jung
+Secondary author: Jim Fan
 ```ocaml
 %{ open Ast %}
 %{ open Type %}
@@ -1889,6 +1925,7 @@ statement_seq:
 ```
 
 ###A.3 type.ml
+Primary authors: Parthiban Loganathan, Daria Jung
 ```ocaml 
 type vartype =
   | Int
@@ -1912,6 +1949,8 @@ let str_of_type = function
 ```
 
 ###A.4 ast.ml
+Primary authors: Parthiban Loganathan, Daria Jung
+Secondary author: Jim Fan
 ```ocaml
 module T = Type
 
@@ -2078,6 +2117,8 @@ let str_of_postop = function
 ```
 
 ###A.5 semantic.ml
+Primary author: Jim Fan
+Secondary author: Jamis Johnson
 ```ocaml
 module A = Ast
 module S = Sast
@@ -3160,6 +3201,8 @@ let rec gen_sast env = function
 ```
 
 ###A.6 sast.ml
+Primary authors: Jim Fan, Parthiban Loganathan, Daria Jung
+Secondary author: Jamis Johnson
 ```ocaml 
 module A = Ast
 module T = Type
@@ -3233,6 +3276,7 @@ type statement =
 ```
 
 ###A.7 generator.ml
+Primary author: Jim Fan
 ```ocaml 
 module A = Ast
 module S = Sast
@@ -3659,6 +3703,7 @@ handle_compound stmt =
 ```
 
 ###A.8 preprocessor.ml
+Primary author: Jim Fan
 ```ocaml 
 {
   (* default Quarklang source code extension *)
@@ -3756,7 +3801,127 @@ let process filename =
 }
 ```
 
-###A.9 compiler.ml
+###A.9 builtin.ml
+Primary author: Jim Fan
+```ocaml
+(***** list of built-in functions and their interfaces *****)
+module A = Ast
+module T = Type
+
+(* system-reserved temporary variable prefix *)
+let forbidden_prefix = "_QUARK_"
+
+let wrap basic_type = A.DataType(basic_type)
+
+(* NoneType is a placeholder: len works with any array type *)
+let any_array = A.ArrayType(A.NoneType)
+(* NoneType is a placeholder, works with any matrix type *)
+let any_matrix = A.MatrixType(A.NoneType)
+
+let cx_mat = A.MatrixType(wrap T.Complex)
+let i = wrap T.Int
+let f = wrap T.Float
+let b = wrap T.Bool
+let frac = wrap T.Fraction
+let cx = wrap T.Complex
+let qreg = wrap T.Qreg
+let s = wrap T.String
+let void = wrap T.Void
+
+(* return arg_types[], return_type *)
+let find_builtin = function
+  | "print" -> [], void
+  | "print_noline" -> [], void
+  | "len" -> [any_array], i
+   (* fraction numerator/denominator *)
+  | "num" -> [frac], i
+  | "denom" -> [frac], i
+   (* complex real/imag parts *)
+  | "real" -> [cx], f
+  | "imag" -> [cx], f
+  (***** math section *****)
+  | "sqrt" -> [f], f
+  | "rand_int" -> [i; i], i
+  | "rand_float" -> [f; f], f
+  
+  (***** matrix section *****)
+  | "coldim" -> [any_matrix], i
+  | "rowdim" -> [any_matrix], i
+    (* matrix generation *)
+  | "hadamard_mat" -> [i], cx_mat
+  | "cnot_mat" -> [], cx_mat
+  | "toffoli_mat" -> [i], cx_mat
+  | "generic_control_mat" -> [i; cx_mat], cx_mat
+  | "pauli_X_mat" -> [], cx_mat
+  | "pauli_Y_mat" -> [], cx_mat
+  | "pauli_Z_mat" -> [], cx_mat
+  | "rot_X_mat" -> [f], cx_mat
+  | "rot_Y_mat" -> [f], cx_mat
+  | "rot_Z_mat" -> [f], cx_mat
+  | "phase_scale_mat" -> [f], cx_mat
+  | "phase_shift_mat" -> [f], cx_mat
+  | "control_phase_shift_mat" -> [f], cx_mat
+  | "swap_mat" -> [], cx_mat
+  | "cswap_mat" -> [], cx_mat
+  | "qft_mat" -> [i], cx_mat
+  | "grover_diffuse_mat" -> [i], cx_mat
+
+  (***** qureg section *****)
+  | "qsize" -> [qreg], i
+  | "qclone" -> [qreg], qreg
+  | "prefix_prob" -> [qreg; i; i], f
+    (* 2nd arg must be a defined function *)
+  | "apply_oracle" -> [qreg; s; i], void
+
+  (***** quantum gate section *****)
+    (* single-bit gates *)
+  | "hadamard" -> [qreg], void
+  | "hadamard_top" -> [qreg; i], void
+  | "pauli_X" -> [qreg; i], void
+  | "pauli_Y" -> [qreg; i], void
+  | "pauli_Z" -> [qreg; i], void
+  | "rot_X" -> [qreg; f; i], void
+  | "rot_Y" -> [qreg; f; i], void
+  | "rot_Z" -> [qreg; f; i], void
+  | "phase_scale" -> [qreg; f; i], void
+  | "phase_shift" -> [qreg; f; i], void
+    (* multi-bit gates *)
+  | "generic_1gate" -> [qreg; cx_mat; i], void
+  | "generic_2gate" -> [qreg; cx_mat; i; i], void
+  | "generic_ngate" -> [qreg; cx_mat; A.ArrayType(i)], void
+    (* control gates *)
+  | "cnot" -> [qreg; i; i], void
+  | "toffoli" -> [qreg; i; i; i], void
+  | "control_phase_shift" -> [qreg; f; i; i], void
+  | "ncnot" -> [qreg; A.ArrayType(i); i], void
+  | "generic_control" -> [qreg; cx_mat; i; i], void
+  | "generic_toffoli" -> [qreg; cx_mat; i; i; i], void
+  | "generic_ncontrol" -> [qreg; cx_mat; A.ArrayType(i); i], void
+    (* other gates *)
+  | "swap" -> [qreg; i; i], void
+  | "cswap" -> [qreg; i; i; i], void
+  | "qft" -> [qreg; i; i], void
+  | "grover_diffuse" -> [qreg], void
+  | _ -> ([], A.NoneType)
+
+(* print is special: it accepts any number of args *)
+let is_print = function
+  | "print" | "print_noline" -> true
+  | _ -> false
+
+(* User not allowed to override certain built-in funtions*)
+(* because otherwise will cause trouble in codegen  *)
+let overridable func = 
+  match func with
+  | "print" | "print_noline"
+  | "apply_oracle" -> 
+    failwith @@ "Built-in function " ^func^ "() not overridable"
+  | _ -> ()
+```
+
+###A.10 compiler.ml
+Primary author: Jim Fan
+Secondary author: Jamis Johnson
 ```ocaml 
 open Semantic
 
@@ -3919,7 +4084,8 @@ let _ =
         failwith "Library folder ../lib doesn't exist. Cannot compile to executable. "
 ```
 
-###A.10 testall.sh
+###A.11 testall.sh
+Primary authors: Daria Jung, Parthiban Loganathan, Jamis Johnson
 ```sh
 #!/bin/bash
 COMPILER="quark/quarkc"
@@ -3951,7 +4117,7 @@ do
 done
 ```
 
-###A.11 addition.qk
+###A.12 addition.qk
 
 ```
 
@@ -3971,7 +4137,7 @@ def int main:
 }
 ```
 
-###A.12 array.qk
+###A.13 array.qk
 
 ```
 def int main: 
@@ -3985,7 +4151,7 @@ def int main:
 }
 ```
 
-###A.13 complex.qk
+###A.14 complex.qk
 
 ```
 def void print_complex: complex x 
@@ -4004,7 +4170,7 @@ def int main:
 }
 ```
 
-###A.14 elif.qk
+###A.15 elif.qk
 
 ```
 def void test: string x
@@ -4031,7 +4197,7 @@ def int main:
 }
 ```
 
-###A.15 float.qk
+###A.16 float.qk
 
 ```
 def int main: 
@@ -4048,7 +4214,7 @@ def int main:
 }
 ```
 
-###A.16 fraction.qk
+###A.17 fraction.qk
 
 ```
 def int main: 
@@ -4070,7 +4236,7 @@ def int main:
 }
 ```
 
-###A.17 gcd.qk
+###A.18 gcd.qk
 
 ```
 def int testgcd: int x, int y 
@@ -4092,7 +4258,7 @@ def int main:
 }
 ```
 
-###A.18 hello_world.qk
+###A.19 hello_world.qk
 
 ```
 def int main: 
@@ -4103,7 +4269,7 @@ def int main:
 }
 ```
 
-###A.19 import.qk
+###A.20 import.qk
 
 ```
 import /imports/test;
@@ -4125,7 +4291,7 @@ def int test: int x
 }
 ```
 
-###A.20 logic.qk
+###A.21 logic.qk
 
 ```
 
@@ -4156,7 +4322,7 @@ def int main:
 }
 ```
 
-###A.21 matrix.qk
+###A.22 matrix.qk
 
 ```
 def int main:
@@ -4167,7 +4333,7 @@ def int main:
 }
 ``` 
 
-###A.22 multi-array.qk
+###A.23 multi-array.qk
 
 ```
 def int main: 
@@ -4184,7 +4350,7 @@ def int main:
 }
 ```
 
-###A.23 range.qk
+###A.24 range.qk
 
 ```
 def int main: 
@@ -4197,7 +4363,7 @@ def int main:
 }
 ```
 
-###A.24 while.qk
+###A.25 while.qk
 
 ```
 def int main:
@@ -4213,7 +4379,7 @@ def int main:
 }
 ```
 
-###A.25 grover.qk
+###A.26 grover.qk
 
 ```
 int nbit = 7;
@@ -4260,7 +4426,7 @@ def int main:
 }
 ```
 
-###A.26 shor.qk
+###A.27 shor.qk
 ```
 int M = 221;
 
@@ -4434,7 +4600,7 @@ def int main:
 }
 ```
 
-###A.27 qreg.qk
+###A.28 qreg.qk
 ```
 def int main:
 {
