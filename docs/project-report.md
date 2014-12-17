@@ -4126,7 +4126,7 @@ def int main:
 }
 ```
 
-###A.25 shor.qk
+###A.26 shor.qk
 ```
 int M = 221;
 
@@ -4297,5 +4297,19 @@ def int main:
 	}
 	print("FAIL");
 	return 0;
+}
+```
+
+###A.27 qreg.qk
+```
+def int main:
+{
+    % nonsense, but just to test if query works
+    qreg ans = <|4, 0|>;
+
+    print(ans ? [:3]);
+    print(ans ?' [:3]);
+
+    return 0;
 }
 ```
