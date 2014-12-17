@@ -1182,8 +1182,6 @@ Architecture
 ####Global Overview
 The Quark architecture primarily consists of two major components, a compiler frontend and a simulator backend. The compiler translates Quark source code into C++ code, which is then compiled with Quark++ (simulator) headers by GNU g++.  
 
-
-
 When the program runs, it links with precompiled a Quark++ dynamic library and executes the quantum circuit simulation instructions. Optionally, the user can compile the generated C++ code with a static library to produce one portable executable, without any external dependencies. This option can be enabled with ```quarkc -static```. It only works on Windows and Linux. 
 
 The Quark compiler is OS aware and will extract the correct library automatically. It supports all major OSes (tested on Windows 7 & 8, Mac OS X and Ubuntu 14.04).
@@ -1243,11 +1241,52 @@ The compiler is written entirely in OCaml. This section outlines the compilation
 
     For example, the binary ampersand ```&``` in Quark is used for both integer bitwise ```and``` and array/string concatenation. The SAST does not need to carry along the operands' type information to tell the code generator which meaning of ```&``` to translate. It only needs to tag the binary operator expression with either ```OpVerbatim``` or ```OpConcat```. 
 
-	A separate source file ```builtin.ml```
+	A separate source file ```builtin.ml``` includes all the builtin function interfaces supported by the Quark++ simulator. The user, however, is free to  The ```print``` and ```print_noline``` are special because they take an arbitrary number of arguments of arbitrary type. 
+	
+	The semantic checker also features very informative error messages to help the user debug better. The following is a few examples:
+	- "A function is confused with a variable: u"
+	- "Function foo() is forward declared, but called without definition"
+	- "If statement predicate must be bool, but fraction provided"
+	- "Array style for-loop must operate on array type, not complex[|]"
+	- "Matrix element unsupported: string"
+	- "Incompatible operands for **: string -.- fraction"
+	- "All rows in a matrix must have the same length"
 
 5. *Code Generation*
 
-    The code generator takes an SAST as input and produces a string of translated C++ code, excluding the headers. It relies on the ```op_tag``` given by the semantic checker to generate the right C++ function. 
+    The code generator takes an SAST as input and produces a string of translated C++ code, excluding the headers. 
+
+	The following is a list of type mappings:
+	- ```int``` → C++ ```int64_t```
+	- ```float``` → C++ primitive ```float```
+	- ```string``` → C++ ```std::string```
+	- ```complex``` → C++ ```std::complex<float>```
+	- arrays → C++ ```std::vector<>```
+	- matrices → ```Eigen::Matrix<float, Dynamic, Dynamic>```
+	- ```fraction``` → Quark++ ```Frac``` class
+	- ```qreg``` → Quark++ ```Qureg``` class
+
+	The generator relies on the ```op_tag``` given by the semantic checker to generate the right C++ function. For example, ```OpCastComplex1``` instructs the generator to cast the first operand of a binary operator to ```std::complex<float>```.
+
+	The generator uses a very special way to handle for-loops. Our for-range loop syntax is
+	 ```for int i in [ start : end : step ]``` 
+	 When ```step``` is negative, the for loop must go in the reverse direction. The sign of ```step```, however, is not available at compilation time. So the code generator uses system reserved temporary variables to handle this situation. 
+	 The temporary identifier has the format ```_QUARK_[10_random_ascii_chars]```. 
+
+	As an example, the following quark code
+	```
+	    for int i in [10 : 0 : step()]:
+        print(i);
+	```
+	is compiled to
+	``` c
+	int64_t _QUARK_5H0aq5mw6x = 0;
+	int64_t _QUARK_v3YH0O1B0h = step();
+	int64_t _QUARK_l03AMaXh6u = _QUARK_v3YH0O1B0h > 0 ? 1 : -1;
+	for (int64_t i = 10; _QUARK_l03AMaXh6u * i < _QUARK_l03AMaXh6u * 0; i += _QUARK_v3YH0O1B0h){
+	std::cout << std::boolalpha << std::setprecision(6) << i << std::endl;
+	}
+	```
 
     The code generator must conform to the Quark++ simulator library interface. In practice, the simulator has to be updated with minor changes to accomodate the compiled code as well as its interaction with the [Eigen](eigen.tuxfamily.org) matrix library.
 
@@ -1258,7 +1297,7 @@ The compiler is written entirely in OCaml. This section outlines the compilation
     The project is self-contained. It requires little to no user-managed dependencies. 
 
 #### Quark++ Simulator
-The simulator is written before the beginning of this term. It contains around 6,000 lines of C++ 11 code, compiles and runs successfully on Windows, Mac and Ubuntu. 
+The simulator is written by Jim Fan before the beginning of this term. It contains around 6,000 lines of C++ 11 code, compiles and runs successfully on Windows, Mac and Ubuntu. 
 
 It features a complete and optimized quantum circuit simulation engine that is able to run the most celebrated quantum algorithms ever conceived, including but not limited to Shor's factorization, Grover's search, Simon's period finding algorithm, etc. It can be included in other quantum computing research projects as a standalone library.
 
@@ -1963,7 +2002,6 @@ let str_of_type = function
 
 ###A.4 ast.ml
 Primary authors: Parthiban Loganathan, Daria Jung
-
 Secondary author: Jim Fan
 ```ocaml
 module T = Type
@@ -2132,7 +2170,6 @@ let str_of_postop = function
 
 ###A.5 semantic.ml
 Primary author: Jim Fan
-
 Secondary authors: Jamis Johnson, Parthiban Loganathan, Daria Jung
 ```ocaml
 module A = Ast
@@ -3217,7 +3254,6 @@ let rec gen_sast env = function
 
 ###A.6 sast.ml
 Primary authors: Jim Fan, Parthiban Loganathan, Daria Jung
-
 Secondary author: Jamis Johnson
 ```ocaml 
 module A = Ast
