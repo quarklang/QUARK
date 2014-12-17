@@ -190,7 +190,7 @@ QUARK provides the prime operator <code>'</code> for matrix transposition.
 float[|] mat = [| 1.2, 3.4; 5.6, 7.8 |];
 mat[2, 1];
 
-mat'; % transpose matrix
+mat = mat'; % transpose matrix
 ```
 
 ####array
