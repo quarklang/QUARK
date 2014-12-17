@@ -1,0 +1,11 @@
+
+def int main:
+{
+    % nonsense, but just to test if query works
+    qreg ans = <|4, 0|>;
+
+    print(ans ? [:3]);
+    print(ans ?' [:3]);
+
+    return 0;
+}

@@ -364,6 +364,8 @@ A new matrix with all zeros (real or complex) can be constructed by
 
 QUARK provides the special prime operator <code>'</code> for matrix transposition, and power operator ```**``` overloaded for matrix kronecker product. 
 
+Matrices are zero indexed.
+
 ```matlab
 float[|] mat = [| 1.2, 3.4; 5.6, 7.8 |];
 mat[2, 1];
@@ -377,6 +379,8 @@ mat ** mat2; % kronecker product
 QUARK allows arrays of any of the above data types. Arrays can have variable length and can be arbitrarily dimensional. 
 
 Arrays can be initialized using a comma-separated list delimited by square brackets [ ]. Additionally, arrays can be declared with a size to create an array of default-initialized elements. 
+
+Arrays are zero indexed.
 
 Arrays may be concatenated with the `&` operator as long as there is a dimension and type match. 
 
@@ -719,6 +723,9 @@ def int main:
 
 ###Casting
 QUARK does not allow explicit type casting.
+
+###Pass by value pass by reference
+QUARK passes arguments by value. The only exception to this is the `qreg` type which is passed by reference. This is because `qregs` are too expensive (and meaningless) to copy in C++, our intermediary representation. If you need to copy a qreg, please use the explicit builtin function `qclone()`.
 
 ###Overloading
 QUARK keeps separate symbol tables for functions and types, and as such the same identifier may be used as a variable and a function at the same time. 
@@ -1292,6 +1299,7 @@ def int main:
 | elif.qk | ensures else-if works correctly
 | fraction.qk | ensures fraction arithmetic works
 | multi-array.qk | ensures we are able to access and write to multi-dimensional arrays
+| qreg.qk | tests qreg initialization and query
 | shor.qk | non-trivial program in QUARK
 | grover.qk | non-trivial program in QUARK
 
