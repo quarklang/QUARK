@@ -6,15 +6,24 @@ Quark
 | :--------------------: | :-------: |
 | Daria Jung             | djj2115   | 
 | Jamis Johnson          | jmj2180   | 
-| Jim Fan                | lf2422    |
+| Linxi Fan ( Jim )      | lf2422    |
 | Parthiban Loganathan   | pl2487    |  
 
 December 15, 2014
+
+<div style="page-break-after: always;"></div>
+
+
+Slides
+======
+Find our slides at the following URL: [http://slides.com/quarklang/quark](http://slides.com/quarklang/quark)
+<div style="page-break-after: always;"></div>
 
 Contents
 ========
 [toc]
 
+<div style="page-break-after: always;"></div>
 
 Introduction
 ============
@@ -33,6 +42,7 @@ Quark is a domain-specific imperative programming language to allow for expressi
 Most quantum algorithms can be decomposed into a quantum circuit part and a classical pre/post-processing part. Recognizing this, QUARK is designed to integrate classical and quantum data types and controls in a seamless workflow. Built in types like complex numbers, fractions, matrices and quantum registers combined with a robust built-in gate library make QUARK a great starting point for quantum computing researchers and enthusiasts.
 
 A relatively efficient quantum circuit simulator is included as part of the QUARK architecture. Source code written in QUARK is compiled to C++, which can then be passed onto our quantum simulator.
+<div style="page-break-after: always;"></div>
 
 Tutorial
 ========
@@ -199,6 +209,7 @@ int meas = q ? [2:10]; % measures qubits 2 through 10
 ```
 
 Note, you can only measure LValue `qreg` variables. There are many builtin functions that utilize quantum registers and aid in building quantum circuits and you can find a complete listing in Language Reference.
+<div style="page-break-after: always;"></div>
 
 Language Reference Manual
 =========================
@@ -254,6 +265,9 @@ The following identifiers are reserved for use as keywords, and may not be used 
 There is only one reserved prefix in QUARK:
 
 `_QUARK_`
+
+####Pseudo-reserved
+`i` may be used as a variable name but not a function name. This is due to the way that QUARK handles the syntax for complex numbers. 
 
 ####Mathematical Constants
 QUARK has two mathematical constants, `PI` and `E`. `PI` is for mathematical constant $\pi$ = 3.141592...
@@ -381,7 +395,7 @@ float[|] mat = [| 1.2, 3.4; 5.6, 7.8 |];
 mat[2, 1];
 complex[|] mat2 = complex[| 5, 9 |];
 % constructs a 5-by-9 complex zero matrix
-mat'; % transpose matrix
+mat = mat'; % transpose matrix
 mat ** mat2; % kronecker product
 ```
 
@@ -723,11 +737,11 @@ import ../lib/herlib2;
 ```
 
 ```
-import imported_file;
+import imported_file; % contains foo2
 
-def int main:
+def int foo:
 {
-    return imported_file.function(5);
+    return foo2(5);
 }
 ```
 
@@ -770,6 +784,139 @@ for int i in [0:7]:
     
 i; % still 1000
 ```
+
+###Built-in Functions
+Below is a list of built-in functions that QUARK provides:
+
+####General
+`print(any_type)`: takes any type and returns void
+
+`print_noline(any_type)`: `print` but does not add a newline
+
+`len([any_type])`: takes any array and returns the length
+
+####Fraction
+`num(fraction)`: takes a fraction type and returns the numerator as an `int`
+
+`denom(fraction)`: takes a fraction type and returns the denominator as an `int`.
+
+####Complex
+`real(complex)`: takes a complex type and returns the real portion of a complex number as a float.
+
+`imag(complex)` takes a complex type and returns the imaginary portion of a complex number as a float.
+
+####Math
+
+`sqrt(float)`: takes the square root of a number and returns a float.
+
+`rand_int(int, int)`: takes two ints as boundaries and returns an int between them.
+
+`rand_float(float, float)`: takes two floats as boundaries and returns a float between them. 
+
+####Matrix
+
+`coldim(any_matrix)`: returns the column dimension of a matrix as an int.
+
+`rowdim(any_matrix)`: returns the row dimension of a matrix as an 
+
+####Matrix Generation
+`hadamard_mat(int)`: takes int and returns a complex matrix.
+
+`cnot_mat()`: takes nothing and returns a complex matrix.
+
+`toffoli_mat(int)`: takes int and returns complex matrix.
+
+`generic_control_mat(int, complex_matrix)`: takes int and complex matrix and returns complex matrix.
+
+`pauli_X_mat()`: takes nothing and returns a complex matrix.
+
+`pauli_Y_mat()`: takes nothing and returns a complex matrix.
+
+`pauli_Z_mat()`: takes nothing and returns a complex matrix.
+
+`rot_X_mat(float)`: takes a float and returns a complex matrix.
+
+`rot_Y_mat(float)`: takes a float and returns a complex matrix.
+
+`rot_Z_mat(float)`: takes a float and returns a complex matrix.
+
+`phase_scale_mat(float)`: takes a float and returns a complex matrix.
+
+`phase_shift_mat(float)`: takes a float and returns a complex matrix.
+
+`control_phase_shift_mat(float)`: takes a float and returns a complex matrix.
+
+`swap_mat()`: takes nothing and returns a complex matrix.
+
+`cswap_mat()`: takes nothing and returns a complex matrix.
+
+`qft_mat(int)`: takes int and returns a complex matrix.
+
+`grover_diffuse_mat(int)`: takes int and returns a complex matrix.
+
+####Quantum Registers
+`qsize(qreg)`: takes a qreg and returns an int.
+
+`qclone(qreg)`: takes a qreg and returns a qreg.
+
+`prefix_prob(qreg, int, int)`: takes a qreg, and int, and an int, and returns a float.
+
+`apply_orancle(qreg, function, int)`: takes a qreg, a defined function, and an int, and returns void.
+
+####Quantum Gates (Functions apply a specific gate to a quantum register)
+
+#####Single bit gates
+`hadamard(qreg)`: takes a qreg and returns void.
+
+`hadamart_top(qreg, int)`: takes qreg and int and returns void.
+
+`pauli_X(qreg, int)`: takes qreg and int and returns void.
+
+`pauli_Y(qreg, int)`: takes qreg and int and returns void.
+
+`paluli_Z(qreg, int)`: takes qreg and int and returns void.
+
+`rot_X(qreg, float, int)`: takes qreg, float, and int and returns void.
+
+`rot_Y(qreg, float, int)`: takes qreg, float, and int and returns void.
+
+`rot_Z(qreg, float, int)`: takes qreg, float, and int and returns void.
+
+`phase_scale(qreg, float, int)`: takes qreg, float, and int and returns void.
+
+`phase_shift(qreg, float, int)`: takes qreg, float, and int and returns void.
+
+#####Multi bit gates
+`generic_1gate(qreg, complex_matrix, int)`: takes qreg, complex matrix, and int and returns void.
+
+`generic_2gate(qreg, complex_matrix, int, int)`: takes qreg, complex matrix, int, and int and returns void.
+
+`generic_ngate(qreg, complex_matrix, [int])`: takes qreg, complex matrix, and an array of ints and returns void.
+
+####Control Gates
+`cnot(qreg, int, int)`: takes qreg, int, and int, and returns void.
+
+`toffoli(qreg, int, int, int)`: takes qreg, int, int, and int and returns void.
+
+`control_phase_shift(qreg, float, int, int)`: takes a qreg, float, int, and int, and returns void.
+
+`ncnot(qreg, [int], int)`: takes a qreg, and array of ints, and int, and returns void.
+
+`generic_control(qreg, complex_matrix, int, int)`: takes qreg, complex matrix, int, and int, and returns void.
+
+`generic_toffoli(qreg, complex_matrix, int, int, int)`: takes qreg, complex matrix, int, int, and int, and returns void.
+
+`generic_ncontrol(qreg, complex_matrix, [int], int)`: takes qreg, complex matrix, an array of ints, and int, and returns void.
+
+####Other Gates
+`swap(qreg, int, int)`: takes qreg, int, and int, and returns void.
+
+`cswap(qreg, int, int, int)`: takes qreg, int, int, and int, and returns void.
+
+`qft(qreg, int, int)`: takes qreg, int, and int, and returns void.
+
+`grover_diffuse(qreg)`: takes qreg and returns void.
+
 
 ###Grammar
 
@@ -952,6 +1099,7 @@ statement_seq:
 
 ```
 
+<div style="page-break-after: always;"></div>
 
 Project Plan
 ============
@@ -1017,7 +1165,7 @@ and took responsibility for whatever we touched. The parts of the compiler and p
 | ------------------------- | :---------------------------------------------: |
 | Project Management        | Parthiban Loganathan                            |
 | Language Reference Manual | Daria Jung                                      |
-| Scanner, Parser           | Parthiban Loganathan, Daria Jung                |
+| Scanner, Parser           | Parthiban Loganathan, Daria Jung, Jim Fan                |
 | Semantic Checking         | Jim Fan, Jamis Johnson                          |
 | Code Generation           | Jim Fan                                         |
 | Testing                   | All                                             |
@@ -1025,19 +1173,20 @@ and took responsibility for whatever we touched. The parts of the compiler and p
 | Project Report            | All                                             |
 | Presentation              | Parthiban Loganathan                            |
 
-Due to our decision to follow the "democracy" approach as opposed to the "dictatorship" approach
-we faced issues with accountability, but each one of us also got to see more of the compiler in the
-process.
+Though some names are not listed under certain sections, it doesn't mean they didn't contribute towards it. For example, Daria helped with project management in the middle of the semester when things were hectic and no one was co-operating. All of us worked on different chunks of semantic checking before we decided on a major rewrite since it was hard to separate it from code generation. Due to our decision to follow the "democracy" approach as opposed to the "dictatorship" approach we faced issues with accountability, but each one of us also got to see more of the compiler in the process.
 
+<div style="page-break-after: always;"></div>
 
 Architecture
 ============
 ####Global Overview
 The Quark architecture primarily consists of two major components, a compiler frontend and a simulator backend. The compiler translates Quark source code into C++ code, which is then compiled with Quark++ (simulator) headers by GNU g++.  
 
+
+
 When the program runs, it links with precompiled a Quark++ dynamic library and executes the quantum circuit simulation instructions. Optionally, the user can compile the generated C++ code with a static library to produce one portable executable, without any external dependencies. This option can be enabled with ```quarkc -static```. It only works on Windows and Linux. 
 
-The Quark compiler is OS aware and will extract the correct library automatically. It supports all major OSes (tested on Windows 7 & 8, Mac OS X 10.10 and Ubuntu 14.04).
+The Quark compiler is OS aware and will extract the correct library automatically. It supports all major OSes (tested on Windows 7 & 8, Mac OS X and Ubuntu 14.04).
 
 #### Compiler Architecture
 The compiler is written entirely in OCaml. This section outlines the compilation pipeline we design. 
@@ -1061,9 +1210,40 @@ The compiler is written entirely in OCaml. This section outlines the compilation
 
     The semantic checker ensures that no type conflicts, variable/function declaration/definition errors exist in a syntactically correct AST. It takes an AST as input and produces a similar recursive structure - the Semantic Abstract Syntax Tree (SAST). 
 
+	The struct ```var_info``` keeps information about a variable's type and depth in scope. A semantic exception is thrown if a variable with the same name is redeclared within the same scope.
+	```ocaml
+	type var_info = {
+	  v_type: A.datatype;
+	  v_depth: int;
+	}
+	```
+	The struct ```func_info``` keeps information about a function interface.
+	```ocaml
+	type func_info = {
+	  f_args: A.datatype list;
+	  f_return: A.datatype;
+	  f_defined: bool; (* for forward declaration *)
+	}
+	```
+	The environment struct is carried along every recursive call to the semantic checker. It contains a variable table, a function table, the current scope depth, ```is_returned``` to check whether a function is properly returned, and ```in_loop``` to ensure that ```continue``` and ```break``` statements appear only in loops.
+	```ocaml
+	type environment = {
+	    var_table: var_info StrMap.t;
+	    func_table: func_info StrMap.t;
+	    (* current function name waiting for 'return' *)
+	    (* if "", we are not inside any function *)
+	    func_current: string; 
+	    depth: int;
+	    is_returned: bool;
+	    in_loop: bool;  (* check break/continue validity *)
+	}
+	```
+
     Our SAST is carefully designed to minimize code generation efforts. A major discovery is that the SAST does not need to carry the type information. Instead, a special ```op_tag``` is added, which contains all the information the code generator requires to produce C++. 
 
     For example, the binary ampersand ```&``` in Quark is used for both integer bitwise ```and``` and array/string concatenation. The SAST does not need to carry along the operands' type information to tell the code generator which meaning of ```&``` to translate. It only needs to tag the binary operator expression with either ```OpVerbatim``` or ```OpConcat```. 
+
+	A separate source file ```builtin.ml```
 
 5. *Code Generation*
 
@@ -1082,6 +1262,7 @@ The simulator is written before the beginning of this term. It contains around 6
 
 It features a complete and optimized quantum circuit simulation engine that is able to run the most celebrated quantum algorithms ever conceived, including but not limited to Shor's factorization, Grover's search, Simon's period finding algorithm, etc. It can be included in other quantum computing research projects as a standalone library.
 
+<div style="page-break-after: always;"></div>
 
 Test Plan
 =======
@@ -1202,58 +1383,58 @@ def int smallest_period: int b, int M
 
 def int long_pow: int a, int p
 {
-	if p == 1:
-		return a;
-	int partial = long_pow(a, p / 2);
-	if p mod 2 == 1:
-		return partial * partial * a;
-	else
-		return partial * partial;
+  if p == 1:
+    return a;
+  int partial = long_pow(a, p / 2);
+  if p mod 2 == 1:
+    return partial * partial * a;
+  else
+    return partial * partial;
 }
 
 def int log2_int: int x
 {
-	int ans = 0;
-	while x > 0:
-	{
-		x = x >> 1;
+  int ans = 0;
+  while x > 0:
+  {
+    x = x >> 1;
         ans ++;
-	}
-	return ans;
+  }
+  return ans;
 }
 
 %{
-	If size == 0, continue until 0
+  If size == 0, continue until 0
 }%
 def int[] to_continued_fraction: fraction frac, int size
 {
-	int[] cfrac;
-	int i = 0;
-	while size < 1 or i < size:
-	{
+  int[] cfrac;
+  int i = 0;
+  while size < 1 or i < size:
+  {
         % array concatenation
         cfrac &= [num(frac) / denom(frac)];
-		frac -= cfrac[i];
-		if num(frac) == 0 : break;
+    frac -= cfrac[i];
+    if num(frac) == 0 : break;
 
         % denom/num built-in
-		frac = ~frac;
+    frac = ~frac;
         i ++;
-	}
-	return cfrac;
+  }
+  return cfrac;
 }
 
 def fraction to_fraction: int[] cfrac, int size
 {
-	if size < 1:
-		size = len(cfrac);
-	fraction ans = 1$cfrac[size - 1];
-	for int i in [size-2 :0 :-1] :
-	{
-		ans += cfrac[i];
-		ans = ~ans;
-	}
-	return ans + cfrac[0];
+  if size < 1:
+    size = len(cfrac);
+  fraction ans = 1$cfrac[size - 1];
+  for int i in [size-2 :0 :-1] :
+  {
+    ans += cfrac[i];
+    ans = ~ans;
+  }
+  return ans + cfrac[0];
 }
 
 int nbit = log2_int(M) + 1;
@@ -1261,75 +1442,75 @@ int nbit = log2_int(M) + 1;
 % This is the user defined function that should be passed as a string argument
 def int shor_oracle: int x
 {
-	return exp_mod(nbit, x, M);
+  return exp_mod(nbit, x, M);
 }
 
 def int main:
 {
-	qreg q0 = <| nbit * 2, 0 |>;
+  qreg q0 = <| nbit * 2, 0 |>;
 
-	qft(q0, 0, nbit);
+  qft(q0, 0, nbit);
 
-	int b; int i;
-	while true:
-	{
-		b = rand_int(2, M);
+  int b; int i;
+  while true:
+  {
+    b = rand_int(2, M);
 
-		if gcd(b, M) != 1: continue;
+    if gcd(b, M) != 1: continue;
 
-		qreg q = qclone(q0);
+    qreg q = qclone(q0);
 
-		apply_oracle(q, "shor_oracle", nbit);
+    apply_oracle(q, "shor_oracle", nbit);
 
-		qft(q, 0, nbit);
+    qft(q, 0, nbit);
 
-		int mTrial = 0;
-		int measured;
+    int mTrial = 0;
+    int measured;
 
-		while mTrial < 10:
-		{
+    while mTrial < 10:
+    {
             mTrial ++;
-			measured = q ?' [:nbit];
-			if measured != 0:
-			{
-				int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
-				for int size in [len(cfrac):0:-1] :
-				{
-					int p = num(to_fraction(cfrac, size));
-					int P = p;
+      measured = q ?' [:nbit];
+      if measured != 0:
+      {
+        int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
+        for int size in [len(cfrac):0:-1] :
+        {
+          int p = num(to_fraction(cfrac, size));
+          int P = p;
 
-					while P < 128 and P < M :
-					{
-						if P mod 2 == 0
-							and exp_mod(b, P, M) == 1 :
-						{
-							int check = exp_mod(b, P / 2, M);
-							if check != 1 and check != M - 1 :
-							{
-								int b_P_1 = long_pow(b, P / 2) - 1;
-								int prime = gcd(M, b_P_1);
+          while P < 128 and P < M :
+          {
+            if P mod 2 == 0
+              and exp_mod(b, P, M) == 1 :
+            {
+              int check = exp_mod(b, P / 2, M);
+              if check != 1 and check != M - 1 :
+              {
+                int b_P_1 = long_pow(b, P / 2) - 1;
+                int prime = gcd(M, b_P_1);
 
-								if prime != 1 and prime != -1 :
-								{
-									print("Found period r = ", P);
-									print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
-									print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
-									int prime2 = gcd(M, b_P_1 + 2);
-									print("gcd(", M, ", ", b_P_1, ") = ", prime);
-									print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
-									print("\nFactorize ", M, " = ", prime, " * ", M/prime if prime2==1 or prime2==-1 else prime2);
-									return 0;
-								}
-							}
-						}
-						P += p;
-					}
-				}
-			}
-		}
-	}
-	print("FAIL");
-	return 0;
+                if prime != 1 and prime != -1 :
+                {
+                  print("Found period r = ", P);
+                  print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
+                  print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
+                  int prime2 = gcd(M, b_P_1 + 2);
+                  print("gcd(", M, ", ", b_P_1, ") = ", prime);
+                  print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
+                  print("\nFactorize ", M, " = ", prime, " * ", M/prime if prime2==1 or prime2==-1 else prime2);
+                  return 0;
+                }
+              }
+            }
+            P += p;
+          }
+        }
+      }
+    }
+  }
+  print("FAIL");
+  return 0;
 }
 ```
 
@@ -1355,7 +1536,9 @@ def int main:
 | shor.qk | non-trivial program in QUARK
 | grover.qk | non-trivial program in QUARK
 
-Testing was primarily done by Daria Jung, Parthiban Loganathan and Jamis Johnson.
+Testing was primarily done by Daria Jung with help from Parthiban Loganathan and Jamis Johnson.
+
+<div style="page-break-after: always;"></div>
 
 Lessons Learned
 ===============
@@ -1365,6 +1548,12 @@ Lessons Learned
 2. Project management is hard. It was difficult to get everyone to meet periodically to discuss progress and language design. Unlike a company, where your primary responsibility is to be developing software, as students with other classes and responsibilities, the project was not a priority till the end of the semester.
 3. Allocating work into sizable chunks was a challenge due to the interrelatedness of the different components. For example, even after defining interfaces, we often found minor specification differences between the parser and code generation led to issues.
 4. Focus on the primary purpose of the language. We initially toyed with the idea of dynamic typing and other advanced features that did not come to fruition.
+
+### Jim Fan
+1. Communication is key to successful teamwork, but it is also the hardest part of teamwork. When one group member disagrees with another on the high-level approach to a problem (e.g. semantic checking), the lack of effective communication will delay the whole group and give rise to misunderstanding. Since code speaks more than words, a working prototype of an idea is found to be more convincing than hours of persuasion. 
+2. We started semantic checking by looking at open source codes from PLT groups in the past. It turned out to be an unwise idea. We would have made progress much more quickly if we had not wasted so much time trying to decode someone else's uncommented source. Their language was simply too different from ours to be a worthwhile reference. We ended up writing every line of semantic checking and code generation from scratch.  
+3. OCaml is not as easy as I think. In addition to the slides in class, I read the relevant chapters in the O'Reilly book [Real World OCaml](https://realworldocaml.org/) after I get stuck in too many places. 
+4. Cross-platform compilation is hard. I was using Windows and the rest of the team were using Mac. I actually bought a new Mac for this purpose. It turned out that Mac did not support static library compilation, and did not conform to the "rpath" standard on Linux. I did miss Java at those moments of pain.
 
 ###Daria Jung
 Group projects are pretty frustrating when the group is comprised of several overworked university students. Real life can get in the way (one group member experienced a death in the family), things always take longer than expected (programmers are the worst at estimating how long something will take), and writing a compiler can get pretty complicated. Communication, or lack thereof, was an impediment to our progress when we started to get going, so it is imperative to be transparent and crystal clear to other teammates about what is happening. I wish that we had had Bob Martin's talk earlier in the semester so we had a better sense of the sorts of things to watch out for. The pace of the project was much different than working on something at a company.
@@ -1380,10 +1569,13 @@ Jump in and start coding stat! The language spec changes rapidly so don't dwell 
 
 Team members will inevitably become overwhelmed with life, other school work, and with each other, and it's easy to get frustrated. Help each other out and go easy on one another (and see above: communicate!). Also, early progress will generally ameliorate stress, as will clearly defined roles.
 
+<div style="page-break-after: always;"></div>
+
+
 #Appendix
 
 ###A.1 scanner.mll
-Authors: Parthiban Loganathan, Daria Jung
+Primary authors: Parthiban Loganathan, Daria Jung
 ```ocaml
 { open Parser }
 
@@ -1503,7 +1695,8 @@ and inline_comments = parse
 ```
 
 ###A.2 parser.mly
-Authors: Parthiban Loganathan, Daria Jung
+Primary authors: Parthiban Loganathan, Daria Jung
+Secondary author: Jim Fan
 ```ocaml
 %{ open Ast %}
 %{ open Type %}
@@ -1745,7 +1938,7 @@ statement_seq:
 ```
 
 ###A.3 type.ml
-Authors: Daria Jung, Parthiban Loganathan
+Primary authors: Parthiban Loganathan, Daria Jung
 ```ocaml 
 type vartype =
   | Int
@@ -1769,7 +1962,9 @@ let str_of_type = function
 ```
 
 ###A.4 ast.ml
-Authors: Daria Jung, Parthiban Loganathan
+Primary authors: Parthiban Loganathan, Daria Jung
+
+Secondary author: Jim Fan
 ```ocaml
 module T = Type
 
@@ -1936,9 +2131,9 @@ let str_of_postop = function
 ```
 
 ###A.5 semantic.ml
-Primary Authors: Jim Fan, Jamis Johnson
+Primary author: Jim Fan
 
-Secondary Authors: Parthiban Loganathan, Daria Jung
+Secondary authors: Jamis Johnson, Parthiban Loganathan, Daria Jung
 ```ocaml
 module A = Ast
 module S = Sast
@@ -3021,7 +3216,9 @@ let rec gen_sast env = function
 ```
 
 ###A.6 sast.ml
-Authors: Jamis Johnson, Jim Fan
+Primary authors: Jim Fan, Parthiban Loganathan, Daria Jung
+
+Secondary author: Jamis Johnson
 ```ocaml 
 module A = Ast
 module T = Type
@@ -3095,7 +3292,7 @@ type statement =
 ```
 
 ###A.7 generator.ml
-Authors: Jim Fan
+Primary author: Jim Fan
 ```ocaml 
 module A = Ast
 module S = Sast
@@ -3522,7 +3719,7 @@ handle_compound stmt =
 ```
 
 ###A.8 preprocessor.ml
-Authors: Jim Fan
+Primary author: Jim Fan
 ```ocaml 
 {
   (* default Quarklang source code extension *)
@@ -3620,8 +3817,127 @@ let process filename =
 }
 ```
 
-###A.9 compiler.ml
-Authors: Jim Fan, Jamis Johnson
+###A.9 builtin.ml
+Primary author: Jim Fan
+```ocaml
+(***** list of built-in functions and their interfaces *****)
+module A = Ast
+module T = Type
+
+(* system-reserved temporary variable prefix *)
+let forbidden_prefix = "_QUARK_"
+
+let wrap basic_type = A.DataType(basic_type)
+
+(* NoneType is a placeholder: len works with any array type *)
+let any_array = A.ArrayType(A.NoneType)
+(* NoneType is a placeholder, works with any matrix type *)
+let any_matrix = A.MatrixType(A.NoneType)
+
+let cx_mat = A.MatrixType(wrap T.Complex)
+let i = wrap T.Int
+let f = wrap T.Float
+let b = wrap T.Bool
+let frac = wrap T.Fraction
+let cx = wrap T.Complex
+let qreg = wrap T.Qreg
+let s = wrap T.String
+let void = wrap T.Void
+
+(* return arg_types[], return_type *)
+let find_builtin = function
+  | "print" -> [], void
+  | "print_noline" -> [], void
+  | "len" -> [any_array], i
+   (* fraction numerator/denominator *)
+  | "num" -> [frac], i
+  | "denom" -> [frac], i
+   (* complex real/imag parts *)
+  | "real" -> [cx], f
+  | "imag" -> [cx], f
+  (***** math section *****)
+  | "sqrt" -> [f], f
+  | "rand_int" -> [i; i], i
+  | "rand_float" -> [f; f], f
+  
+  (***** matrix section *****)
+  | "coldim" -> [any_matrix], i
+  | "rowdim" -> [any_matrix], i
+    (* matrix generation *)
+  | "hadamard_mat" -> [i], cx_mat
+  | "cnot_mat" -> [], cx_mat
+  | "toffoli_mat" -> [i], cx_mat
+  | "generic_control_mat" -> [i; cx_mat], cx_mat
+  | "pauli_X_mat" -> [], cx_mat
+  | "pauli_Y_mat" -> [], cx_mat
+  | "pauli_Z_mat" -> [], cx_mat
+  | "rot_X_mat" -> [f], cx_mat
+  | "rot_Y_mat" -> [f], cx_mat
+  | "rot_Z_mat" -> [f], cx_mat
+  | "phase_scale_mat" -> [f], cx_mat
+  | "phase_shift_mat" -> [f], cx_mat
+  | "control_phase_shift_mat" -> [f], cx_mat
+  | "swap_mat" -> [], cx_mat
+  | "cswap_mat" -> [], cx_mat
+  | "qft_mat" -> [i], cx_mat
+  | "grover_diffuse_mat" -> [i], cx_mat
+
+  (***** qureg section *****)
+  | "qsize" -> [qreg], i
+  | "qclone" -> [qreg], qreg
+  | "prefix_prob" -> [qreg; i; i], f
+    (* 2nd arg must be a defined function *)
+  | "apply_oracle" -> [qreg; s; i], void
+
+  (***** quantum gate section *****)
+    (* single-bit gates *)
+  | "hadamard" -> [qreg], void
+  | "hadamard_top" -> [qreg; i], void
+  | "pauli_X" -> [qreg; i], void
+  | "pauli_Y" -> [qreg; i], void
+  | "pauli_Z" -> [qreg; i], void
+  | "rot_X" -> [qreg; f; i], void
+  | "rot_Y" -> [qreg; f; i], void
+  | "rot_Z" -> [qreg; f; i], void
+  | "phase_scale" -> [qreg; f; i], void
+  | "phase_shift" -> [qreg; f; i], void
+    (* multi-bit gates *)
+  | "generic_1gate" -> [qreg; cx_mat; i], void
+  | "generic_2gate" -> [qreg; cx_mat; i; i], void
+  | "generic_ngate" -> [qreg; cx_mat; A.ArrayType(i)], void
+    (* control gates *)
+  | "cnot" -> [qreg; i; i], void
+  | "toffoli" -> [qreg; i; i; i], void
+  | "control_phase_shift" -> [qreg; f; i; i], void
+  | "ncnot" -> [qreg; A.ArrayType(i); i], void
+  | "generic_control" -> [qreg; cx_mat; i; i], void
+  | "generic_toffoli" -> [qreg; cx_mat; i; i; i], void
+  | "generic_ncontrol" -> [qreg; cx_mat; A.ArrayType(i); i], void
+    (* other gates *)
+  | "swap" -> [qreg; i; i], void
+  | "cswap" -> [qreg; i; i; i], void
+  | "qft" -> [qreg; i; i], void
+  | "grover_diffuse" -> [qreg], void
+  | _ -> ([], A.NoneType)
+
+(* print is special: it accepts any number of args *)
+let is_print = function
+  | "print" | "print_noline" -> true
+  | _ -> false
+
+(* User not allowed to override certain built-in funtions*)
+(* because otherwise will cause trouble in codegen  *)
+let overridable func = 
+  match func with
+  | "print" | "print_noline"
+  | "apply_oracle" -> 
+    failwith @@ "Built-in function " ^func^ "() not overridable"
+  | _ -> ()
+```
+
+###A.10 compiler.ml
+Primary author: Jim Fan
+Secondary author: Jamis Johnson
 ```ocaml 
 open Semantic
 
@@ -3784,8 +4100,8 @@ let _ =
         failwith "Library folder ../lib doesn't exist. Cannot compile to executable. "
 ```
 
-###A.10 testall.sh
-Authors: Daria Jung, Parthiban Loganathan, Jamis Johnson
+###A.11 testall.sh
+Primary authors: Daria Jung, Parthiban Loganathan, Jamis Johnson
 ```sh
 #!/bin/bash
 COMPILER="quark/quarkc"
@@ -3817,7 +4133,7 @@ do
 done
 ```
 
-###A.11 addition.qk
+###A.12 addition.qk
 
 ```
 
@@ -3837,7 +4153,7 @@ def int main:
 }
 ```
 
-###A.12 array.qk
+###A.13 array.qk
 
 ```
 def int main: 
@@ -3851,7 +4167,7 @@ def int main:
 }
 ```
 
-###A.13 complex.qk
+###A.14 complex.qk
 
 ```
 def void print_complex: complex x 
@@ -3870,7 +4186,7 @@ def int main:
 }
 ```
 
-###A.14 elif.qk
+###A.15 elif.qk
 
 ```
 def void test: string x
@@ -3897,7 +4213,7 @@ def int main:
 }
 ```
 
-###A.15 float.qk
+###A.16 float.qk
 
 ```
 def int main: 
@@ -3914,7 +4230,7 @@ def int main:
 }
 ```
 
-###A.16 fraction.qk
+###A.17 fraction.qk
 
 ```
 def int main: 
@@ -3936,7 +4252,7 @@ def int main:
 }
 ```
 
-###A.17 gcd.qk
+###A.18 gcd.qk
 
 ```
 def int testgcd: int x, int y 
@@ -3958,7 +4274,7 @@ def int main:
 }
 ```
 
-###A.18 hello_world.qk
+###A.19 hello_world.qk
 
 ```
 def int main: 
@@ -3969,7 +4285,7 @@ def int main:
 }
 ```
 
-###A.19 import.qk
+###A.20 import.qk
 
 ```
 import /imports/test;
@@ -3991,7 +4307,7 @@ def int test: int x
 }
 ```
 
-###A.20 logic.qk
+###A.21 logic.qk
 
 ```
 
@@ -4022,7 +4338,7 @@ def int main:
 }
 ```
 
-###A.21 matrix.qk
+###A.22 matrix.qk
 
 ```
 def int main:
@@ -4033,7 +4349,7 @@ def int main:
 }
 ``` 
 
-###A.22 multi-array.qk
+###A.23 multi-array.qk
 
 ```
 def int main: 
@@ -4050,7 +4366,7 @@ def int main:
 }
 ```
 
-###A.23 range.qk
+###A.24 range.qk
 
 ```
 def int main: 
@@ -4063,7 +4379,7 @@ def int main:
 }
 ```
 
-###A.24 while.qk
+###A.25 while.qk
 
 ```
 def int main:
@@ -4079,7 +4395,7 @@ def int main:
 }
 ```
 
-###A.25 grover.qk
+###A.26 grover.qk
 
 ```
 int nbit = 7;
@@ -4087,7 +4403,7 @@ int key = 73; % secret key
 
 def int grover_oracle : int x
 {
-	if x == key:
+  if x == key:
         return 1;
     else
         return 0;
@@ -4095,38 +4411,38 @@ def int grover_oracle : int x
 
 def int main:
 {
-	qreg q = <| nbit+1, 1 |>;
+  qreg q = <| nbit+1, 1 |>;
 
-	int N = 1 << nbit;
-	int sqrtN = sqrt(N);
+  int N = 1 << nbit;
+  int sqrtN = sqrt(N);
 
-	hadamard(q);
+  hadamard(q);
 
-	int ans = 0;
-	float[] probAtKey;
+  int ans = 0;
+  float[] probAtKey;
 
-	for int iter in [: sqrtN + 1] :
-	{
-		apply_oracle(q, "grover_oracle", nbit);
+  for int iter in [: sqrtN + 1] :
+  {
+    apply_oracle(q, "grover_oracle", nbit);
 
-		hadamard_top(q, nbit);
-		grover_diffuse(q);
-		hadamard_top(q, nbit);
+    hadamard_top(q, nbit);
+    grover_diffuse(q);
+    hadamard_top(q, nbit);
 
-		if iter == sqrtN:
-			while grover_oracle(ans) == 0:
-				ans = q ?' [:nbit];
+    if iter == sqrtN:
+      while grover_oracle(ans) == 0:
+        ans = q ?' [:nbit];
 
-		probAtKey &= [prefix_prob(q, nbit, key)];
-	}
+    probAtKey &= [prefix_prob(q, nbit, key)];
+  }
 
-	print("Found key: ", ans);
-	print("Probability = ", probAtKey);
+  print("Found key: ", ans);
+  print("Probability = ", probAtKey);
     return 0;
 }
 ```
 
-###A.26 shor.qk
+###A.27 shor.qk
 ```
 int M = 221;
 
@@ -4169,58 +4485,58 @@ def int smallest_period: int b, int M
 
 def int long_pow: int a, int p
 {
-	if p == 1:
-		return a;
-	int partial = long_pow(a, p / 2);
-	if p mod 2 == 1:
-		return partial * partial * a;
-	else
-		return partial * partial;
+  if p == 1:
+    return a;
+  int partial = long_pow(a, p / 2);
+  if p mod 2 == 1:
+    return partial * partial * a;
+  else
+    return partial * partial;
 }
 
 def int log2_int: int x
 {
-	int ans = 0;
-	while x > 0:
-	{
-		x = x >> 1;
+  int ans = 0;
+  while x > 0:
+  {
+    x = x >> 1;
         ans ++;
-	}
-	return ans;
+  }
+  return ans;
 }
 
 %{
-	If size == 0, continue until 0
+  If size == 0, continue until 0
 }%
 def int[] to_continued_fraction: fraction frac, int size
 {
-	int[] cfrac;
-	int i = 0;
-	while size < 1 or i < size:
-	{
+  int[] cfrac;
+  int i = 0;
+  while size < 1 or i < size:
+  {
         % array concatenation
         cfrac &= [num(frac) / denom(frac)];
-		frac -= cfrac[i];
-		if num(frac) == 0 : break;
+    frac -= cfrac[i];
+    if num(frac) == 0 : break;
 
         % denom/num built-in
-		frac = ~frac;
+    frac = ~frac;
         i ++;
-	}
-	return cfrac;
+  }
+  return cfrac;
 }
 
 def fraction to_fraction: int[] cfrac, int size
 {
-	if size < 1:
-		size = len(cfrac);
-	fraction ans = 1$cfrac[size - 1];
-	for int i in [size-2 :0 :-1] :
-	{
-		ans += cfrac[i];
-		ans = ~ans;
-	}
-	return ans + cfrac[0];
+  if size < 1:
+    size = len(cfrac);
+  fraction ans = 1$cfrac[size - 1];
+  for int i in [size-2 :0 :-1] :
+  {
+    ans += cfrac[i];
+    ans = ~ans;
+  }
+  return ans + cfrac[0];
 }
 
 int nbit = log2_int(M) + 1;
@@ -4228,79 +4544,79 @@ int nbit = log2_int(M) + 1;
 % This is the user defined function that should be passed as a string argument
 def int shor_oracle: int x
 {
-	return exp_mod(nbit, x, M);
+  return exp_mod(nbit, x, M);
 }
 
 def int main:
 {
-	qreg q0 = <| nbit * 2, 0 |>;
+  qreg q0 = <| nbit * 2, 0 |>;
 
-	qft(q0, 0, nbit);
+  qft(q0, 0, nbit);
 
-	int b; int i;
-	while true:
-	{
-		b = rand_int(2, M);
+  int b; int i;
+  while true:
+  {
+    b = rand_int(2, M);
 
-		if gcd(b, M) != 1: continue;
+    if gcd(b, M) != 1: continue;
 
-		qreg q = qclone(q0);
+    qreg q = qclone(q0);
 
-		apply_oracle(q, "shor_oracle", nbit);
+    apply_oracle(q, "shor_oracle", nbit);
 
-		qft(q, 0, nbit);
+    qft(q, 0, nbit);
 
-		int mTrial = 0;
-		int measured;
+    int mTrial = 0;
+    int measured;
 
-		while mTrial < 10:
-		{
+    while mTrial < 10:
+    {
             mTrial ++;
-			measured = q ?' [:nbit];
-			if measured != 0:
-			{
-				int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
-				for int size in [len(cfrac):0:-1] :
-				{
-					int p = num(to_fraction(cfrac, size));
-					int P = p;
+      measured = q ?' [:nbit];
+      if measured != 0:
+      {
+        int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
+        for int size in [len(cfrac):0:-1] :
+        {
+          int p = num(to_fraction(cfrac, size));
+          int P = p;
 
-					while P < 128 and P < M :
-					{
-						if P mod 2 == 0
-							and exp_mod(b, P, M) == 1 :
-						{
-							int check = exp_mod(b, P / 2, M);
-							if check != 1 and check != M - 1 :
-							{
-								int b_P_1 = long_pow(b, P / 2) - 1;
-								int prime = gcd(M, b_P_1);
+          while P < 128 and P < M :
+          {
+            if P mod 2 == 0
+              and exp_mod(b, P, M) == 1 :
+            {
+              int check = exp_mod(b, P / 2, M);
+              if check != 1 and check != M - 1 :
+              {
+                int b_P_1 = long_pow(b, P / 2) - 1;
+                int prime = gcd(M, b_P_1);
 
-								if prime != 1 and prime != -1 :
-								{
-									print("Found period r = ", P);
-									print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
-									print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
-									int prime2 = gcd(M, b_P_1 + 2);
-									print("gcd(", M, ", ", b_P_1, ") = ", prime);
-									print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
-									print("\nFactorize ", M, " = ", prime, " * ", M/prime if prime2==1 or prime2==-1 else prime2);
-									return 0;
-								}
-							}
-						}
-						P += p;
-					}
-				}
-			}
-		}
-	}
-	print("FAIL");
-	return 0;
+                if prime != 1 and prime != -1 :
+                {
+                  print("Found period r = ", P);
+                  print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
+                  print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
+                  int prime2 = gcd(M, b_P_1 + 2);
+                  print("gcd(", M, ", ", b_P_1, ") = ", prime);
+                  print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
+                  print("\nFactorize ", M, " = ", prime, " * ", M/prime if prime2==1 or prime2==-1 else prime2);
+                  return 0;
+                }
+              }
+            }
+            P += p;
+          }
+        }
+      }
+    }
+  }
+  print("FAIL");
+  return 0;
 }
 ```
 
-###A.27 qreg.qk
+###A.28 qreg.qk
 ```
 def int main:
 {
