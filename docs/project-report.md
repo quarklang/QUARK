@@ -851,6 +851,7 @@ Below is a list of built-in functions that QUARK provides:
 `qsize(qreg)`: takes a qreg and returns an int.
 
 `qclone(qreg)`: takes a qreg and returns a qreg.
+
 `prefix_prob(qreg, int, int)`: takes a qreg, and int, and an int, and returns a float.
 
 `apply_orancle(qreg, function, int)`: takes a qreg, a defined function, and an int, and returns void.
