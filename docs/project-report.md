@@ -329,19 +329,24 @@ q ? [2:10];  % measures qubit 2 to 10
 ####matrix
 QUARK allows you to create matrices; a `matrix` uses a special bracket notation to distinguish from arrays, and rows are separated by semicolons. Matrices may be composed of only `int`, `float`, or `complex`. Matrix elements may be accessed with a square bracket notation by separating the column and row index numbers by commas. 
 
-QUARK provides the prime operator <code>'</code> for matrix transposition.
+A new matrix with all zeros (real or complex) can be constructed by
+ ```type[| row_dim, column_dim |]``` and used in the middle of any expression. 
+
+QUARK provides the special prime operator <code>'</code> for matrix transposition, and power operator ```**``` overloaded for matrix kronecker product. 
 
 ```matlab
 float[|] mat = [| 1.2, 3.4; 5.6, 7.8 |];
 mat[2, 1];
-
+complex[|] mat2 = complex[| 5, 9 |];
+% constructs a 5-by-9 complex zero matrix
 mat'; % transpose matrix
+mat ** mat2; % kronecker product
 ```
 
 ####array
-QUARK allows arrays of any of the above data types. Arrays are of variable length and are arbitrarily dimensional. 
+QUARK allows arrays of any of the above data types. Arrays can have variable length and can be arbitrarily dimensional. 
 
-Arrays can be initialized using a comma-separated list delimited by square brackets [ ]. Additionally, arrays can be declared with a size to create an array of uninitialized elements. 
+Arrays can be initialized using a comma-separated list delimited by square brackets [ ]. Additionally, arrays can be declared with a size to create an array of default-initialized elements. 
 
 Arrays may be concatenated with the `&` operator as long as there is a dimension and type match. 
 
@@ -349,8 +354,9 @@ Arrays may be concatenated with the `&` operator as long as there is a dimension
 int[5]; % gives us [0,0,0,0,0]
 int[] a = [1, 2, 3]; % array initialization
 int[][] b = [[1,2,3], [4,5,6]]; % 2-d array
-
-[11, 22, 33] & int[3]
+print(complex[16]); 
+% constructs an array of 16 i(0, 0)
+[11, 22, 33] & int[3];
 % gives us [11, 22, 33, 0, 0, 0]
 ```
 
@@ -371,7 +377,7 @@ Indices of multidimensional arrays may be accessed by separating the dimensional
 
 ```matlab
 int[][] arr = [[0,1,2],[3,4,5]]
-arr[1][1]; % accesses 4
+arr[1, 1]; % accesses 4
 ```
 
 The built-in `len` function returns an `int` representing the length of the array.
