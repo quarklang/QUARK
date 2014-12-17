@@ -6,7 +6,7 @@ Quark
 | :--------------------: | :-------: |
 | Daria Jung             | djj2115   | 
 | Jamis Johnson          | jmj2180   | 
-| Jim Fan                | lf2422    |
+| Linxi Fan ( Jim )      | lf2422    |
 | Parthiban Loganathan   | pl2487    |  
 
 December 15, 2014
@@ -730,11 +730,11 @@ import ../lib/herlib2;
 ```
 
 ```
-import imported_file;
+import imported_file; % contains foo2
 
-def int main:
+def int foo:
 {
-    return imported_file.function(5);
+    return foo2(5);
 }
 ```
 
@@ -1157,7 +1157,7 @@ and took responsibility for whatever we touched. The parts of the compiler and p
 | ------------------------- | :---------------------------------------------: |
 | Project Management        | Parthiban Loganathan                            |
 | Language Reference Manual | Daria Jung                                      |
-| Scanner, Parser           | Parthiban Loganathan, Daria Jung                |
+| Scanner, Parser           | Parthiban Loganathan, Daria Jung, Jim Fan                |
 | Semantic Checking         | Jim Fan, Jamis Johnson                          |
 | Code Generation           | Jim Fan                                         |
 | Testing                   | All                                             |
@@ -1506,6 +1506,12 @@ Lessons Learned
 3. Allocating work into sizable chunks was a challenge due to the interrelatedness of the different components. For example, even after defining interfaces, we often found minor specification differences between the parser and code generation led to issues.
 4. Focus on the primary purpose of the language. We initially toyed with the idea of dynamic typing and other advanced features that did not come to fruition.
 
+### Jim Fan
+1. Communication is key to successful teamwork, but it is also the hardest part of teamwork. When one group member disagrees with another on the high-level approach to a problem (e.g. semantic checking), the lack of effective communication will delay the whole group and give rise to misunderstanding. Since code speaks more than words, a working prototype of an idea is found to be more convincing than hours of persuasion. 
+2. We started semantic checking by looking at open source codes from PLT groups in the past. It turned out to be an unwise idea. We would have made progress much more quickly if we had not wasted so much time trying to decode someone else's uncommented source. Their language was simply too different from ours to be a worthwhile reference. We ended up writing every line of semantic checking and code generation from scratch.  
+3. OCaml is not as easy as I think. In addition to the slides in class, I read the relevant chapters in the O'Reilly book [Real World OCaml](https://realworldocaml.org/) after I get stuck in too many places. 
+4. Cross-platform compilation is hard. I was using Windows and the rest of the team were using Mac. I actually bought a new Mac for this purpose. It turned out that Mac did not support static library compilation, and did not conform to the "rpath" standard on Linux. I did miss Java at those moments of pain.
+
 ###Daria Jung
 Group projects are pretty frustrating when the group is comprised of several overworked university students. Real life can get in the way (one group member experienced a death in the family), things always take longer than expected (programmers are the worst at estimating how long something will take), and writing a compiler can get pretty complicated. Communication, or lack thereof, was an impediment to our progress when we started to get going, so it is imperative to be transparent and crystal clear to other teammates about what is happening. I wish that we had had Bob Martin's talk earlier in the semester so we had a better sense of the sorts of things to watch out for. The pace of the project was much different than working on something at a company.
 
@@ -1523,7 +1529,6 @@ Team members will inevitably become overwhelmed with life, other school work, an
 #Appendix
 
 ###A.1 scanner.mll
-Authors: Parthiban Loganathan, Daria Jung
 ```ocaml
 { open Parser }
 
@@ -1643,7 +1648,6 @@ and inline_comments = parse
 ```
 
 ###A.2 parser.mly
-Authors: Parthiban Loganathan, Daria Jung
 ```ocaml
 %{ open Ast %}
 %{ open Type %}
@@ -1885,7 +1889,6 @@ statement_seq:
 ```
 
 ###A.3 type.ml
-Authors: Daria Jung, Parthiban Loganathan
 ```ocaml 
 type vartype =
   | Int
@@ -1909,7 +1912,6 @@ let str_of_type = function
 ```
 
 ###A.4 ast.ml
-Authors: Daria Jung, Parthiban Loganathan
 ```ocaml
 module T = Type
 
@@ -2076,9 +2078,6 @@ let str_of_postop = function
 ```
 
 ###A.5 semantic.ml
-Primary Authors: Jim Fan, Jamis Johnson
-
-Secondary Authors: Parthiban Loganathan, Daria Jung
 ```ocaml
 module A = Ast
 module S = Sast
@@ -3161,7 +3160,6 @@ let rec gen_sast env = function
 ```
 
 ###A.6 sast.ml
-Authors: Jamis Johnson, Jim Fan
 ```ocaml 
 module A = Ast
 module T = Type
@@ -3235,7 +3233,6 @@ type statement =
 ```
 
 ###A.7 generator.ml
-Authors: Jim Fan
 ```ocaml 
 module A = Ast
 module S = Sast
@@ -3662,7 +3659,6 @@ handle_compound stmt =
 ```
 
 ###A.8 preprocessor.ml
-Authors: Jim Fan
 ```ocaml 
 {
   (* default Quarklang source code extension *)
@@ -3761,7 +3757,6 @@ let process filename =
 ```
 
 ###A.9 compiler.ml
-Authors: Jim Fan, Jamis Johnson
 ```ocaml 
 open Semantic
 
@@ -3925,7 +3920,6 @@ let _ =
 ```
 
 ###A.10 testall.sh
-Authors: Daria Jung, Parthiban Loganathan, Jamis Johnson
 ```sh
 #!/bin/bash
 COMPILER="quark/quarkc"
