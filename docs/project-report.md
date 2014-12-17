@@ -11,6 +11,10 @@ Quark
 
 December 15, 2014
 
+Slides
+======
+Find our slides at the following URL: [http://slides.com/quarklang/quark](http://slides.com/quarklang/quark)
+
 Contents
 ========
 [toc]
