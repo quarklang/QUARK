@@ -67,7 +67,7 @@ usage: quarkc -s source.qk [-c output.cpp ] [-o executable] [-static] [-g++ /pat
   -help  Display this list of options
 ```
 
-As stated above, to compile `tests/hello_world.qk` into C++ and an executable run `./quark/quarkc -s tests/hello_world.qk -c hello_world.cpp -o hello_world`. You can run the hello_world executable `./hello_world` to get the output, and the `cat` command shows the generated C++ as follows:
+As stated above, to compile `tests/hello_world.qk` into C++ and an executable run `./quark/quarkc -s tests/hello_world.qk -c hello_world.cpp -o hello_world`. You can run the hello_world executable `./hello_world` to get the output, and `cat hello_world.cpp` shows the generated C++ as follows:
 
 ```
 vagrant@vagrant-ubuntu-trusty-64:/vagrant$ ./hello_world
@@ -91,7 +91,7 @@ return 0;
 
 The C++ includes are referencing our quantum simulator and these files can be found in the `lib` directory.
 
-To run some quantum computing programs, compile `shor.qk` and `grover.qk` in the `quark` folder. They are examples of non-trivial programs performing Shor's algorithm and Grover's search. More information on them in the testing section.
+To run some quantum computing programs, compile `shor.qk` and `grover.qk` in the `quark` folder. They are examples of non-trivial programs performing Shor's algorithm and Grover's search. Their implementation can be found in the testing section and the appendix.
 
 Given an actual quantum computer, we would be able to run these algorithms in the stated time. For now, we run them on our simulator in exponential time for small N examples.
 
@@ -1355,7 +1355,7 @@ def int main:
 | shor.qk | non-trivial program in QUARK
 | grover.qk | non-trivial program in QUARK
 
-Testing was primarily done by Daria Jung with help from Parthiban Loganathan and Jamis Johnson.
+Testing was primarily done by Daria Jung, Parthiban Loganathan and Jamis Johnson.
 
 Lessons Learned
 ===============
