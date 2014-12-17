@@ -1296,6 +1296,8 @@ The compiler is written entirely in OCaml. This section outlines the compilation
 
     The project is self-contained. It requires little to no user-managed dependencies. 
 
+![Compiler flow](https://raw.githubusercontent.com/quarklang/QUARK/master/docs/diagrams/Compiler.png)
+
 #### Quark++ Simulator
 The simulator is written by Jim Fan before the beginning of this term. It contains around 6,000 lines of C++ 11 code, compiles and runs successfully on Windows, Mac and Ubuntu. 
 
