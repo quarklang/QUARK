@@ -259,6 +259,9 @@ There is only one reserved prefix in QUARK:
 
 `_QUARK_`
 
+####Pseudo-reserved
+`i` may be used as a variable name but not a function name. This is due to the way that QUARK handles the syntax for complex numbers. 
+
 ####Mathematical Constants
 QUARK has two mathematical constants, `PI` and `E`. `PI` is for mathematical constant $\pi$ = 3.141592...
 `E` for the mathematical constant e = 2.718281... 
@@ -385,7 +388,7 @@ float[|] mat = [| 1.2, 3.4; 5.6, 7.8 |];
 mat[2, 1];
 complex[|] mat2 = complex[| 5, 9 |];
 % constructs a 5-by-9 complex zero matrix
-mat'; % transpose matrix
+mat = mat'; % transpose matrix
 mat ** mat2; % kronecker product
 ```
 
