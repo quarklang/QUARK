@@ -13,7 +13,7 @@ A language and compiler implemented in OCaml to build quantum circuits.
 - You can write code locally on your host machine and run it on the box at any time in the standard dev environment
 - You can also run `vagrant suspend` to suspend the box (still occupies disk) and `vagrant destroy` to remove it completely
 
-# Project Report
+####Project Report
 [Quark](https://github.com/quarklang/QUARK/blob/master/docs/project-report.md)
 
 ####Team
