@@ -861,8 +861,8 @@ expr:
   | STRING_LITERAL                             
   | [ expr_list ]                
   | datatype [ expr ]       
-  | [| matrix_row_list ]          
-  | datatype [| expr , expr ]
+  | [| matrix_row_list |]          
+  | datatype [| expr , expr |]
   | i( expr , expr )     
   | i( expr )                  
   | <| expr , expr |>                
