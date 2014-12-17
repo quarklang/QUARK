@@ -93,7 +93,7 @@ The C++ includes are referencing our quantum simulator and these files can be fo
 
 To run some quantum computing programs, compile `shor.qk` and `grover.qk` in the `quark` folder. They are examples of non-trivial programs performing Shor's algorithm and Grover's search. More information on them in the testing section.
 
-Given an actual quantum computer, we would be able to run these algorithms in the stated time. For now, we run them on our simulator.
+Given an actual quantum computer, we would be able to run these algorithms in the stated time. For now, we run them on our simulator in exponential time for small N examples.
 
 Shor's algorithm can factorize large integers in polynomial time.
 Run `./quark/quarkc -sco ./quark/shor.qk shor` and `./shor`
