@@ -11,14 +11,19 @@ Quark
 
 December 15, 2014
 
+<div style="page-break-after: always;"></div>
+
+
 Slides
 ======
 Find our slides at the following URL: [http://slides.com/quarklang/quark](http://slides.com/quarklang/quark)
+<div style="page-break-after: always;"></div>
 
 Contents
 ========
 [toc]
 
+<div style="page-break-after: always;"></div>
 
 Introduction
 ============
@@ -37,6 +42,7 @@ Quark is a domain-specific imperative programming language to allow for expressi
 Most quantum algorithms can be decomposed into a quantum circuit part and a classical pre/post-processing part. Recognizing this, QUARK is designed to integrate classical and quantum data types and controls in a seamless workflow. Built in types like complex numbers, fractions, matrices and quantum registers combined with a robust built-in gate library make QUARK a great starting point for quantum computing researchers and enthusiasts.
 
 A relatively efficient quantum circuit simulator is included as part of the QUARK architecture. Source code written in QUARK is compiled to C++, which can then be passed onto our quantum simulator.
+<div style="page-break-after: always;"></div>
 
 Tutorial
 ========
@@ -203,6 +209,7 @@ int meas = q ? [2:10]; % measures qubits 2 through 10
 ```
 
 Note, you can only measure LValue `qreg` variables. There are many builtin functions that utilize quantum registers and aid in building quantum circuits and you can find a complete listing in Language Reference.
+<div style="page-break-after: always;"></div>
 
 Language Reference Manual
 =========================
@@ -1092,6 +1099,7 @@ statement_seq:
 
 ```
 
+<div style="page-break-after: always;"></div>
 
 Project Plan
 ============
@@ -1165,10 +1173,9 @@ and took responsibility for whatever we touched. The parts of the compiler and p
 | Project Report            | All                                             |
 | Presentation              | Parthiban Loganathan                            |
 
-Due to our decision to follow the "democracy" approach as opposed to the "dictatorship" approach
-we faced issues with accountability, but each one of us also got to see more of the compiler in the
-process.
+Though some names are not listed under certain sections, it doesn't mean they didn't contribute towards it. For example, Daria helped with project management in the middle of the semester when things were hectic and no one was co-operating. All of us worked on different chunks of semantic checking before we decided on a major rewrite since it was hard to separate it from code generation. Due to our decision to follow the "democracy" approach as opposed to the "dictatorship" approach we faced issues with accountability, but each one of us also got to see more of the compiler in the process.
 
+<div style="page-break-after: always;"></div>
 
 Architecture
 ============
@@ -1255,6 +1262,7 @@ The simulator is written before the beginning of this term. It contains around 6
 
 It features a complete and optimized quantum circuit simulation engine that is able to run the most celebrated quantum algorithms ever conceived, including but not limited to Shor's factorization, Grover's search, Simon's period finding algorithm, etc. It can be included in other quantum computing research projects as a standalone library.
 
+<div style="page-break-after: always;"></div>
 
 Test Plan
 =======
@@ -1528,7 +1536,9 @@ def int main:
 | shor.qk | non-trivial program in QUARK
 | grover.qk | non-trivial program in QUARK
 
-Testing was primarily done by Daria Jung, Parthiban Loganathan and Jamis Johnson.
+Testing was primarily done by Daria Jung with help from Parthiban Loganathan and Jamis Johnson.
+
+<div style="page-break-after: always;"></div>
 
 Lessons Learned
 ===============
@@ -1558,6 +1568,9 @@ Communication is vital. Pick a time to meet everyweek for an hour or two and don
 Jump in and start coding stat! The language spec changes rapidly so don't dwell on the minutiae. What matters most is the core objective of your language. Complete the first edition of the LRM by your team's first or second meeting and move on to writing code.
 
 Team members will inevitably become overwhelmed with life, other school work, and with each other, and it's easy to get frustrated. Help each other out and go easy on one another (and see above: communicate!). Also, early progress will generally ameliorate stress, as will clearly defined roles.
+
+<div style="page-break-after: always;"></div>
+
 
 #Appendix
 
