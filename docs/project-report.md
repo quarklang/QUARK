@@ -964,10 +964,10 @@ and took responsibility for whatever we touched. The parts of the compiler and p
 | ------------------------- | :---------------------------------------------: |
 | Project Management        | Parthiban Loganathan                            |
 | Language Reference Manual | Daria Jung                                      |
-| Scanner, Parser           | Parthiban Loganathan, Daria Jung                |
-| Semantic Checking         | Jamis Johnson, Jim Fan                          |
+| Scanner, Parser           | Parthiban Loganathan, Daria Jung, Jim Fan                |
+| Semantic Checking         | Jim Fan, Jamis Johnson                          |
 | Code Generation           | Jim Fan                                         |
-| Testing                   | Daria Jung, Parthiban Loganathan, Jamis Johnson |
+| Testing                   | All |
 | Simulator                 | Jim Fan                                         |
 | Project Report            | All                                             |
 
@@ -978,6 +978,55 @@ process.
 
 Architecture
 ============
+####Global Overview
+The Quark architecture primarily consists of two major components, a compiler frontend and a simulator backend. The compiler translates Quark source code into C++ code, which is then compiled with Quark++ (simulator) headers by GNU g++.  
+
+When the program runs, it links with precompiled a Quark++ dynamic library and executes the quantum circuit simulation instructions. Optionally, the user can compile the generated C++ code with a static library to produce one portable executable, without any external dependencies. This option can be enabled with ```quarkc -static```. It only works on Windows and Linux. 
+
+The Quark compiler is OS aware and will extract the correct library automatically. It supports all major OSes (tested on Windows 7 & 8, Mac OS X 10.10 and Ubuntu 14.04).
+
+#### Compiler Architecture
+The compiler is written entirely in OCaml. This section outlines the compilation pipeline we design. 
+
+1. *Preprocessing*
+
+    The preprocessor mainly resolves all ```import``` statements. The file path following each ```import``` is checked and added to a hashtable, which ensures that no circular or repetitive imports is allowed. 
+    
+    The imported file can contain ```import``` themselves, so the preprocessor recursively expands all imported sources until no more ```import``` statments left. 
+
+2. *Scanning*
+
+    The scanner tokenizes the source code into OCaml symbols. Details of the scanner rules can be found in the LRM.
+
+3. *Parsing*
+
+    The parser defines the syntactical rules of the Quark language. It takes the stream of tokens produced by the scanner as input, and produces an abstract syntax tree (AST), a recursive data structure. 
+    More details of the grammar can be found in the LRM.
+
+4. *Semantic checking*
+
+    The semantic checker ensures that no type conflicts, variable/function declaration/definition errors exist in a syntactically correct AST. It takes an AST as input and produces a similar recursive structure - the Semantic Abstract Syntax Tree (SAST). 
+
+    Our SAST is carefully designed to minimize code generation efforts. A major discovery is that the SAST does not need to carry the type information. Instead, a special ```op_tag``` is added, which contains all the information the code generator requires to produce C++. 
+
+    For example, the binary ampersand ```&``` in Quark is used for both integer bitwise ```and``` and array/string concatenation. The SAST does not need to carry along the operands' type information to tell the code generator which meaning of ```&``` to translate. It only needs to tag the binary operator expression with either ```OpVerbatim``` or ```OpConcat```. 
+
+5. Code Generation
+
+    The code generator takes an SAST as input and produces a string of translated C++ code, excluding the headers. It relies on the ```op_tag``` given by the semantic checker to generate the right C++ function. 
+
+    The code generator must conform to the Quark++ simulator library interface. In practice, the simulator has to be updated with minor changes to accomodate the compiled code as well as its interaction with the [Eigen](eigen.tuxfamily.org) matrix library.
+
+6. User Interface
+
+    Quarkc implements a number of command line arguments to improve user experience. Shorthand args are also provided for convenience. 
+
+    The project is self-contained. It requires little to no user-managed dependencies. 
+
+#### Quark++ Simulator
+The simulator is written before the beginning of this term. It contains around 6,000 lines of C++ 11 code, compiles and runs successfully on Windows, Mac and Ubuntu. 
+
+It features a complete and optimized quantum circuit simulation engine that is able to run the most celebrated quantum algorithms ever conceived, including but not limited to Shor's factorization, Grover's search, Simon's period finding algorithm, etc. It can be included in other quantum computing research projects as a standalone library.
 
 
 Test Plan
