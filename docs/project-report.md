@@ -1,15 +1,15 @@
 Quark
 ====
-The Quantum Analysis and Realization Kit Language
+*Quantum Analysis and Realization Kit Language*
 
-| Name          | UNI       | 
-| :-------------------- | :-------: |
-| Daria Jung        | djj2115   | 
-| Jamis Johnson     | jmj2180   | 
-| Jim Fan           | lf2422    |
-| Parthiban Loganathan  | pl2487    |  
+| Name                   | UNI       | 
+| :--------------------: | :-------: |
+| Daria Jung             | djj2115   | 
+| Jamis Johnson          | jmj2180   | 
+| Jim Fan                | lf2422    |
+| Parthiban Loganathan   | pl2487    |  
 
-December 14, 2014
+December 15, 2014
 
 Contents
 ========
@@ -146,10 +146,10 @@ How you declare each type in Quark,
 int i = 5;
 float f = 3.0;
 bool b = true;
-string s = "greetings earthling";
+string s = "So Long, and Thanks for All the Fish";
 fraction f = 10$3;
 complex c = i(1.0, 2.0);
-string[] arr = ["hi", "world"];
+string[] arr = ["Ford", "Prefect"];
 int[][] arr2 = [[1,2,3],[4,5,6]];
 ```
 
@@ -1000,12 +1000,13 @@ and took responsibility for whatever we touched. The parts of the compiler and p
 | ------------------------- | :---------------------------------------------: |
 | Project Management        | Parthiban Loganathan                            |
 | Language Reference Manual | Daria Jung                                      |
-| Scanner, Parser           | Parthiban Loganathan, Daria Jung, Jim Fan                |
+| Scanner, Parser           | Parthiban Loganathan, Daria Jung                |
 | Semantic Checking         | Jim Fan, Jamis Johnson                          |
 | Code Generation           | Jim Fan                                         |
-| Testing                   | All |
+| Testing                   | All                                             |
 | Simulator                 | Jim Fan                                         |
 | Project Report            | All                                             |
+| Presentation              | Parthiban Loganathan                            |
 
 Due to our decision to follow the "democracy" approach as opposed to the "dictatorship" approach
 we faced issues with accountability, but each one of us also got to see more of the compiler in the
@@ -1047,13 +1048,13 @@ The compiler is written entirely in OCaml. This section outlines the compilation
 
     For example, the binary ampersand ```&``` in Quark is used for both integer bitwise ```and``` and array/string concatenation. The SAST does not need to carry along the operands' type information to tell the code generator which meaning of ```&``` to translate. It only needs to tag the binary operator expression with either ```OpVerbatim``` or ```OpConcat```. 
 
-5. Code Generation
+5. *Code Generation*
 
     The code generator takes an SAST as input and produces a string of translated C++ code, excluding the headers. It relies on the ```op_tag``` given by the semantic checker to generate the right C++ function. 
 
     The code generator must conform to the Quark++ simulator library interface. In practice, the simulator has to be updated with minor changes to accomodate the compiled code as well as its interaction with the [Eigen](eigen.tuxfamily.org) matrix library.
 
-6. User Interface
+6. *User Interface*
 
     Quarkc implements a number of command line arguments to improve user experience. Shorthand args are also provided for convenience. 
 
@@ -1322,7 +1323,7 @@ Team members will inevitably become overwhelmed with life, other school work, an
 #Appendix
 
 ###A.1 scanner.mll
-
+Authors: Parthiban Loganathan, Daria Jung
 ```ocaml
 { open Parser }
 
@@ -1442,7 +1443,7 @@ and inline_comments = parse
 ```
 
 ###A.2 parser.mly
-
+Authors: Parthiban Loganathan, Daria Jung
 ```ocaml
 %{ open Ast %}
 %{ open Type %}
@@ -1684,7 +1685,7 @@ statement_seq:
 ```
 
 ###A.3 type.ml
-
+Authors: Daria Jung, Parthiban Loganathan
 ```ocaml 
 type vartype =
   | Int
@@ -1708,6 +1709,7 @@ let str_of_type = function
 ```
 
 ###A.4 ast.ml
+Authors: Daria Jung, Parthiban Loganathan
 ```ocaml
 module T = Type
 
@@ -1874,7 +1876,9 @@ let str_of_postop = function
 ```
 
 ###A.5 semantic.ml
+Primary Authors: Jim Fan, Jamis Johnson
 
+Secondary Authors: Daria Jung, Parthiban Loganathan
 ```ocaml
 module A = Ast
 module S = Sast
@@ -2957,7 +2961,7 @@ let rec gen_sast env = function
 ```
 
 ###A.6 sast.ml
-
+Authors: Jamis Johnson, Jim Fan
 ```ocaml 
 module A = Ast
 module T = Type
@@ -3031,7 +3035,7 @@ type statement =
 ```
 
 ###A.7 generator.ml
-
+Authors: Jim Fan
 ```ocaml 
 module A = Ast
 module S = Sast
@@ -3458,7 +3462,7 @@ handle_compound stmt =
 ```
 
 ###A.8 preprocessor.ml
-
+Authors: Jim Fan
 ```ocaml 
 {
   (* default Quarklang source code extension *)
@@ -3557,7 +3561,7 @@ let process filename =
 ```
 
 ###A.9 compiler.ml
-
+Authors: Jim Fan, Jamis Johnson
 ```ocaml 
 open Semantic
 
@@ -3721,7 +3725,7 @@ let _ =
 ```
 
 ###A.10 testall.sh
-
+Authors: Daria Jung, Parthiban Loganathan, Jamis Johnson
 ```sh
 #!/bin/bash
 COMPILER="quark/quarkc"
