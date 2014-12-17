@@ -10,7 +10,7 @@ A language and compiler implemented in OCaml to build quantum circuits.
 - Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
 - Open the repo directory and run `vagrant up`
 - Run `vagrant ssh` to ssh into the Vagrant box running Ubuntu 14.04 LTS with OCaml and g++4.8 installed
-- Make sure you are in the `/vagrant` directory by running the command `pwd` and if you are not run `cd /vagrant`.
+- Make sure you are in the `/vagrant` directory. If not, run `cd /vagrant`.
 
 ###Compiling and Running Quark Programs
 The following Hello World example Quark program is saved in `/tests/hello_world.qk`.
@@ -39,7 +39,7 @@ usage: quarkc -s source.qk [-c output.cpp ] [-o executable] [-static] [-g++ /pat
   -help  Display this list of options
 ```
 
-As stated above, to compile `tests/hello_world.qk` into C++ and an executable run `./quark/quarkc -s tests/hello_world.qk -c hello_world.cpp -o hello_world`. You can run the hello_world executable to get output, and the `cat` command shows the generated C++ as follows:
+As stated above, to compile `tests/hello_world.qk` into C++ and an executable run `./quark/quarkc -s tests/hello_world.qk -c hello_world.cpp -o hello_world`. You can run the hello_world executable `./hello_world` to get the output, and the `cat` command shows the generated C++ as follows:
 
 ```
 vagrant@vagrant-ubuntu-trusty-64:/vagrant$ ./hello_world
@@ -63,7 +63,15 @@ return 0;
 
 The C++ includes are referencing our quantum simulator and these files can be found in the `lib` directory.
 
-You can run `vagrant suspend` to suspend the box (still occupies disk) and `vagrant destroy` to remove it completely
+To run some quantum computing programs, compile `shor.qk` and `grover.qk` in the `quark` folder. They are examples of non-trivial programs performing Shor's algorithm and Grover's search. More information on them in the testing section.
+
+Given an actual quantum computer, we would be able to run these algorithms in the stated time. For now, we run them on our simulator in exponential time for small N examples.
+
+Shor's algorithm can factorize large integers in polynomial time.
+Run `./quark/quarkc -sco ./quark/shor.qk shor` and `./shor`
+
+Grover's search can search an unsorted database in O(N<sup>1/2</sup>) time.
+Run `./quark/quarkc -sco ./quark/grover.qk grover` and `./grover`
 
 
 ####Team
