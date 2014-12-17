@@ -801,71 +801,112 @@ Below is a list of built-in functions that QUARK provides:
 ####Math
 
 `sqrt(float)`: takes the square root of a number and returns a float.
+
 `rand_int(int, int)`: takes two ints as boundaries and returns an int between them.
+
 `rand_float(float, float)`: takes two floats as boundaries and returns a float between them. 
 
 ####Matrix
 
 `coldim(any_matrix)`: returns the column dimension of a matrix as an int.
+
 `rowdim(any_matrix)`: returns the row dimension of a matrix as an 
 
 ####Matrix Generation
 `hadamard_mat(int)`: takes int and returns a complex matrix.
-cnot_mat(): takes nothing and returns a complex matrix.
+
+`cnot_mat()`: takes nothing and returns a complex matrix.
+
 `toffoli_mat(int)`: takes int and returns complex matrix.
+
 `generic_control_mat(int, complex_matrix)`: takes int and complex matrix and returns complex matrix.
+
 `pauli_X_mat()`: takes nothing and returns a complex matrix.
+
 `pauli_Y_mat()`: takes nothing and returns a complex matrix.
+
 `pauli_Z_mat()`: takes nothing and returns a complex matrix.
+
 `rot_X_mat(float)`: takes a float and returns a complex matrix.
+
 `rot_Y_mat(float)`: takes a float and returns a complex matrix.
+
 `rot_Z_mat(float)`: takes a float and returns a complex matrix.
+
 `phase_scale_mat(float)`: takes a float and returns a complex matrix.
+
 `phase_shift_mat(float)`: takes a float and returns a complex matrix.
+
 `control_phase_shift_mat(float)`: takes a float and returns a complex matrix.
+
 `swap_mat()`: takes nothing and returns a complex matrix.
+
 `cswap_mat()`: takes nothing and returns a complex matrix.
+
 `qft_mat(int)`: takes int and returns a complex matrix.
+
 `grover_diffuse_mat(int)`: takes int and returns a complex matrix.
 
 ####Quantum Registers
 `qsize(qreg)`: takes a qreg and returns an int.
+
 `qclone(qreg)`: takes a qreg and returns a qreg.
 `prefix_prob(qreg, int, int)`: takes a qreg, and int, and an int, and returns a float.
+
 `apply_orancle(qreg, function, int)`: takes a qreg, a defined function, and an int, and returns void.
 
 ####Quantum Gates (Functions apply a specific gate to a quantum register)
 
 #####Single bit gates
 `hadamard(qreg)`: takes a qreg and returns void.
+
 `hadamart_top(qreg, int)`: takes qreg and int and returns void.
+
 `pauli_X(qreg, int)`: takes qreg and int and returns void.
+
 `pauli_Y(qreg, int)`: takes qreg and int and returns void.
+
 `paluli_Z(qreg, int)`: takes qreg and int and returns void.
+
 `rot_X(qreg, float, int)`: takes qreg, float, and int and returns void.
+
 `rot_Y(qreg, float, int)`: takes qreg, float, and int and returns void.
+
 `rot_Z(qreg, float, int)`: takes qreg, float, and int and returns void.
+
 `phase_scale(qreg, float, int)`: takes qreg, float, and int and returns void.
+
 `phase_shift(qreg, float, int)`: takes qreg, float, and int and returns void.
 
 #####Multi bit gates
 `generic_1gate(qreg, complex_matrix, int)`: takes qreg, complex matrix, and int and returns void.
+
 `generic_2gate(qreg, complex_matrix, int, int)`: takes qreg, complex matrix, int, and int and returns void.
+
 `generic_ngate(qreg, complex_matrix, [int])`: takes qreg, complex matrix, and an array of ints and returns void.
 
 ####Control Gates
 `cnot(qreg, int, int)`: takes qreg, int, and int, and returns void.
+
 `toffoli(qreg, int, int, int)`: takes qreg, int, int, and int and returns void.
+
 `control_phase_shift(qreg, float, int, int)`: takes a qreg, float, int, and int, and returns void.
+
 `ncnot(qreg, [int], int)`: takes a qreg, and array of ints, and int, and returns void.
+
 `generic_control(qreg, complex_matrix, int, int)`: takes qreg, complex matrix, int, and int, and returns void.
+
 `generic_toffoli(qreg, complex_matrix, int, int, int)`: takes qreg, complex matrix, int, int, and int, and returns void.
+
 `generic_ncontrol(qreg, complex_matrix, [int], int)`: takes qreg, complex matrix, an array of ints, and int, and returns void.
 
 ####Other Gates
 `swap(qreg, int, int)`: takes qreg, int, and int, and returns void.
+
 `cswap(qreg, int, int, int)`: takes qreg, int, int, and int, and returns void.
+
 `qft(qreg, int, int)`: takes qreg, int, and int, and returns void.
+
 `grover_diffuse(qreg)`: takes qreg and returns void.
 
 
