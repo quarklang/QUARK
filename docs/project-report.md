@@ -1963,6 +1963,7 @@ let str_of_type = function
 
 ###A.4 ast.ml
 Primary authors: Parthiban Loganathan, Daria Jung
+
 Secondary author: Jim Fan
 ```ocaml
 module T = Type
@@ -2131,7 +2132,8 @@ let str_of_postop = function
 
 ###A.5 semantic.ml
 Primary author: Jim Fan
-Secondary author: Jamis Johnson
+
+Secondary authors: Jamis Johnson, Parthiban Loganathan, Daria Jung
 ```ocaml
 module A = Ast
 module S = Sast
@@ -3215,6 +3217,7 @@ let rec gen_sast env = function
 
 ###A.6 sast.ml
 Primary authors: Jim Fan, Parthiban Loganathan, Daria Jung
+
 Secondary author: Jamis Johnson
 ```ocaml 
 module A = Ast
