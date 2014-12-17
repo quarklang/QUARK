@@ -1878,7 +1878,7 @@ let str_of_postop = function
 ###A.5 semantic.ml
 Primary Authors: Jim Fan, Jamis Johnson
 
-Secondary Authors: Daria Jung, Parthiban Loganathan
+Secondary Authors: Parthiban Loganathan, Daria Jung
 ```ocaml
 module A = Ast
 module S = Sast
