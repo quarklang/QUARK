@@ -151,14 +151,44 @@ fraction f = 10$3;
 complex c = i(1.0, 2.0);
 string[] arr = ["hi", "world"];
 int[][] arr2 = [[1,2,3],[4,5,6]];
-float[|] = [|1.0, 2.1; 3.2, 42.1|];
 ```
 
-And last but definitely not least, the quantum register,
+###Matrices
+Quark matrices have a different syntax than 2-dimensional arrays because they are compiled to Eigen classes as opposed to the built-in C++ vector. This also means n-dimensional arrays can have variable length rows whereas matrices must have equal length rows.
+
+A matrix is declared as follows,
+
+```
+float[|] mat = [|1.0, 2.1; 3.2, 42.1|];
+```
+
+Where semicolons indicate the end of rows. Matrices can be composed of `int`, `float`, or `complex`. You can transpose a matrix by appending an apostrophe,
+
+```
+mat = mat';
+```
+
+And matrix elements can be accessed using the bracket notation and zero-indexed row and column integers,
+
+```
+float f = mat[2, 1];
+```
+
+###Quantum Registers
+And last but definitely not least, the quantum register. Quantum registers are a key component for constructing quantum circuits. When declaring quantum registers, the left value denotes the initial size of a quantum register, and the right value denotes the initial bit.
 
 `qreg q = <| 10, 0 |>;`
 
-Where the first value (10 in this case) indicates the number of bits in the quantum register, and the second value (0 in this case) is the binary value to which each  bit is initialized.
+And `qreg` is the only type that is pass by reference.
+
+You measure the state of a quantum register by using the destructive `?` operator and the non-destructive, but physically unrealistic, `?'` operator.
+
+```
+qreg q = <| 10, 0 |>;
+int meas = q ? [2:10]; % measures qubits 2 through 10
+```
+
+Note, you can only measure LValue `qreg` variables. There are many builtin functions that utilize quantum registers and aid in building quantum circuits and you can find a complete listing in Language Reference.
 
 Language Reference Manual
 =========================
