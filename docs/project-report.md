@@ -684,7 +684,7 @@ def return_type func_name: type arg1, type arg2
 {
     % statements in function body
     
-    return return_type
+    return return_type;
 }
 ```
 
