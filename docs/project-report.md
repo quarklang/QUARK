@@ -1173,7 +1173,7 @@ and took responsibility for whatever we touched. The parts of the compiler and p
 | Project Report            | All                                             |
 | Presentation              | Parthiban Loganathan                            |
 
-Due to our decision to follow the "democracy" approach as opposed to the "dictatorship" approach we faced issues with accountability, but each one of us also got to see more of the compiler in the process.
+Though some names are not listed under certain sections, it doesn't mean they didn't contribute towards it. For example, Daria helped with project management in the middle of the semester when things were hectic and no one was co-operating. All of us worked on different chunks of semantic checking before we decided on a major rewrite since it was hard to separate it from code generation. Due to our decision to follow the "democracy" approach as opposed to the "dictatorship" approach we faced issues with accountability, but each one of us also got to see more of the compiler in the process.
 
 <div style="page-break-after: always;"></div>
 
