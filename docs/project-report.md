@@ -96,10 +96,10 @@ To run some quantum computing programs, compile `shor.qk` and `grover.qk` in the
 Given an actual quantum computer, we would be able to run these algorithms in the stated time. For now, we run them on our simulator in exponential time for small N examples.
 
 Shor's algorithm can factorize large integers in polynomial time.
-Run `./quark/quarkc -sco ./quark/shor.qk shor` and `./shor`
+Run `./quark/quarkc -s quark/shor.qk -c shor.cpp -o shor` and then run the executable`./shor`
 
 Grover's search can search an unsorted database in O(N<sup>1/2</sup>) time.
-Run `./quark/quarkc -sco ./quark/grover.qk grover` and `./grover`
+Run `./quark/quarkc -s quark/grover.qk -c grove.cpp -o grover` and then run the executable `./grover`
 
 ###Essential Syntax
 Quark syntax resembles something along the lines of Python with static typing. It is influenced by a number of languages including Python, MATLAB and C. If you already know a popular imperative language, you should be able to easily glean the majority of the syntax by simply reading through these examples. Our language manual provides a more explicit outline of the language spec.
