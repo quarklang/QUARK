@@ -775,6 +775,97 @@ for int i in [0:7]:
 i; % still 1000
 ```
 
+###Built-in Functions
+Below is a list of built-in functions that QUARK provides:
+
+####General
+`print(any_type)`: takes any type and returns void
+
+`print_noline(any_type)`: `print` but does not add a newline
+
+`len([any_type])`: takes any array and returns the length
+
+####Fraction
+`num(fraction)`: takes a fraction type and returns the numerator as an `int`
+
+`denom(fraction)`: takes a fraction type and returns the denominator as an `int`.
+
+####Complex
+`real(complex)`: takes a complex type and returns the real portion of a complex number as a float.
+
+`imag(complex)` takes a complex type and returns the imaginary portion of a complex number as a float.
+
+####Math
+
+`sqrt(float)`: takes the square root of a number and returns a float.
+`rand_int(int, int)`: takes two ints as boundaries and returns an int between them.
+`rand_float(float, float)`: takes two floats as boundaries and returns a float between them. 
+
+####Matrix
+
+`coldim(any_matrix)`: returns the column dimension of a matrix as an int.
+`rowdim(any_matrix)`: returns the row dimension of a matrix as an 
+
+####Matrix Generation
+`hadamard_mat(int)`: takes int and returns a complex matrix.
+cnot_mat(): takes nothing and returns a complex matrix.
+`toffoli_mat(int)`: takes int and returns complex matrix.
+`generic_control_mat(int, complex_matrix)`: takes int and complex matrix and returns complex matrix.
+`pauli_X_mat()`: takes nothing and returns a complex matrix.
+`pauli_Y_mat()`: takes nothing and returns a complex matrix.
+`pauli_Z_mat()`: takes nothing and returns a complex matrix.
+`rot_X_mat(float)`: takes a float and returns a complex matrix.
+`rot_Y_mat(float)`: takes a float and returns a complex matrix.
+`rot_Z_mat(float)`: takes a float and returns a complex matrix.
+`phase_scale_mat(float)`: takes a float and returns a complex matrix.
+`phase_shift_mat(float)`: takes a float and returns a complex matrix.
+`control_phase_shift_mat(float)`: takes a float and returns a complex matrix.
+`swap_mat()`: takes nothing and returns a complex matrix.
+`cswap_mat()`: takes nothing and returns a complex matrix.
+`qft_mat(int)`: takes int and returns a complex matrix.
+`grover_diffuse_mat(int)`: takes int and returns a complex matrix.
+
+####Quantum Registers
+`qsize(qreg)`: takes a qreg and returns an int.
+`qclone(qreg)`: takes a qreg and returns a qreg.
+`prefix_prob(qreg, int, int)`: takes a qreg, and int, and an int, and returns a float.
+`apply_orancle(qreg, function, int)`: takes a qreg, a defined function, and an int, and returns void.
+
+####Quantum Gates (Functions apply a specific gate to a quantum register)
+
+#####Single bit gates
+`hadamard(qreg)`: takes a qreg and returns void.
+`hadamart_top(qreg, int)`: takes qreg and int and returns void.
+`pauli_X(qreg, int)`: takes qreg and int and returns void.
+`pauli_Y(qreg, int)`: takes qreg and int and returns void.
+`paluli_Z(qreg, int)`: takes qreg and int and returns void.
+`rot_X(qreg, float, int)`: takes qreg, float, and int and returns void.
+`rot_Y(qreg, float, int)`: takes qreg, float, and int and returns void.
+`rot_Z(qreg, float, int)`: takes qreg, float, and int and returns void.
+`phase_scale(qreg, float, int)`: takes qreg, float, and int and returns void.
+`phase_shift(qreg, float, int)`: takes qreg, float, and int and returns void.
+
+#####Multi bit gates
+`generic_1gate(qreg, complex_matrix, int)`: takes qreg, complex matrix, and int and returns void.
+`generic_2gate(qreg, complex_matrix, int, int)`: takes qreg, complex matrix, int, and int and returns void.
+`generic_ngate(qreg, complex_matrix, [int])`: takes qreg, complex matrix, and an array of ints and returns void.
+
+####Control Gates
+`cnot(qreg, int, int)`: takes qreg, int, and int, and returns void.
+`toffoli(qreg, int, int, int)`: takes qreg, int, int, and int and returns void.
+`control_phase_shift(qreg, float, int, int)`: takes a qreg, float, int, and int, and returns void.
+`ncnot(qreg, [int], int)`: takes a qreg, and array of ints, and int, and returns void.
+`generic_control(qreg, complex_matrix, int, int)`: takes qreg, complex matrix, int, and int, and returns void.
+`generic_toffoli(qreg, complex_matrix, int, int, int)`: takes qreg, complex matrix, int, int, and int, and returns void.
+`generic_ncontrol(qreg, complex_matrix, [int], int)`: takes qreg, complex matrix, an array of ints, and int, and returns void.
+
+####Other Gates
+`swap(qreg, int, int)`: takes qreg, int, and int, and returns void.
+`cswap(qreg, int, int, int)`: takes qreg, int, int, and int, and returns void.
+`qft(qreg, int, int)`: takes qreg, int, and int, and returns void.
+`grover_diffuse(qreg)`: takes qreg and returns void.
+
+
 ###Grammar
 
 Below is the grammar for QUARK. Words in capital letters are tokens passed in from the lexer.
@@ -1206,58 +1297,58 @@ def int smallest_period: int b, int M
 
 def int long_pow: int a, int p
 {
-	if p == 1:
-		return a;
-	int partial = long_pow(a, p / 2);
-	if p mod 2 == 1:
-		return partial * partial * a;
-	else
-		return partial * partial;
+  if p == 1:
+    return a;
+  int partial = long_pow(a, p / 2);
+  if p mod 2 == 1:
+    return partial * partial * a;
+  else
+    return partial * partial;
 }
 
 def int log2_int: int x
 {
-	int ans = 0;
-	while x > 0:
-	{
-		x = x >> 1;
+  int ans = 0;
+  while x > 0:
+  {
+    x = x >> 1;
         ans ++;
-	}
-	return ans;
+  }
+  return ans;
 }
 
 %{
-	If size == 0, continue until 0
+  If size == 0, continue until 0
 }%
 def int[] to_continued_fraction: fraction frac, int size
 {
-	int[] cfrac;
-	int i = 0;
-	while size < 1 or i < size:
-	{
+  int[] cfrac;
+  int i = 0;
+  while size < 1 or i < size:
+  {
         % array concatenation
         cfrac &= [num(frac) / denom(frac)];
-		frac -= cfrac[i];
-		if num(frac) == 0 : break;
+    frac -= cfrac[i];
+    if num(frac) == 0 : break;
 
         % denom/num built-in
-		frac = ~frac;
+    frac = ~frac;
         i ++;
-	}
-	return cfrac;
+  }
+  return cfrac;
 }
 
 def fraction to_fraction: int[] cfrac, int size
 {
-	if size < 1:
-		size = len(cfrac);
-	fraction ans = 1$cfrac[size - 1];
-	for int i in [size-2 :0 :-1] :
-	{
-		ans += cfrac[i];
-		ans = ~ans;
-	}
-	return ans + cfrac[0];
+  if size < 1:
+    size = len(cfrac);
+  fraction ans = 1$cfrac[size - 1];
+  for int i in [size-2 :0 :-1] :
+  {
+    ans += cfrac[i];
+    ans = ~ans;
+  }
+  return ans + cfrac[0];
 }
 
 int nbit = log2_int(M) + 1;
@@ -1265,75 +1356,75 @@ int nbit = log2_int(M) + 1;
 % This is the user defined function that should be passed as a string argument
 def int shor_oracle: int x
 {
-	return exp_mod(nbit, x, M);
+  return exp_mod(nbit, x, M);
 }
 
 def int main:
 {
-	qreg q0 = <| nbit * 2, 0 |>;
+  qreg q0 = <| nbit * 2, 0 |>;
 
-	qft(q0, 0, nbit);
+  qft(q0, 0, nbit);
 
-	int b; int i;
-	while true:
-	{
-		b = rand_int(2, M);
+  int b; int i;
+  while true:
+  {
+    b = rand_int(2, M);
 
-		if gcd(b, M) != 1: continue;
+    if gcd(b, M) != 1: continue;
 
-		qreg q = qclone(q0);
+    qreg q = qclone(q0);
 
-		apply_oracle(q, "shor_oracle", nbit);
+    apply_oracle(q, "shor_oracle", nbit);
 
-		qft(q, 0, nbit);
+    qft(q, 0, nbit);
 
-		int mTrial = 0;
-		int measured;
+    int mTrial = 0;
+    int measured;
 
-		while mTrial < 10:
-		{
+    while mTrial < 10:
+    {
             mTrial ++;
-			measured = q ?' [:nbit];
-			if measured != 0:
-			{
-				int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
-				for int size in [len(cfrac):0:-1] :
-				{
-					int p = num(to_fraction(cfrac, size));
-					int P = p;
+      measured = q ?' [:nbit];
+      if measured != 0:
+      {
+        int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
+        for int size in [len(cfrac):0:-1] :
+        {
+          int p = num(to_fraction(cfrac, size));
+          int P = p;
 
-					while P < 128 and P < M :
-					{
-						if P mod 2 == 0
-							and exp_mod(b, P, M) == 1 :
-						{
-							int check = exp_mod(b, P / 2, M);
-							if check != 1 and check != M - 1 :
-							{
-								int b_P_1 = long_pow(b, P / 2) - 1;
-								int prime = gcd(M, b_P_1);
+          while P < 128 and P < M :
+          {
+            if P mod 2 == 0
+              and exp_mod(b, P, M) == 1 :
+            {
+              int check = exp_mod(b, P / 2, M);
+              if check != 1 and check != M - 1 :
+              {
+                int b_P_1 = long_pow(b, P / 2) - 1;
+                int prime = gcd(M, b_P_1);
 
-								if prime != 1 and prime != -1 :
-								{
-									print("Found period r = ", P);
-									print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
-									print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
-									int prime2 = gcd(M, b_P_1 + 2);
-									print("gcd(", M, ", ", b_P_1, ") = ", prime);
-									print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
-									print("\nFactorize ", M, " = ", prime, " * ", M/prime if prime2==1 or prime2==-1 else prime2);
-									return 0;
-								}
-							}
-						}
-						P += p;
-					}
-				}
-			}
-		}
-	}
-	print("FAIL");
-	return 0;
+                if prime != 1 and prime != -1 :
+                {
+                  print("Found period r = ", P);
+                  print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
+                  print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
+                  int prime2 = gcd(M, b_P_1 + 2);
+                  print("gcd(", M, ", ", b_P_1, ") = ", prime);
+                  print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
+                  print("\nFactorize ", M, " = ", prime, " * ", M/prime if prime2==1 or prime2==-1 else prime2);
+                  return 0;
+                }
+              }
+            }
+            P += p;
+          }
+        }
+      }
+    }
+  }
+  print("FAIL");
+  return 0;
 }
 ```
 
@@ -4091,7 +4182,7 @@ int key = 73; % secret key
 
 def int grover_oracle : int x
 {
-	if x == key:
+  if x == key:
         return 1;
     else
         return 0;
@@ -4099,33 +4190,33 @@ def int grover_oracle : int x
 
 def int main:
 {
-	qreg q = <| nbit+1, 1 |>;
+  qreg q = <| nbit+1, 1 |>;
 
-	int N = 1 << nbit;
-	int sqrtN = sqrt(N);
+  int N = 1 << nbit;
+  int sqrtN = sqrt(N);
 
-	hadamard(q);
+  hadamard(q);
 
-	int ans = 0;
-	float[] probAtKey;
+  int ans = 0;
+  float[] probAtKey;
 
-	for int iter in [: sqrtN + 1] :
-	{
-		apply_oracle(q, "grover_oracle", nbit);
+  for int iter in [: sqrtN + 1] :
+  {
+    apply_oracle(q, "grover_oracle", nbit);
 
-		hadamard_top(q, nbit);
-		grover_diffuse(q);
-		hadamard_top(q, nbit);
+    hadamard_top(q, nbit);
+    grover_diffuse(q);
+    hadamard_top(q, nbit);
 
-		if iter == sqrtN:
-			while grover_oracle(ans) == 0:
-				ans = q ?' [:nbit];
+    if iter == sqrtN:
+      while grover_oracle(ans) == 0:
+        ans = q ?' [:nbit];
 
-		probAtKey &= [prefix_prob(q, nbit, key)];
-	}
+    probAtKey &= [prefix_prob(q, nbit, key)];
+  }
 
-	print("Found key: ", ans);
-	print("Probability = ", probAtKey);
+  print("Found key: ", ans);
+  print("Probability = ", probAtKey);
     return 0;
 }
 ```
@@ -4173,58 +4264,58 @@ def int smallest_period: int b, int M
 
 def int long_pow: int a, int p
 {
-	if p == 1:
-		return a;
-	int partial = long_pow(a, p / 2);
-	if p mod 2 == 1:
-		return partial * partial * a;
-	else
-		return partial * partial;
+  if p == 1:
+    return a;
+  int partial = long_pow(a, p / 2);
+  if p mod 2 == 1:
+    return partial * partial * a;
+  else
+    return partial * partial;
 }
 
 def int log2_int: int x
 {
-	int ans = 0;
-	while x > 0:
-	{
-		x = x >> 1;
+  int ans = 0;
+  while x > 0:
+  {
+    x = x >> 1;
         ans ++;
-	}
-	return ans;
+  }
+  return ans;
 }
 
 %{
-	If size == 0, continue until 0
+  If size == 0, continue until 0
 }%
 def int[] to_continued_fraction: fraction frac, int size
 {
-	int[] cfrac;
-	int i = 0;
-	while size < 1 or i < size:
-	{
+  int[] cfrac;
+  int i = 0;
+  while size < 1 or i < size:
+  {
         % array concatenation
         cfrac &= [num(frac) / denom(frac)];
-		frac -= cfrac[i];
-		if num(frac) == 0 : break;
+    frac -= cfrac[i];
+    if num(frac) == 0 : break;
 
         % denom/num built-in
-		frac = ~frac;
+    frac = ~frac;
         i ++;
-	}
-	return cfrac;
+  }
+  return cfrac;
 }
 
 def fraction to_fraction: int[] cfrac, int size
 {
-	if size < 1:
-		size = len(cfrac);
-	fraction ans = 1$cfrac[size - 1];
-	for int i in [size-2 :0 :-1] :
-	{
-		ans += cfrac[i];
-		ans = ~ans;
-	}
-	return ans + cfrac[0];
+  if size < 1:
+    size = len(cfrac);
+  fraction ans = 1$cfrac[size - 1];
+  for int i in [size-2 :0 :-1] :
+  {
+    ans += cfrac[i];
+    ans = ~ans;
+  }
+  return ans + cfrac[0];
 }
 
 int nbit = log2_int(M) + 1;
@@ -4232,75 +4323,75 @@ int nbit = log2_int(M) + 1;
 % This is the user defined function that should be passed as a string argument
 def int shor_oracle: int x
 {
-	return exp_mod(nbit, x, M);
+  return exp_mod(nbit, x, M);
 }
 
 def int main:
 {
-	qreg q0 = <| nbit * 2, 0 |>;
+  qreg q0 = <| nbit * 2, 0 |>;
 
-	qft(q0, 0, nbit);
+  qft(q0, 0, nbit);
 
-	int b; int i;
-	while true:
-	{
-		b = rand_int(2, M);
+  int b; int i;
+  while true:
+  {
+    b = rand_int(2, M);
 
-		if gcd(b, M) != 1: continue;
+    if gcd(b, M) != 1: continue;
 
-		qreg q = qclone(q0);
+    qreg q = qclone(q0);
 
-		apply_oracle(q, "shor_oracle", nbit);
+    apply_oracle(q, "shor_oracle", nbit);
 
-		qft(q, 0, nbit);
+    qft(q, 0, nbit);
 
-		int mTrial = 0;
-		int measured;
+    int mTrial = 0;
+    int measured;
 
-		while mTrial < 10:
-		{
+    while mTrial < 10:
+    {
             mTrial ++;
-			measured = q ?' [:nbit];
-			if measured != 0:
-			{
-				int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
-				for int size in [len(cfrac):0:-1] :
-				{
-					int p = num(to_fraction(cfrac, size));
-					int P = p;
+      measured = q ?' [:nbit];
+      if measured != 0:
+      {
+        int[] cfrac = to_continued_fraction((1 << nbit)$measured, 0);
+        for int size in [len(cfrac):0:-1] :
+        {
+          int p = num(to_fraction(cfrac, size));
+          int P = p;
 
-					while P < 128 and P < M :
-					{
-						if P mod 2 == 0
-							and exp_mod(b, P, M) == 1 :
-						{
-							int check = exp_mod(b, P / 2, M);
-							if check != 1 and check != M - 1 :
-							{
-								int b_P_1 = long_pow(b, P / 2) - 1;
-								int prime = gcd(M, b_P_1);
+          while P < 128 and P < M :
+          {
+            if P mod 2 == 0
+              and exp_mod(b, P, M) == 1 :
+            {
+              int check = exp_mod(b, P / 2, M);
+              if check != 1 and check != M - 1 :
+              {
+                int b_P_1 = long_pow(b, P / 2) - 1;
+                int prime = gcd(M, b_P_1);
 
-								if prime != 1 and prime != -1 :
-								{
-									print("Found period r = ", P);
-									print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
-									print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
-									int prime2 = gcd(M, b_P_1 + 2);
-									print("gcd(", M, ", ", b_P_1, ") = ", prime);
-									print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
-									print("\nFactorize ", M, " = ", prime, " * ", M/prime if prime2==1 or prime2==-1 else prime2);
-									return 0;
-								}
-							}
-						}
-						P += p;
-					}
-				}
-			}
-		}
-	}
-	print("FAIL");
-	return 0;
+                if prime != 1 and prime != -1 :
+                {
+                  print("Found period r = ", P);
+                  print("b ^ r = ", b, " ^ ", P, " = 1 mod ", M);
+                  print("b ^ (r/2) = ", b, " ^ ", P / 2, " = ", check, " mod ", M);
+                  int prime2 = gcd(M, b_P_1 + 2);
+                  print("gcd(", M, ", ", b_P_1, ") = ", prime);
+                  print("gcd(", M, ", ", b_P_1 + 2, ") = ", prime2);
+                  print("\nFactorize ", M, " = ", prime, " * ", M/prime if prime2==1 or prime2==-1 else prime2);
+                  return 0;
+                }
+              }
+            }
+            P += p;
+          }
+        }
+      }
+    }
+  }
+  print("FAIL");
+  return 0;
 }
 ```
 
