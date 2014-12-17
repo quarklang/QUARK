@@ -38,7 +38,7 @@ Tutorial
 ========
 
 ###Environment Installation
-Install [Vagrant](https://www.vagrantup.com/downloads.html), a tool for provisioning virtual machines used to maintain a consistent environment. You will also need  to install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) which Vagrant uses for virtualization. Clone the [Quark repository](https://github.com/quarklang/QUARK), navigate to the directory and run `vagrant up`. This will provision and run a Ubuntu 14.04 LTS virtual instance as well as download and install dependencies such as OCaml and g++-4.8. Run `vagrant ssh` to ssh into the VM. Make sure you are in the `/vagrant` directory by running the command `pwd` and if you are not run `cd /vagrant`.
+Install [Vagrant](https://www.vagrantup.com/downloads.html), a tool for provisioning virtual machines used to maintain a consistent environment. You will also need  to install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) which Vagrant uses for virtualization. After unzipping Quark.tar.gz, navigate to the main Quark directory (the one which contains bootstrap.sh and Vagrantfile) and run `vagrant up`. This will provision and run a Ubuntu 14.04 LTS virtual instance as well as download and install dependencies such as OCaml and g++-4.8. Run `vagrant ssh` to ssh into the VM. Make sure you are in the `/vagrant` directory by running the command `pwd` and if you are not run `cd /vagrant`. You shuould now see all the files from the Quark folder shared with the VM + this VM has all the dependencies installed. Now we can compile and run Quark programs.
 
 ###Compiling and Running Quark Programs
 The following Hello World example Quark program is saved in `/tests/hello_world.qk`.
